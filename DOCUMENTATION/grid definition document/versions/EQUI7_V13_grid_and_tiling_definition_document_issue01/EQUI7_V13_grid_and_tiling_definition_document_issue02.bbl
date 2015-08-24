@@ -1,0 +1,36 @@
+\begin{thebibliography}{4}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\providecommand{\eprint}[2][]{\url{#2}}
+\providecommand{\bibinfo}[2]{#2}
+\ifx\xfnm\relax \def\xfnm[#1]{\unskip,\space#1}\fi
+%Type = Article
+\bibitem[{Bauer-Marschallinger et~al.(2014)Bauer-Marschallinger, Sabel and
+  Wagner}]{Bauer-Marschallinger2014}
+\bibinfo{author}{Bauer-Marschallinger, B.}, \bibinfo{author}{Sabel, D.},
+  \bibinfo{author}{Wagner, W.}, \bibinfo{year}{2014}.
+\newblock \bibinfo{title}{Optimisation of global grids for high-resolution
+  remote sensing data}.
+\newblock \bibinfo{journal}{Computers \& Geosciences} \bibinfo{volume}{72},
+  \bibinfo{pages}{84 -- 93}.
+%Type = Techreport
+\bibitem[{Karney(2011)}]{Karney2011}
+\bibinfo{author}{Karney, C.F.F.}, \bibinfo{year}{2011}.
+\newblock \bibinfo{title}{Geodesics on an ellipsoid of revolution}.
+\newblock \bibinfo{type}{Technical Report}. SRI International.
+\newblock \eprint{1102.1215}.
+%Type = Article
+\bibitem[{Karney(2013)}]{Karney2013}
+\bibinfo{author}{Karney, C.F.F.}, \bibinfo{year}{2013}.
+\newblock \bibinfo{title}{Algorithms for geodesics}.
+\newblock \bibinfo{journal}{Journal of Geodesy} \bibinfo{volume}{87},
+  \bibinfo{pages}{43--55}.
+%Type = Book
+\bibitem[{Snyder(1987)}]{Snyder1987}
+\bibinfo{author}{Snyder, J.P.}, \bibinfo{year}{1987}.
+\newblock \bibinfo{title}{Map projections -- A working manual}.
+\newblock \bibinfo{number}{1395}, \bibinfo{publisher}{USGPO}.
+
+\end{thebibliography}

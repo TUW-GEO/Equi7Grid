@@ -1,0 +1,23 @@
+\select@language {english}
+\contentsline {section}{\numberline {0}Preamble}{4}
+\contentsline {section}{\numberline {1}Overview}{5}
+\contentsline {subsection}{\numberline {1.1}Rationale}{5}
+\contentsline {subsection}{\numberline {1.2}Key Facts}{5}
+\contentsline {section}{\numberline {2}Design and Geometry}{6}
+\contentsline {subsection}{\numberline {2.1}Datum}{6}
+\contentsline {subsection}{\numberline {2.2}Zones}{6}
+\contentsline {subsection}{\numberline {2.3}Projections}{8}
+\contentsline {subsubsection}{\numberline {2.3.1}The Azimuthal Equidistant}{8}
+\contentsline {subsubsection}{\numberline {2.3.2}Equi7 Projections}{9}
+\contentsline {subsection}{\numberline {2.4}Tiling}{12}
+\contentsline {section}{\numberline {3}Production and Structure}{16}
+\contentsline {subsection}{\numberline {3.1}Projection Implementation}{16}
+\contentsline {subsection}{\numberline {3.2}Grid Defining Files}{17}
+\contentsline {paragraph}{Zone Shapefile}{17}
+\contentsline {paragraph}{Tiles Shapefile}{17}
+\contentsline {paragraph}{Land Shapefile}{17}
+\contentsline {paragraph}{Zone DEM File}{17}
+\contentsline {paragraph}{Tile DEM File}{18}
+\contentsline {section}{\numberline {4}Usage}{19}
+\contentsline {subsection}{\numberline {4.1}The Equi7Grid Class}{19}
+\contentsline {section}{\numberline {5}Glossary}{20}
