@@ -5,16 +5,17 @@ except ImportError:
     from distutils.core import setup
 
 config = {
-    'description': 'My Project',
-    'author': 'My Name',
-    'url': 'URL to get it at.',
-    'download_url': 'Where to download it.',
-    'author_email': 'My email.',
+    'description': 'Definition of the Equi7Grid',
+    'author': 'Bernhard Bauer-Marschallinger',
+    'url': 'https://github.com/bbauerma/Equi7Grid',
+    'download_url': 'https://github.com/bbauerma/Equi7Grid',
+    'author_email': 'bbm@geo.tuwien.ac.at',
     'version': '0.1',
     'install_requires': ['nose'],
     'packages': ['Equi7Grid'],
     'scripts': [],
-    'name': 'projectname'
+    'name': 'Equi7Grid'
+
 }
 
 setup(**config)

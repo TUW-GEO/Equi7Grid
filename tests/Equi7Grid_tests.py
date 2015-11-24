@@ -2,6 +2,7 @@
 from nose.tools import *
 import Equi7Grid
 
+
 def setup():
     print "SETUP!"
 
