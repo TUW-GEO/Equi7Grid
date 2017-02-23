@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Vienna University of Technology (TU Wien), Department of
+# Copyright (c) 2017, Vienna University of Technology (TU Wien), Department of
 # Geodesy and Geoinformation (GEO).
 # All rights reserved.
 #
@@ -60,25 +60,21 @@ import os
 import itertools
 import pickle
 import click
-from sgrt.command_line import cli
+from command_line import cli
 
 import pyproj
 import numpy as np
 from osgeo import ogr
 from osgeo import osr
 
-from sgrt.common.utils import platform
-from sgrt.common.utils.retrieve_raster_boundary import retrieve_raster_boundary
-from Equi7Grid import gdalport
-
-
-# refactor
-
+import platform
+import gdalport
 
 def _load_equi7grid_data(module_path):
     # load the data, raise the error if failed to load equi7grid.dat
     equi7_data = None
-    fname = os.path.join(os.path.dirname(module_path), "equi7grid.dat")
+    system = platform.system()
+    fname = os.path.join(os.path.dirname(module_path), "data", "equi7grid_{0}.dat".format(system))
     with open(fname, "rb") as f:
         equi7_data = pickle.load(f)
     return equi7_data
