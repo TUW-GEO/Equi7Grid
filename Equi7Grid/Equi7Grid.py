@@ -1,22 +1,39 @@
-# Copyright (c) 2014, Vienna University of Technology (TU Wien), Department
-# of Geodesy and Geoinformation (GEO).
+# Copyright (c) 2015, Vienna University of Technology (TU Wien), Department of
+# Geodesy and Geoinformation (GEO).
 # All rights reserved.
 #
-# All information contained herein is, and remains the property of Vienna
-# University of Technology (TU Wien), Department of Geodesy and Geoinformation
-# (GEO). The intellectual and technical concepts contained herein are
-# proprietary to Vienna University of Technology (TU Wien), Department of
-# Geodesy and Geoinformation (GEO). Dissemination of this information or
-# reproduction of this material is forbidden unless prior written permission
-# is obtained from Vienna University of Technology (TU Wien), Department of
-# Geodesy and Geoinformation (GEO).
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation are
+# those of the authors and should not be interpreted as representing official
+# policies, either expressed or implied, of the FreeBSD Project.
+
 
 '''
-Created on November 01, 2014
+Created on November 05, 2015
 
 Equi7Grid
 
-@author: Senmao Cao Senmao.Cao@geo.tuwien.ac.at
+@author: Bernhard Bauer-Marschallinger, bbm@geo.tuwien.ac.at
 
 Note:
 
@@ -44,13 +61,14 @@ import itertools
 import pickle
 import click
 from sgrt.command_line import cli
-from osgeo import ogr, osr
+
 import pyproj
 import numpy as np
-from sgrt.common.utils import platform
-from sgrt.common.utils.quicklook import gen_qlook
-from sgrt.common.utils.retrieve_raster_boundary import retrieve_raster_boundary
+from osgeo import ogr
+from osgeo import osr
 
+from sgrt.common.utils import platform
+from sgrt.common.utils.retrieve_raster_boundary import retrieve_raster_boundary
 from Equi7Grid import gdalport
 
 
@@ -65,8 +83,15 @@ def _load_equi7grid_data(module_path):
         equi7_data = pickle.load(f)
     return equi7_data
 
+
 class Equi7Grid(object):
-    """Equi7 Grid
+    """
+    Equi7 Grid
+
+    Parameters
+    ----------
+    res : float
+        The tile resolution
     """
 
     # static attribute
@@ -80,19 +105,18 @@ class Equi7Grid(object):
     _static_tilecodes = ["T6", "T3", "T1"]
 
     def __init__(self, res):
-        """ construct Equi7 grid system.
+        """
+        construct Equi7 grid system.
 
-        Parameters
-        ----------
-        res : float
-            The tile resolution
         """
         self.res = int(res)
         # initializing
         self._initialize()
 
     def _initialize(self):
-        """ initialization"""
+        """
+        initialization
+        """
 
         # check if the equi7grid.data have been loaded successfully
         if Equi7Grid._static_equi7_data is None:
@@ -674,13 +698,13 @@ class Equi7Grid(object):
         return overlapped_tiles
 
     def resample_to_geotiff(self, image, output_dir, gdal_path=None, sgrid_ids=None,
-                 accurate_boundary=True, e7_folder=True, ftiles=None,
-                 roi=None, coverland=True, outshortname=None,
-                 withtilenameprefix=False, withtilenamesuffix=True,
-                 compress=True, resampling_type="near", overwrite=False,
-                 image_nodata=None, tile_nodata=None, qlook_flag=None,
-                 Tiledtiff=False):
-        """Resample the image to tiles as geotiffs.
+                            accurate_boundary=True, e7_folder=True, ftiles=None,
+                            roi=None, coverland=True, outshortname=None,
+                            withtilenameprefix=False, withtilenamesuffix=True,
+                            compress=True, compresstype="LZW", resampling_type="near",
+                            overwrite=False, image_nodata=None, tile_nodata=None,
+                            tiledtiff=True, blocksize=512):
+        """Resample the image to tiles.
 
         Parameters
         ----------
@@ -718,8 +742,10 @@ class Equi7Grid(object):
             The nodata value of input images.
         tile_nodata : double
             The nodata value of tile.
-        qlook_flag : bool
-            Generate qlook for each tile or not.
+        tiledtiff : bool
+            Set to yes for tiled geotiff output
+        blocksize: integer
+            sets tile width, in x and y direction
 
         """
         # get the output shortname if not provided
@@ -798,17 +824,17 @@ class Equi7Grid(object):
 
             options["-co"] = list()
             if compress:
-                options["-co"].append("COMPRESS=LZW")
-            if image_nodata is not None:
+                options["-co"].append("COMPRESS={0}".format(compresstype))
+            if image_nodata != None:
                 options["-srcnodata"] = image_nodata
-            if tile_nodata is not None:
+            if tile_nodata != None:
                 options["-dstnodata"] = tile_nodata
             if overwrite:
                 options["-overwrite"] = " "
-            if Tiledtiff:
+            if tiledtiff:
                 options["-co"].append("TILED=YES")
-                options["-co"].append("BLOCKXSIZE=512")
-                options["-co"].append("BLOCKYSIZE=512")
+                options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
+                options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
 
             # call gdalwarp for resampling
             succeed, _ = gdalport.call_gdal_util('gdalwarp', src_files=image,
@@ -819,22 +845,6 @@ class Equi7Grid(object):
             if succeed:
                 dst_file_names.extend([filename])
 
-            if self.res >= 500:
-                qlook_scl = '20%'
-            else:
-                qlook_scl = '5%'
-
-            # generate quick look
-            if (succeed and qlook_flag):
-                qlook_dir = os.path.join(tile_path, "qlooks")
-                if not os.path.exists(qlook_dir):
-                    platform.makedirs(qlook_dir)
-                fname_qlook = os.path.join(
-                    qlook_dir, "".join(('Q' + outbasename[1:], ".tif")))
-                gen_qlook(filename, dst_file=fname_qlook,
-                          min_stretch=-2500, max_stretch=0,
-                          gdal_path=gdal_path,
-                          resize_factor=(qlook_scl, qlook_scl))
         return dst_file_names
 
 
