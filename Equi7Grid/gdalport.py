@@ -44,17 +44,20 @@ import subprocess
 from osgeo import gdal
 from osgeo import ogr
 from osgeo import osr
-from datetime import datetime
 import numpy as np
-from scipy import ndimage  # for extract raster boundary
+from itertools import izip
+from itertools import cycle
 
+from datetime import datetime
+from scipy import ndimage
 
 class GdalImage:
 
     """A sample class to access a image with GDAL library"""
 
-    def __init__(self, gdaldataset):
+    def __init__(self, gdaldataset, filepath):
         self.dataset = gdaldataset
+        self.filepath = filepath
 
     def close(self):
         """close the dataset"""
@@ -68,7 +71,7 @@ class GdalImage:
         band_idx : int
             The band index starting from 1.
         subset : list or tuple
-            The subset should be in pixles, like this (xmin, ymin, xmax, ymax).
+            The subset should be in pixels, like this (xmin, ymin, xmax, ymax).
 
         Returns
         ------
@@ -93,8 +96,12 @@ class GdalImage:
         """get the height of the image"""
         return self.dataset.RasterYSize if self.dataset else None
 
-    def get_raster_nodata_value(self, band_idx=1):
-        """get the nodatave.
+    @property
+    def shape(self):
+        return (self.YSize(), self.XSize())
+
+    def get_band_nodata(self, band_idx=1):
+        """get band nodata value.
 
         Parameters
         ----------
@@ -104,19 +111,40 @@ class GdalImage:
         Returns
         -------
         nodata
-            no data value if it's available, otherwise it will return None
+            nodata value if it's available, otherwise it will return None
 
         """
         if band_idx < 1 or band_idx > self.dataset.RasterCount:
             raise IndexError("band index is out of range")
         return self.dataset.GetRasterBand(band_idx).GetNoDataValue()
 
+
+    def get_raster_nodata(self):
+        """get the nodata value for all bands in a list
+        this is compatible with the write_image's nodata parameter
+
+        Returns
+        -------
+        nodata
+            no data values in a list if it's available, otherwise it will return None
+        """
+
+        nodata = list()
+        for i in xrange(0, self.dataset.RasterCount):
+            nodata.append(self.dataset.GetRasterBand(i + 1).GetNoDataValue())
+
+        return nodata if len(nodata) >= 0 and not all(d is None for d in nodata) else None
+
     def read_all_band(self):
         """read the data of all the bands"""
-        raise NotImplementedError(
-            "sorry, read_all_band has not been implemented!")
+        m = np.full((self.band_count(), self.YSize(), self.XSize()), 0.0)
 
-    def get_raster_dtype(self, band_idx=1):
+        for bandIdx in xrange(self.band_count()):
+            m[bandIdx] = self.read_band(bandIdx + 1)
+
+        return m
+
+    def get_band_dtype(self, band_idx=1):
         """get the data type of given band"""
         if band_idx < 1 or band_idx > self.dataset.RasterCount:
             raise IndexError("band index is out of range")
@@ -130,6 +158,20 @@ class GdalImage:
         """get the projection string in wkt format"""
         return self.dataset.GetProjection() if self.dataset else None
 
+    def colormap(self, band_idx=1):
+        """get the colormap of given band"""
+        if band_idx < 1 or band_idx > self.dataset.RasterCount:
+            raise IndexError("band index is out of range")
+        ct = self.dataset.GetRasterBand(band_idx).GetColorTable()
+        if ct is None:
+            return None
+
+        colormap = []
+        for i in xrange(ct.GetCount()):
+            colormap.append(ct.GetColorEntry(i))
+
+        return colormap
+
     def band_count(self):
         """get the band count"""
         return self.dataset.RasterCount if self.dataset else None
@@ -139,6 +181,30 @@ class GdalImage:
         geot = self.geotransform()
         return (geot[0], geot[3] + self.YSize() * geot[5],
                 geot[0] + self.XSize() * geot[1], geot[3])
+
+    def pixel2coords(self, x, y):
+        """Returns global coordinates from pixel x, y coords"""
+        xoff, a, b, yoff, d, e = self.geotransform()
+
+        xp = a * x + b * y + xoff
+        yp = d * x + e * y + yoff
+        return(xp, yp)
+
+    def coords2pixel(self, l1, l2):
+        gt = self.geotransform()
+        col = int((l1 - gt[0]) / gt[1])
+        row = int((l2 - gt[3]) / gt[5])
+        if col < 0 or col >= self.XSize() or row < 0 or row >= self.YSize():
+            return None
+        return [row, col]
+
+    def inside(self, l1, l2):
+        """Checks if a pixel is in this image"""
+        x, y = self.coords2pixel(l1, l2)
+
+        return x >= 0 and x < self.XSize() and y >= 0 and y < self.YSize()
+
+
 
 
 def open_image(filename):
@@ -164,7 +230,7 @@ def open_image(filename):
     if dataset is None:
         raise IOError("cannot open %s" % filename)
 
-    return GdalImage(dataset)
+    return GdalImage(dataset, filename)
 
 
 # dict for transfer the datatype and resample type
@@ -190,7 +256,7 @@ gdal_resample_type = {"nearst": gdal.GRA_NearestNeighbour,
                       }
 
 
-def get_gdal_datatype(datatype):
+def dtype_np2gdal(datatype):
     """get gdal data type from datatype
 
     Parameters
@@ -207,7 +273,7 @@ def get_gdal_datatype(datatype):
     return gdal_datatype[datatype] if datatype in gdal_datatype else None
 
 
-def get_gdal_resampling_type(resampling_method):
+def rtype_str2gdal(resampling_method):
     """get gdal resample type from resampling method string"""
     mthd = resampling_method.lower()
     return gdal_resample_type[mthd] if mthd in gdal_resample_type else None
@@ -244,9 +310,9 @@ def create_dataset(filename, datatype, dims, frmt="GTiff", geotransform=None,
 
     """
     driver = gdal.GetDriverByName(frmt)
-    gdaldatatype = get_gdal_datatype(datatype)
+    gdaldatatype = dtype_np2gdal(datatype)
     if driver is None:
-        raise IOError("cannot get driver of {}".format(frmt))
+        raise IOError("cannot get driver for {}".format(frmt))
     band_count, xsize, ysize = dims
     if option is None:
         out_ds = driver.Create(
@@ -264,7 +330,9 @@ def create_dataset(filename, datatype, dims, frmt="GTiff", geotransform=None,
 
 
 def write_image(image, filename, frmt="GTiff", nodata=None,
-                geotransform=None, projection=None, option=None):
+                geotransform=None, projection=None, option=None,
+                colormap=None, compress=True, overwrite=True,
+                ref_image=None, dtype=None):
     """output image into filename with specific format
 
     Parameters
@@ -281,6 +349,8 @@ def write_image(image, filename, frmt="GTiff", nodata=None,
         contain six geotransform parameters
     projection : string
         projection definition string
+    dtype
+        Datatype that we want to use, per default dtype = dtype.image
 
     Returns
     -------
@@ -295,12 +365,37 @@ def write_image(image, filename, frmt="GTiff", nodata=None,
             if some invalid parameters are given
 
     """
+    if ref_image is not None:
+        if geotransform is None:
+            geotransform = ref_image.geotransform()
+
+        if projection is None:
+            projection = ref_image.projection()
+
+        if nodata is None:
+            nodata = ref_image.get_raster_nodata()
+
+    if overwrite is False and os.path.exists(filename):
+        return None
+
     # to make sure dim of image is 2 or 3
     if image is None or image.ndim < 2 or image.ndim > 3:
         raise ValueError(
             "The image is None or it's dimension isn't in two or three.")
     dims = (1, image.shape[1], image.shape[0]) if image.ndim == 2 \
-        else (image.shape[2], image.shape[1], image.shape[0])
+        else (image.shape[0], image.shape[2], image.shape[1])
+
+    # Enable compression of the file
+
+    if compress:
+        if option is None:
+            option = ['COMPRESS=LZW']
+        else:
+            if not filter(lambda x: x.upper().startswith("COMPRESS"), option):
+                option.append("COMPRESS=LZW")
+            else:
+                print "Info: use compression method set by option!"
+
     # create dataset
     ds = create_dataset(filename, str(image.dtype), dims, frmt, geotransform,
                         projection, option)
@@ -309,11 +404,25 @@ def write_image(image, filename, frmt="GTiff", nodata=None,
         ds.GetRasterBand(1).WriteArray(image, 0, 0)
     else:
         for i in xrange(ds.RasterCount):
-            ds.GetRasterBand(i + 1).WriteArray(image[:, :, i], 0, 0)
+            ds.GetRasterBand(i + 1).WriteArray(image[i] if dtype is None else image[i].astype(dtype), 0, 0)
+
+    ds.FlushCache()
     # set nodata for each band
     if nodata is not None:
+        assert ds.RasterCount == len(nodata) or len(nodata) == 1, "Mismatch of nodata values and RasterCount"
+        for i, val in izip(xrange(ds.RasterCount), cycle(nodata)):
+            ds.GetRasterBand(i + 1).SetNoDataValue(val)
+
+    # colormaps are only supported for 1 band rasters
+    if colormap is not None and ds.RasterCount == 1:
+        ct = gdal.ColorTable()
+        for i, color in enumerate(colormap):
+            if len(color) == 3:
+                color = list(color) + [0,]
+            ct.SetColorEntry(i, tuple(color))
+
         for i in xrange(ds.RasterCount):
-            ds.GetRasterBand(i + 1).SetNoDataValue(nodata[i])
+            ds.GetRasterBand(i + 1).SetRasterColorTable(ct)
 
     return ds
 
@@ -334,12 +443,12 @@ def write_geometry(geom, fname, format="shapefile"):
     drv = ogr.GetDriverByName("ESRI Shapefile")
     dst_ds = drv.CreateDataSource(fname)
     srs = geom.GetSpatialReference()
-    
+
     dst_layer = dst_ds.CreateLayer("out", srs=srs)
     fd = ogr.FieldDefn('DN', ogr.OFTInteger)
     dst_layer.CreateField(fd)
-    dst_field = 0
-    
+    #dst_field = 0
+
     feature = ogr.Feature(dst_layer.GetLayerDefn())
     feature.SetField("DN", 1)
     feature.SetGeometry(geom)
@@ -347,18 +456,31 @@ def write_geometry(geom, fname, format="shapefile"):
     feature.Destroy()
     # clean tmp file
     dst_ds.Destroy()
-    return 
+    return
 
 
-def extent2polygon(extent):
-    """create a polygon geometry from extent."""
-    area = [(extent[0], extent[1]), (extent[2], extent[1]),
-            (extent[2], extent[3]), (extent[0], extent[3])]
+def extent2polygon(extent, wkt=None):
+    """create a polygon geometry from extent.
+
+    extent : list
+        extent in terms of [xmin, ymin, xmax, ymax]
+    wkt : string
+        project string in well known text format
+
+    """
+    area = [(extent[0], extent[1]), ((extent[0] + extent[2])/2, extent[1]), (extent[2], extent[1]),
+            (extent[2], (extent[1] + extent[3])/2),
+            (extent[2], extent[3]), ((extent[0] + extent[2])/2, extent[3]), (extent[0], extent[3]),
+            (extent[0], (extent[1] + extent[3])/2)]
     edge = ogr.Geometry(ogr.wkbLinearRing)
     [edge.AddPoint(x, y) for x, y in area]
     edge.CloseRings()
     geom_area = ogr.Geometry(ogr.wkbPolygon)
     geom_area.AddGeometry(edge)
+    if wkt:
+        geo_sr = osr.SpatialReference()
+        geo_sr.ImportFromWkt(wkt)
+        geom_area.AssignSpatialReference(geo_sr)
     return geom_area
 
 
@@ -417,7 +539,7 @@ def call_gdal_util(util_name, gdal_path=None, src_files=None, dst_file=None,
                 cmd.append(str(v))
 
     # add source files and destination file (in double quotation)
-    if hasattr(src_files,  "__iter__"):
+    if hasattr(src_files, "__iter__"):
         src_files_str = " ".join(src_files)
     else:
         src_files_str = '"%s"' % src_files
@@ -450,7 +572,7 @@ def _analyse_gdal_output(output):
         return False
 
 
-def retrieve_raster_boundary(infile, gdal_path=None, nodata=None):
+def retrieve_raster_boundary(infile, gdal_path=None, nodata=None, outfile=None):
     """return a geometry of multipolygon representing the accurate boundary.
 
     Parameters
@@ -477,7 +599,7 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None):
     infile_bname = os.path.splitext(os.path.basename(infile))[0]
     qlook = os.path.join(os.path.dirname(infile),
                          "temp_{}_{}.tif".format(infile_bname, cur_time))
-    
+
     img_ds = open_image(infile)
     width, height = img_ds.XSize(), img_ds.YSize()
     img_geot = img_ds.geotransform()
@@ -487,7 +609,7 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None):
     factor = int(np.round(max(width/qlook_size, height/qlook_size)))
     x_res = img_geot[1] * factor
     y_res = img_geot[5] * factor
-    
+
     options = {'-of': 'GTiff',
                '-r': "near",
                '-te': " ".join(map(str, img_extent)),
@@ -496,11 +618,6 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None):
                '-srcnodata' : nodata,
                '-dstnodata' : nodata
                }
-
-
-#    options = {'-of': 'GTiff', '-co': 'COMPRESS=LZW',
-#               '-outsize': ("2%", "2%"), '-ot': 'Byte',
-#               '-scale': (-9999, 9999, 0, 255)}
 
     succeed, _ = call_gdal_util('gdalwarp', src_files=infile,
                                 dst_file=qlook, gdal_path=gdal_path,
@@ -538,13 +655,6 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None):
     # Polygonize
     driver = ogr.GetDriverByName('Memory')
     dst_ds = driver.CreateDataSource("")
-
-#    outfile = os.path.join(os.path.dirname(infile),
-#             "{}_{}.shp".format(
-#                 os.path.splitext(os.path.basename(infile))[0],
-#                 datetime.now().strftime("%Y%m%d_%H%M%S")))
-#    drv = ogr.GetDriverByName("ESRI Shapefile")
-#    dst_ds = drv.CreateDataSource(outfile)
 
     srs = None
     if qlook_dst.projection():
