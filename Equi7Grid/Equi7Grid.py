@@ -897,6 +897,7 @@ class Equi7Tile(object):
         self.lly = int(self.ftile[12:15]) * 100000
         self._tile_span = int(self.ftile[-1]) * 100000
         self._array_size = int(self._tile_span / self.res)
+        self._subset = self.subset
 
 
     @property
@@ -936,23 +937,40 @@ class Equi7Tile(object):
 
 
     @property
-    def _subset(self):
+    def subset(self):
         """
-        holds indices of the subset-of-interest
+        holds initial indices of the subset-of-interest
         :return: subset-of-interest
         """
         return (0, 0, self.array_size, self.array_size)
 
-    @_subset.setter
-    def _subset(self, limits):
+    @subset.setter
+    def subset(self, limits):
         """
         changes the indices of the subset-of-interest,
-        mostly to a smaller extent for efficient reading
+        mostly to a smaller extent, for efficient reading
 
         limits : tuple
-            the limits of subsets as (xmin, ymin, xmin, xmax).
+            the limits of subsets as (xmin, ymin, xmax, ymax).
 
         """
+        string = ['xmin', 'ymin', 'xmax', 'ymax']
+        if len(limits) != 4:
+            raise ValueError('Limits are not properly set!')
+
+        _max = self._array_size
+
+        for l, limit in enumerate(limits):
+            if (limit < 0) or (limit >= _max):
+                raise ValueError('{} is out of bounds!'.format(string[l]))
+
+        xmin, ymin, xmax, ymax = limits
+
+        if xmin >= xmax:
+            raise ValueError('xmin >= xmax!')
+        if ymin >= ymax:
+            raise ValueError('ymin >= ymax!')
+
         self._subset = limits
 
 
