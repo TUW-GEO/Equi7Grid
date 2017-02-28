@@ -94,11 +94,12 @@ class Equi7Grid(object):
     _static_equi7_data = _load_equi7grid_data(__file__)
     # sub grid IDs
     _static_sgrid_ids = ["NA", "EU", "AS", "SA", "AF", "OC", "AN"]
-    # supported grid spacing (resolution)
-    _static_res = [1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80, 75, 64, 60, 50, 48, 40, 32,
-                   30, 25, 24, 20, 16, 10, 8, 5, 4, 2, 1]
     # supported tile widths(resolution)
     _static_tilecodes = ["T6", "T3", "T1"]
+    # supported grid spacing (resolution)
+    _static_res = [1000, 800, 750, 600, 500, 400, 300, 250, 200,
+                   150, 125, 100, 96, 80, 75, 64, 60, 50, 48, 40,
+                   32, 30, 25, 24, 20, 16, 10, 8, 5, 4, 2, 1]
 
     def __init__(self, res):
         """
@@ -119,48 +120,22 @@ class Equi7Grid(object):
             self.res = None
             raise ValueError("cannot load Equi7Grid ancillary data!")
 
-        # allowing sampling of [1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80, 75, 64] metres
-        if ((self.res in range(64, 1000)) and (600000 % self.res == 0)):
-            self._tilecode = "T6"
-            self._tile_xspan, self._tile_yspan = (600000, 600000)
-        # allowing sampling of [60, 50, 48, 40, 32, 30, 25, 24, 20] metres
-        elif ((self.res in range(20, 60)) and (300000 % self.res == 0)):
-            self._tilecode = "T3"
-            self._tile_xspan, self._tile_yspan = (300000, 300000)
-        # allowing sampling of [16, 10, 8, 5, 4, 2, 1] metres
-        elif ((self.res in range(1, 16)) and (100000 % self.res == 0)):
-            self._tilecode = "T1"
-            self._tile_xspan, self._tile_yspan = (100000, 100000)
-        else:
-            invalid_res = self.res
-            self.res = None
-            msg = "Unsupported resolution {:d}!".format(invalid_res)
-            msg += "Supported resolution: {}".format(
-                str(Equi7Grid._static_res))
-            raise ValueError(msg)
+        self._tilecode, self._span = self.link_res_2_tile(self.res, get_span=True)
 
         # keep a reference to the _static_equi7_data
         self._equi7_data = Equi7Grid._static_equi7_data
 
     @property
+    def tilecode(self):
+        return self._tilecode
+
+    @property
     def span(self):
-        return self._tile_xspan
-
-    @property
-    def tile_xspan(self):
-        return self._tile_xspan
-
-    @property
-    def tile_yspan(self):
-        return self._tile_yspan
+        return self._xspan
 
     @property
     def sgrids(self):
         return Equi7Grid._static_sgrid_ids
-
-    @property
-    def tilecode(self):
-        return self._tilecode
 
     def is_coverland(self, ftile):
         """check if tile covers land
@@ -532,20 +507,34 @@ class Equi7Grid(object):
             return index
 
     @staticmethod
-    def get_tile_code(res):
+    def link_res_2_tile(res, get_span=False):
         res = int(res)
         tile_code = None
-        if res in [500, 75]:
+        span = None
+        # allowing sampling of [1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80, 75, 64] metres
+        if ((res in range(64, 1001)) and (600000 % res == 0)):
             tile_code = "T6"
-        elif res in [40]:
+            span = 600000
+        # allowing sampling of [60, 50, 48, 40, 32, 30, 25, 24, 20] metres
+        elif ((res in range(20, 61)) and (300000 % res == 0)):
             tile_code = "T3"
-        elif res in [10, 5]:
+            span = 300000
+        # allowing sampling of [16, 10, 8, 5, 4, 2, 1] metres
+        elif ((res in range(1, 17)) and (100000 % res == 0)):
             tile_code = "T1"
+            span = 100000
         else:
             msg = "Error: Given resolution %d is not supported!" % res
+            msg += " Supported resolutions: {}".format(
+                str(Equi7Grid._static_res))
             raise ValueError(msg)
 
-        return tile_code
+        if get_span == True:
+            result = (tile_code, span)
+        else:
+            result = tile_code
+
+        return result
 
     @staticmethod
     def find_overlapped_tiles(ftile, res):
@@ -954,7 +943,7 @@ class Equi7Tile(object):
         But if both are given, the res will be used.
         """
         if res is not None:
-            tilecode = Equi7Grid.get_tile_code(res)
+            tilecode = Equi7Grid.link_res_2_tile(res)
         elif tilecode is not None:
             tilecode = tilecode
         else:
