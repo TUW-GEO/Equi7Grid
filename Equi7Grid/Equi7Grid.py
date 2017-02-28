@@ -120,7 +120,7 @@ class Equi7Grid(object):
             self.res = None
             raise ValueError("cannot load Equi7Grid ancillary data!")
 
-        self._tilecode, self._span = self.link_res_2_tile(self.res, get_span=True)
+        self._tilecode, self._tile_span = self.link_res_2_tile(self.res, get_span=True)
 
         # keep a reference to the _static_equi7_data
         self._equi7_data = Equi7Grid._static_equi7_data
@@ -130,8 +130,8 @@ class Equi7Grid(object):
         return self._tilecode
 
     @property
-    def span(self):
-        return self._span
+    def tile_span(self):
+        return self._tile_span
 
     @property
     def sgrids(self):
@@ -199,9 +199,9 @@ class Equi7Grid(object):
     def identify_tile_per_xy(self, sgrid_id, location):
         """Return the tile name."""
         east = (int(location[0])
-                / self._tile_xspan) * self._tile_xspan / 100000
+                / self._tile_span) * self._tile_span / 100000
         north = (int(location[1])
-                 / self._tile_yspan) * self._tile_yspan / 100000
+                 / self._tile_span) * self._tile_span / 100000
         return "{}{:03d}M_E{:03d}N{:03d}{}".format(sgrid_id, self.res,
                                                    east, north, self.tilecode)
 
@@ -672,7 +672,7 @@ class Equi7Grid(object):
                 self.__search_sgrid_tiles(geom_area, sgrid_id, coverland))
         return overlapped_tiles
 
-    def __search_sgrid_tiles(self, geom, sgrid_id, coverland):
+    def __search_sgrid_tiles(self, area_geometry, sgrid_id, coverland):
         """
         Search the tiles which are overlapping with the given grid.
 
@@ -691,11 +691,11 @@ class Equi7Grid(object):
             If not found, return empty list.
         """
         # get the intersection of the area of interest and grid zone
-        intersect = geom.Intersection(self.get_sgrid_zone_geom(sgrid_id))
+        intersect = area_geometry.Intersection(self.get_sgrid_zone_geom(sgrid_id))
         if not intersect:
             return list()
         # The spatial reference need to be set again after intersection
-        intersect.AssignSpatialReference(geom.GetSpatialReference())
+        intersect.AssignSpatialReference(area_geometry.GetSpatialReference())
         # transform the area of interest to the grid coordinate system
         grid_sr = osr.SpatialReference()
         grid_sr.ImportFromWkt(self.get_sgrid_projection(sgrid_id))
@@ -703,10 +703,10 @@ class Equi7Grid(object):
 
         # get envelope of the Geometry and cal the bounding tile of the
         envelope = intersect.GetEnvelope()
-        x_min = int(envelope[0]) / self._tile_xspan * self._tile_xspan
-        x_max = (int(envelope[1]) / self._tile_xspan + 1) * self._tile_xspan
-        y_min = int(envelope[2]) / self._tile_yspan * self._tile_yspan
-        y_max = (int(envelope[3]) / self._tile_yspan + 1) * self._tile_yspan
+        x_min = int(envelope[0]) / self._tile_span * self._tile_span
+        x_max = (int(envelope[1]) / self._tile_span + 1) * self._tile_span
+        y_min = int(envelope[2]) / self._tile_span * self._tile_span
+        y_max = (int(envelope[3]) / self._tile_span + 1) * self._tile_span
 
         # make sure x_min and y_min greater or equal 0
         x_min = 0 if x_min < 0 else x_min
@@ -714,10 +714,10 @@ class Equi7Grid(object):
 
         # get overlapped tiles
         overlapped_tiles = list()
-        for x, y in itertools.product(xrange(x_min, x_max, self._tile_xspan),
-                                      xrange(y_min, y_max, self._tile_yspan)):
-            geom_tile = gdalport.extent2polygon((x, y, x + self._tile_xspan,
-                                                 y + self._tile_yspan))
+        for x, y in itertools.product(xrange(x_min, x_max, self._tile_span),
+                                      xrange(y_min, y_max, self._tile_span)):
+            geom_tile = gdalport.extent2polygon((x, y, x + self._tile_span,
+                                                 y + self._tile_span))
             if geom_tile.Intersects(intersect):
                 ftile = self.identify_tile_per_xy(sgrid_id, [x, y])
                 if not coverland or self.is_coverland(ftile):
@@ -892,13 +892,11 @@ class Equi7Tile(object):
         self.ftile = ftile.upper()
         self._sgrid = self.ftile[0:2]
         self.res = int(self.ftile[2:5])
+        self.tilecode = self.ftile[-2:]
         self.llx = int(self.ftile[8:11]) * 100000
         self.lly = int(self.ftile[12:15]) * 100000
-        self._xspan = int(self.ftile[-1]) * 100000
-        self._yspan = self._xspan
-        self.tilecode = self.ftile[-2:]
-        self._xsize = int(self._xspan / self.res)
-        self._ysize = int(self._yspan / self.res)
+        self._span = int(self.ftile[-1]) * 100000
+        self._size = int(self._span / self.res)
 
     @property
     def fullname(self):
@@ -914,22 +912,22 @@ class Equi7Tile(object):
 
     @property
     def span(self):
-        return self._xspan
+        return self._span
 
     @property
     def size(self):
-        return self._xsize
+        return self._size
 
     @property
     def shape(self):
-        return (self._ysize, self._xsize)
+        return (self._size, self._size)
 
     @property
     def extent(self):
         """return the extent of the tile in the terms of [minX,minY,maxX,maxY]
         """
         return [self.llx, self.lly,
-                self.llx + self._xspan, self.lly + self._yspan]
+                self.llx + self._span, self.lly + self._span]
 
     def projection(self):
         return Equi7Grid._static_equi7_data[self._sgrid]["project"]
@@ -950,7 +948,7 @@ class Equi7Tile(object):
 
         """
         geot = [self.llx, self.res, 0,
-                self.lly + self._yspan, 0, -self.res]
+                self.lly + self._span, 0, -self.res]
         return geot
 
     def get_tile_geotags(self):
