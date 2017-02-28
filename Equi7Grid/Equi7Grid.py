@@ -131,7 +131,7 @@ class Equi7Grid(object):
 
     @property
     def span(self):
-        return self._xspan
+        return self._span
 
     @property
     def sgrids(self):
@@ -196,7 +196,7 @@ class Equi7Grid(object):
                      if geom.Intersects(self.get_sgrid_zone_geom(sgrid_id))]
         return sgrid_ids
 
-    def identify_tile(self, sgrid_id, location):
+    def identify_tile_per_xy(self, sgrid_id, location):
         """Return the tile name."""
         east = (int(location[0])
                 / self._tile_xspan) * self._tile_xspan / 100000
@@ -555,6 +555,49 @@ class Equi7Grid(object):
         """
         return Equi7Tile(ftile).find_family_tiles(res=res)
 
+    def identify_tiles_per_bbox(self, sgrid_id, bbox):
+        """Light-weight routine that returns
+           the name of tiles covering the bounding box.
+
+        Parameters
+        ----------
+        sgrid_id : string
+            sub-grid id string e.g. EU for Europe
+        extent : list
+            list of equi7-coordinates limiting the bounding box.
+            scheme: [xmin, xmax, ymin, ymax]
+
+        Return
+        ------
+        list
+            list of tiles covering the extent
+
+        """
+        xmin, xmax, ymin, ymax = bbox
+
+        if (xmin >= xmax) or (ymin >= ymax):
+            raise ValueError("Check order of coordinates of bbox! "
+                             "Scheme: [xmin, xmax, ymin, ymax]")
+
+        tcode = self._tilecode # why _?
+        trs = self.res
+
+        sp = self._span
+        sp_multi = sp / 100000
+
+        x_anchors = range(xmin / sp * sp_multi, xmax / sp * sp_multi + 1, sp_multi)
+        y_anchors = range(ymin / sp * sp_multi, ymax / sp * sp_multi + 1, sp_multi)
+
+        tx, ty = np.meshgrid(x_anchors, y_anchors)
+        tx = tx.flatten()
+        ty = ty.flatten()
+
+        tiles = []
+        for i, _ in enumerate(tx):
+            tiles.append("{}{:03d}M_E{:03d}N{:03d}{}".format(sgrid_id, trs, tx[i], ty[i], tcode))
+
+        return tiles
+
     def search_tiles(self,
                      geom_area=None,
                      extent=None,
@@ -676,7 +719,7 @@ class Equi7Grid(object):
             geom_tile = gdalport.extent2polygon((x, y, x + self._tile_xspan,
                                                  y + self._tile_yspan))
             if geom_tile.Intersects(intersect):
-                ftile = self.identify_tile(sgrid_id, [x, y])
+                ftile = self.identify_tile_per_xy(sgrid_id, [x, y])
                 if not coverland or self.is_coverland(ftile):
                     overlapped_tiles.append(ftile)
 
@@ -1019,10 +1062,10 @@ class Equi7Tile(object):
               type=bool,
               default=True,
               help='Only search tile that cover land area.')
+
 def find_tiles(resolution, sgrid_ids, extent, coverland):
     """
     Find Tiles for Equi7 grid of resolution.
-    Resolution in meters, one of 500, 75, 40, 10, 5.
     """
     eq7 = Equi7Grid(resolution)
     if len(sgrid_ids) == 0:
