@@ -39,14 +39,14 @@ Note:
 
     Geos support of Gdal library should be enabled for the accurate spatial
     operation, otherwise, the search overlapped tiles will not be completely
-    accurate. Equi7Grid also depends the grids' zone array_shape files of both aeqd
+    accurate. Equi7Grid also depends the grids' zone shape_px files of both aeqd
     and wgs84.
 
     terminology:
     grid =  grid name (Equi7)
     res= grid resolution/grid spacing (5,10,40,75,500 meters)
     subgrid= subgrid full name (e.g. "AF500M")
-    sgrid_id= sub-grid ini (e.g. "AF")
+    subgrid_id= sub-grid ini (e.g. "AF")
     tile= tile name ("E036N090T6")
     tile_code= tile code representing width of tile (T1:100km, T3:300km,
                 T6:600km)
@@ -93,7 +93,7 @@ class Equi7Grid(object):
     # static attribute
     _static_equi7_data = _load_equi7grid_data(__file__)
     # sub grid IDs
-    _static_sgrid_ids = ["NA", "EU", "AS", "SA", "AF", "OC", "AN"]
+    _static_subgrid_ids = ["NA", "EU", "AS", "SA", "AF", "OC", "AN"]
     # supported tile widths(resolution)
     _static_tilecodes = ["T6", "T3", "T1"]
     # supported grid spacing (resolution)
@@ -120,22 +120,15 @@ class Equi7Grid(object):
             self.res = None
             raise ValueError("cannot load Equi7Grid ancillary data!")
 
-        self._tilecode, self._tile_span = self.link_res_2_tile(self.res, get_span=True)
+        self.tilecode, self.tile_span_m = self.link_res_2_tile(self.res, get_span=True)
 
         # keep a reference to the _static_equi7_data
         self._equi7_data = Equi7Grid._static_equi7_data
 
-    @property
-    def tilecode(self):
-        return self._tilecode
 
     @property
-    def tile_span(self):
-        return self._tile_span
-
-    @property
-    def sgrids(self):
-        return Equi7Grid._static_sgrid_ids
+    def subgrids(self):
+        return Equi7Grid._static_subgrid_ids
 
     def is_coverland(self, ftile):
         """check if tile covers land
@@ -147,32 +140,32 @@ class Equi7Grid(object):
         """
         return Equi7Tile(ftile).covers_land()
 
-    def get_sgrid_zone_geom(self, sgrid_id):
-        """return sub-grid tile_extent geometry
+    def get_subgrid_zone_geom(self, subgrid_id):
+        """return sub-grid extent_m geometry
 
         Parameters
         ----------
-        sgrid_id : string
+        subgrid_id : string
             sub-grid id string e.g. EU for Europe
 
         Return
         ------
         OGRGeomtery
-            a geometry representing the tile_extent of given sub-grid
+            a geometry representing the extent_m of given sub-grid
 
         """
-        geom = ogr.CreateGeometryFromWkt(self._equi7_data[sgrid_id]["tile_extent"])
+        geom = ogr.CreateGeometryFromWkt(self._equi7_data[subgrid_id]["extent_m"])
         geo_sr = osr.SpatialReference()
         geo_sr.SetWellKnownGeogCS("EPSG:4326")
         geom.AssignSpatialReference(geo_sr)
         return geom
 
-    def get_sgrid_projection(self, sgrid_id):
+    def get_subgrid_projection(self, subgrid_id):
         """return sub-grid spatial reference in wkt format
 
         Parameters
         ----------
-        sgrid_id : string
+        subgrid_id : string
             sub-grid id string e.g. EU for Europe
 
         Return
@@ -181,35 +174,35 @@ class Equi7Grid(object):
             wkt string representing sub-grid spatial reference
 
         """
-        return self._equi7_data[sgrid_id]["project"]
+        return self._equi7_data[subgrid_id]["project"]
 
-    def get_sgrid_tiles(self, sgrid_id, tilecode=None):
+    def get_subgrid_tiles(self, subgrid_id, tilecode=None):
         """return all the tiles in the given sub grid"""
         if tilecode is None:
             tilecode = self.tilecode
 
-        return list(self._equi7_data[sgrid_id]["coverland"][tilecode])
+        return list(self._equi7_data[subgrid_id]["coverland"][tilecode])
 
-    def identify_sgrid(self, geom):
+    def identify_subgrid(self, geom):
         """return the overlapped grid ids."""
-        sgrid_ids = [sgrid_id for sgrid_id in Equi7Grid._static_sgrid_ids
-                     if geom.Intersects(self.get_sgrid_zone_geom(sgrid_id))]
-        return sgrid_ids
+        subgrid_ids = [subgrid_id for subgrid_id in Equi7Grid._static_subgrid_ids
+                     if geom.Intersects(self.get_subgrid_zone_geom(subgrid_id))]
+        return subgrid_ids
 
-    def identify_tile_per_xy(self, sgrid_id, location):
+    def identify_tile_per_xy(self, subgrid_id, location):
         """Return the tile name."""
         east = (int(location[0])
-                / self._tile_span) * self._tile_span / 100000
+                / self.tile_span_m) * self.tile_span_m / 100000
         north = (int(location[1])
-                 / self._tile_span) * self._tile_span / 100000
-        return "{}{:03d}M_E{:03d}N{:03d}{}".format(sgrid_id, self.res,
+                 / self.tile_span_m) * self.tile_span_m / 100000
+        return "{}{:03d}M_E{:03d}N{:03d}{}".format(subgrid_id, self.res,
                                                    east, north, self.tilecode)
 
     @staticmethod
-    def get_tile_extent(ftile):
-        """return the tile_extent of the tile in the terms of [minX,minY,maxX,maxY]
+    def get_tile_extent_m(ftile):
+        """return the extent_m of the tile in the terms of [minX,minY,maxX,maxY]
         """
-        return Equi7Tile(ftile).tile_extent
+        return Equi7Tile(ftile).extent_m
 
     @staticmethod
     def get_tile_geotransform(ftile):
@@ -238,8 +231,8 @@ class Equi7Grid(object):
                    'spatialreference': tile.projection()}
         return geotags
 
-    def lonlat2equi7xy(self, lon, lat, sgrid_id=None):
-        """ convert (lon, lat) to Equi7 (sgrid_id, x, y)
+    def lonlat2equi7xy(self, lon, lat, subgrid_id=None):
+        """ convert (lon, lat) to Equi7 (subgrid_id, x, y)
 
         Parameters
         ----------
@@ -247,14 +240,14 @@ class Equi7Grid(object):
             longitude
         lat: number or numpy.ndarray
             latitude
-        sgrid_id: string, optional
-            sgrid_id if known, otherwise it will be found from the coordinates.
-            Without a known sgrid_id this method is much slower since each
+        subgrid_id: string, optional
+            subgrid_id if known, otherwise it will be found from the coordinates.
+            Without a known subgrid_id this method is much slower since each
             point has to be handled separately.
 
         Return
         ------
-        sgrid_id: string
+        subgrid_id: string
             subgrid id
         x: like longitude
             projected x coordinate
@@ -264,17 +257,17 @@ class Equi7Grid(object):
         Raises
         ------
         TypeError
-            if lon, lat are numpy arrays but no sgrid_id is given
+            if lon, lat are numpy arrays but no subgrid_id is given
         """
-        if sgrid_id is None:
+        if subgrid_id is None:
 
-            vfunc = np.vectorize(self._lonlat2xy_no_sgrid)
+            vfunc = np.vectorize(self._lonlat2xy_no_subgrid)
             return vfunc(lon, lat)
         else:
-            return self._lonlat2xy_sgrid(lon, lat, sgrid_id=sgrid_id)
+            return self._lonlat2xy_subgrid(lon, lat, subgrid_id=subgrid_id)
 
-    def _lonlat2xy_no_sgrid(self, lon, lat):
-        """ convert (lon, lat) to Equi7 (sgrid_id, x, y)
+    def _lonlat2xy_no_subgrid(self, lon, lat):
+        """ convert (lon, lat) to Equi7 (subgrid_id, x, y)
         without knowledge of subgrid
 
         Parameters
@@ -286,7 +279,7 @@ class Equi7Grid(object):
 
         Return
         ------
-        sgrid_id: string
+        subgrid_id: string
             subgrid id
         x: number
             projected x coordinate
@@ -301,17 +294,17 @@ class Equi7Grid(object):
         geom_pt.AddPoint(lon, lat)
         geom_pt.AssignSpatialReference(geo_sr)
         # any valid location should be in only one grid
-        sgrid_id = self.identify_sgrid(geom_pt)[0]
+        subgrid_id = self.identify_subgrid(geom_pt)[0]
         # convert to Equi7
         grid_sr = osr.SpatialReference()
-        grid_sr.ImportFromWkt(self.get_sgrid_projection(sgrid_id))
+        grid_sr.ImportFromWkt(self.get_subgrid_projection(subgrid_id))
         tx = osr.CoordinateTransformation(geo_sr, grid_sr)
         x, y, _ = tx.TransformPoint(lon, lat)
 
-        return np.full_like(x, sgrid_id, dtype=object), x, y
+        return np.full_like(x, subgrid_id, dtype=object), x, y
 
-    def _lonlat2xy_sgrid(self, lon, lat, sgrid_id):
-        """ convert (lon, lat) to Equi7 (sgrid_id, x, y)
+    def _lonlat2xy_subgrid(self, lon, lat, subgrid_id):
+        """ convert (lon, lat) to Equi7 (subgrid_id, x, y)
         with knowledge of subgrid id
 
         Parameters
@@ -320,12 +313,12 @@ class Equi7Grid(object):
             longitude
         lat: number or numpy.ndarray
             latitude
-        sgrid_id: string
+        subgrid_id: string
             subgrid id
 
         Return
         ------
-        sgrid_id: string
+        subgrid_id: string
             subgrid id
         x: like longitude
             projected x coordinate
@@ -334,19 +327,19 @@ class Equi7Grid(object):
         """
 
         grid_sr = osr.SpatialReference()
-        grid_sr.ImportFromWkt(self.get_sgrid_projection(sgrid_id))
+        grid_sr.ImportFromWkt(self.get_subgrid_projection(subgrid_id))
         p_grid = pyproj.Proj(grid_sr.ExportToProj4())
         p_geo = pyproj.Proj(init="EPSG:4326")
         x, y = pyproj.transform(p_geo, p_grid, lon, lat)
 
-        return sgrid_id, x, y
+        return subgrid_id, x, y
 
-    def equi7xy2lonlat(self, sgrid_id, x, y):
-        """ convert Equi7 (sgrid_id, x, y) to (lon, lat)
+    def equi7xy2lonlat(self, subgrid_id, x, y):
+        """ convert Equi7 (subgrid_id, x, y) to (lon, lat)
 
         Parameters
         ----------
-        sgrid_id : string
+        subgrid_id : string
             the sub-grid id (represent continent) of the coordination,
             should be one of ["NA", "EU", "AS", "SA", "AF", "OC", "AN"]
         x : number or numpy.ndarray
@@ -361,19 +354,26 @@ class Equi7Grid(object):
             latitudes in EPSG 4326
         """
         grid_sr = osr.SpatialReference()
-        grid_sr.ImportFromWkt(self.get_sgrid_projection(sgrid_id))
+        grid_sr.ImportFromWkt(self.get_subgrid_projection(subgrid_id))
         p_grid = pyproj.Proj(grid_sr.ExportToProj4())
         p_geo = pyproj.Proj(init="EPSG:4326")
         lon, lat = pyproj.transform(p_grid, p_geo, x, y)
         return lon, lat
 
-    def equi7xy2en(self, sgrid_id, x, y, projstring=None, epsg='4326'):
-        """ convert Equi7 (sgrid_id, x, y) to (easting, northing)
+    def equi7xy2en(self, subgrid_id, x, y, projstring=None, epsg='4326'):
+        '''
+        todo: make new method and replace it here. keep the name here?
+        e.g.
+        equi7xy2en(self, subgrid_id, x, y, projstring=None, epsg='4326')
+            xy2uv(subgrid_id, x, y, projstring=None, epsg='4326')
+        '''
+
+        """ convert Equi7 (subgrid_id, x, y) to (easting, northing)
         in output projection
 
         Parameters
         ----------
-        sgrid_id : string
+        subgrid_id : string
             the sub-grid id (represent continent) of the coordination,
             should be one of ["NA", "EU", "AS", "SA", "AF", "OC", "AN"]
         x : number or numpy.ndarray
@@ -388,7 +388,7 @@ class Equi7Grid(object):
             northing in output projection
         """
         grid_sr = osr.SpatialReference()
-        grid_sr.ImportFromWkt(self.get_sgrid_projection(sgrid_id))
+        grid_sr.ImportFromWkt(self.get_subgrid_projection(subgrid_id))
         p_grid = pyproj.Proj(grid_sr.ExportToProj4())
         if projstring is None:
             projection = ':'.join(['EPSG', epsg])
@@ -404,9 +404,9 @@ class Equi7Grid(object):
         """keep for compatibility"""
         # example ftile "AF500M_E060N036T6"
         # check the validation of ftile
-        sgrid_id = ftile[0:2]
+        subgrid_id = ftile[0:2]
         res = int(ftile[2:5])
-        tile_span = int(ftile[-1]) * 100000
+        tile_span_m = int(ftile[-1]) * 100000
         east = int(ftile[8:11]) * 100000
         north = int(ftile[12:15]) * 100000
         tile_code = ftile[-2:]
@@ -415,11 +415,11 @@ class Equi7Grid(object):
             raise ValueError("The grid resolution is not supported!")
 
         equi7_data = Equi7Grid._static_equi7_data
-        if ftile[7:] not in equi7_data[sgrid_id]["coverland"][tile_code]:
+        if ftile[7:] not in equi7_data[subgrid_id]["coverland"][tile_code]:
             msg = "Given tile name was not found in land masses tile list!"
             raise ValueError(msg)
 
-        return (sgrid_id, res, tile_span, east, north, tile_code)
+        return (subgrid_id, res, tile_span_m, east, north, tile_code)
 
     @staticmethod
     def get_index(dst_ftile, src_ftile, get_px_counts=False):
@@ -439,7 +439,7 @@ class Equi7Grid(object):
         Return
         ------
         index : numpy array
-            The index array with the same array_size as the dst tilename
+            The index array with the same size_px as the dst tilename
         px_counts : numpy array
             The number number of fine pixels per coarse pixel
         """
@@ -449,8 +449,8 @@ class Equi7Grid(object):
 
         # check if dst tile is a sub tile of src tile
         if dtile.llx < stile.llx or dtile.lly < stile.lly \
-           or dtile.llx + dtile.tile_span > stile.llx + stile.tile_span \
-           or dtile.lly + dtile.tile_span > stile.lly + stile.tile_span:
+           or dtile.llx + dtile.tile_span_m > stile.llx + stile.tile_span_m \
+           or dtile.lly + dtile.tile_span_m > stile.lly + stile.tile_span_m:
             raise ValueError("dst tile should be a sub tile of src tile!")
 
         index_pattern = {"075T6-500T6": (7, 6, 7),
@@ -474,7 +474,7 @@ class Equi7Grid(object):
         for i in range(len(pattern)):
             pattern_tmpl.extend([i] * pattern[i])
         # k number of patterns that dtile takes
-        k = dtile.array_size / pattern_sum + 2
+        k = dtile.size_px / pattern_sum + 2
         idx = np.tile(pattern_tmpl, k)
         corr = np.repeat(np.arange(k) * len(pattern), pattern_sum)
         idx += corr
@@ -486,19 +486,19 @@ class Equi7Grid(object):
         x_n, x_m = xoff / pattern_sum, xoff % pattern_sum
         x_idx = idx + (x_n * len(pattern))
         # shift idx to the correct start point
-        x_idx = x_idx[x_m:x_m + dtile.array_size]
+        x_idx = x_idx[x_m:x_m + dtile.size_px]
 
         # make y index
-        yoff = (dtile.lly + dtile.tile_span - stile.lly - stile.tile_span) / -dtile.res
+        yoff = (dtile.lly + dtile.tile_span_m - stile.lly - stile.tile_span_m) / -dtile.res
         y_n, y_m = yoff / pattern_sum, yoff % pattern_sum
         y_idx = idx + (y_n * len(pattern))
         # shift idx to the correct start point
-        y_idx = y_idx[y_m:y_m + dtile.array_size]
+        y_idx = y_idx[y_m:y_m + dtile.size_px]
 
         # create index array
-        index = np.empty((dtile.array_size, dtile.array_size), dtype=np.uint32)
+        index = np.empty((dtile.size_px, dtile.size_px), dtype=np.uint32)
         for i, v in enumerate(y_idx):
-            index[i, :] = x_idx + v * stile.array_size
+            index[i, :] = x_idx + v * stile.size_px
 
         if get_px_counts:
             n_pixels = (np.unique(x_idx,return_counts=True)[1]).astype(np.uint16)
@@ -510,19 +510,19 @@ class Equi7Grid(object):
     def link_res_2_tile(res, get_span=False):
         res = int(res)
         tile_code = None
-        tile_span = None
+        tile_span_m = None
         # allowing sampling of [1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80, 75, 64] metres
         if ((res in range(64, 1001)) and (600000 % res == 0)):
             tile_code = "T6"
-            tile_span = 600000
+            tile_span_m = 600000
         # allowing sampling of [60, 50, 48, 40, 32, 30, 25, 24, 20] metres
         elif ((res in range(20, 61)) and (300000 % res == 0)):
             tile_code = "T3"
-            tile_span = 300000
+            tile_span_m = 300000
         # allowing sampling of [16, 10, 8, 5, 4, 2, 1] metres
         elif ((res in range(1, 17)) and (100000 % res == 0)):
             tile_code = "T1"
-            tile_span = 100000
+            tile_span_m = 100000
         else:
             msg = "Error: Given resolution %d is not supported!" % res
             msg += " Supported resolutions: {}".format(
@@ -530,7 +530,7 @@ class Equi7Grid(object):
             raise ValueError(msg)
 
         if get_span == True:
-            result = (tile_code, tile_span)
+            result = (tile_code, tile_span_m)
         else:
             result = tile_code
 
@@ -555,22 +555,22 @@ class Equi7Grid(object):
         """
         return Equi7Tile(ftile).find_family_tiles(res=res)
 
-    def identify_tiles_per_bbox(self, sgrid_id, bbox):
+    def identify_tiles_per_bbox(self, subgrid_id, bbox):
         """Light-weight routine that returns
-           the name of tiles covering the bounding box.
+           the name of tiles intersecting the bounding box.
 
         Parameters
         ----------
-        sgrid_id : string
+        subgrid_id : string
             sub-grid id string e.g. EU for Europe
-        tile_extent : list
+        extent_m : list
             list of equi7-coordinates limiting the bounding box.
             scheme: [xmin, ymin, xmax, ymax]
 
         Return
         ------
-        list
-            list of tiles covering the tile_extent
+        tilenames
+            list of tiles intersecting the bounding box
 
         """
         xmin, ymin, xmax, ymax = bbox
@@ -579,10 +579,10 @@ class Equi7Grid(object):
             raise ValueError("Check order of coordinates of bbox! "
                              "Scheme: [xmin, ymin, xmax, ymax]")
 
-        tcode = self._tilecode # why _?
+        tcode = self.tilecode # why _?
         trs = self.res
 
-        sp = self._tile_span
+        sp = self.tile_span_m
         sp_multi = sp / 100000
 
         x_anchors = range(xmin / sp * sp_multi, xmax / sp * sp_multi + 1, sp_multi)
@@ -592,17 +592,19 @@ class Equi7Grid(object):
         tx = tx.flatten()
         ty = ty.flatten()
 
-        tiles = []
+        tilenames = []
         for i, _ in enumerate(tx):
-            tiles.append("{}{:03d}M_E{:03d}N{:03d}{}".format(sgrid_id, trs, tx[i], ty[i], tcode))
+            tilenames.append("{}{:03d}M_E{:03d}N{:03d}{}".format(subgrid_id, trs, tx[i], ty[i], tcode))
 
-        return tiles
+        return tilenames
+
+
 
     def search_tiles(self,
                      geom_area=None,
-                     tile_extent=None,
+                     extent_m=None,
                      epsg=4326,
-                     sgrid_ids=None,
+                     subgrid_ids=None,
                      coverland=False,
                      gdal_path=None):
 
@@ -613,13 +615,13 @@ class Equi7Grid(object):
         ----------
         geom_area : geometry
             a polygon or multipolygon geometery object representing the ROI
-        tile_extent : list
+        extent_m : list
             It is a polygon representing the rectangle region of interest
             in the format of [xmin, ymin, xmax, ymax].
         epsg : str
             EPSG CODE defining the spatial reference system, in which
-            the geometry or tile_extent is given. Default is LatLon (EPSG:4326)
-        sgrid_ids : list
+            the geometry or extent_m is given. Default is LatLon (EPSG:4326)
+        subgrid_ids : list
             grid ID to specified which continents you want to search. Default
             value is None for searching all continents.
 
@@ -630,23 +632,23 @@ class Equi7Grid(object):
             If not found, return empty list.
         """
         # check input grids
-        if sgrid_ids is None:
-            sgrid_ids = Equi7Grid._static_sgrid_ids
+        if subgrid_ids is None:
+            subgrid_ids = Equi7Grid._static_subgrid_ids
         else:
-            sgrid_ids = [x.upper() for x in sgrid_ids]
-            if set(sgrid_ids).issubset(set(Equi7Grid._static_sgrid_ids)):
-                sgrid_ids = list(sgrid_ids)
+            subgrid_ids = [x.upper() for x in subgrid_ids]
+            if set(subgrid_ids).issubset(set(Equi7Grid._static_subgrid_ids)):
+                subgrid_ids = list(subgrid_ids)
             else:
                 raise ValueError("Invalid agrument: grid must one of [ %s ]." %
-                                 " ".join(Equi7Grid._static_sgrid_ids))
+                                 " ".join(Equi7Grid._static_subgrid_ids))
 
-        if not geom_area and not tile_extent:
-            print "Error: either geom or tile_extent should be given as the ROI."
+        if not geom_area and not extent_m:
+            print "Error: either geom or extent_m should be given as the ROI."
             return list()
 
         # obtain the geometry of ROI
         if not geom_area:
-            geom_area = gdalport.extent2polygon(tile_extent)
+            geom_area = gdalport.extent2polygon(extent_m)
             geom_sr = osr.SpatialReference()
             geom_sr.ImportFromEPSG(epsg)
             geom_area.AssignSpatialReference(geom_sr)
@@ -662,17 +664,17 @@ class Equi7Grid(object):
             geom_area.TransformTo(geo_sr)
 
         # intersect the given grid ids and the overlapped ids
-        overlapped_grids = self.identify_sgrid(geom_area)
-        sgrid_ids = list(set(sgrid_ids) & set(overlapped_grids))
+        overlapped_grids = self.identify_subgrid(geom_area)
+        subgrid_ids = list(set(subgrid_ids) & set(overlapped_grids))
 
         # finding tiles
         overlapped_tiles = list()
-        for sgrid_id in sgrid_ids:
+        for subgrid_id in subgrid_ids:
             overlapped_tiles.extend(
-                self.__search_sgrid_tiles(geom_area, sgrid_id, coverland))
+                self.__search_subgrid_tiles(geom_area, subgrid_id, coverland))
         return overlapped_tiles
 
-    def __search_sgrid_tiles(self, area_geometry, sgrid_id, coverland):
+    def __search_subgrid_tiles(self, area_geometry, subgrid_id, coverland):
         """
         Search the tiles which are overlapping with the given grid.
 
@@ -680,7 +682,7 @@ class Equi7Grid(object):
         ----------
         area_geometry : geometry
             It is a polygon geometry representing the region of interest.
-        sgrid_id : string
+        subgrid_id : string
             sub grid ID to specified which continent you want to search.
             Default value is None for searching all continents.
 
@@ -691,22 +693,22 @@ class Equi7Grid(object):
             If not found, return empty list.
         """
         # get the intersection of the area of interest and grid zone
-        intersect = area_geometry.Intersection(self.get_sgrid_zone_geom(sgrid_id))
+        intersect = area_geometry.Intersection(self.get_subgrid_zone_geom(subgrid_id))
         if not intersect:
             return list()
         # The spatial reference need to be set again after intersection
         intersect.AssignSpatialReference(area_geometry.GetSpatialReference())
         # transform the area of interest to the grid coordinate system
         grid_sr = osr.SpatialReference()
-        grid_sr.ImportFromWkt(self.get_sgrid_projection(sgrid_id))
+        grid_sr.ImportFromWkt(self.get_subgrid_projection(subgrid_id))
         intersect.TransformTo(grid_sr)
 
         # get envelope of the Geometry and cal the bounding tile of the
         envelope = intersect.GetEnvelope()
-        x_min = int(envelope[0]) / self._tile_span * self._tile_span
-        x_max = (int(envelope[1]) / self._tile_span + 1) * self._tile_span
-        y_min = int(envelope[2]) / self._tile_span * self._tile_span
-        y_max = (int(envelope[3]) / self._tile_span + 1) * self._tile_span
+        x_min = int(envelope[0]) / self.tile_span_m * self.tile_span_m
+        x_max = (int(envelope[1]) / self.tile_span_m + 1) * self.tile_span_m
+        y_min = int(envelope[2]) / self.tile_span_m * self.tile_span_m
+        y_max = (int(envelope[3]) / self.tile_span_m + 1) * self.tile_span_m
 
         # make sure x_min and y_min greater or equal 0
         x_min = 0 if x_min < 0 else x_min
@@ -714,18 +716,18 @@ class Equi7Grid(object):
 
         # get overlapped tiles
         overlapped_tiles = list()
-        for x, y in itertools.product(xrange(x_min, x_max, self._tile_span),
-                                      xrange(y_min, y_max, self._tile_span)):
-            geom_tile = gdalport.extent2polygon((x, y, x + self._tile_span,
-                                                 y + self._tile_span))
+        for x, y in itertools.product(xrange(x_min, x_max, self.tile_span_m),
+                                      xrange(y_min, y_max, self.tile_span_m)):
+            geom_tile = gdalport.extent2polygon((x, y, x + self.tile_span_m,
+                                                 y + self.tile_span_m))
             if geom_tile.Intersects(intersect):
-                ftile = self.identify_tile_per_xy(sgrid_id, [x, y])
+                ftile = self.identify_tile_per_xy(subgrid_id, [x, y])
                 if not coverland or self.is_coverland(ftile):
                     overlapped_tiles.append(ftile)
 
         return overlapped_tiles
 
-    def resample_to_geotiff(self, image, output_dir, gdal_path=None, sgrid_ids=None,
+    def resample_to_geotiff(self, image, output_dir, gdal_path=None, subgrid_ids=None,
                             accurate_boundary=True, e7_folder=True, ftiles=None,
                             roi=None, coverland=True, outshortname=None,
                             withtilenameprefix=False, withtilenamesuffix=True,
@@ -744,7 +746,7 @@ class Equi7Grid(object):
             if set (default), the output data will be stored in equi7 folder structure
         gdal_path : string
             Gdal utilities location.
-        sgrid_ids : list
+        subgrid_ids : list
             Only resample to the specified continents,
             default is to resample to all continents.
         roi : OGRGeometry
@@ -795,7 +797,7 @@ class Equi7Grid(object):
                     roi_geom = None
                 if roi_geom:
                     ftiles = self.search_tiles(geom_area=roi_geom,
-                                               sgrid_ids=sgrid_ids,
+                                               subgrid_ids=subgrid_ids,
                                                coverland=coverland,
                                                gdal_path=gdal_path)
                 else:
@@ -806,12 +808,12 @@ class Equi7Grid(object):
                     geo_sr.ImportFromWkt(ds.projection())
                     geo_extent.AssignSpatialReference(geo_sr)
                     ftiles = self.search_tiles(geom_area=geo_extent,
-                                               sgrid_ids=sgrid_ids,
+                                               subgrid_ids=subgrid_ids,
                                                coverland=coverland,
                                                gdal_path=gdal_path)
             else:
                 ftiles = self.search_tiles(geom_area=roi,
-                                           sgrid_ids=sgrid_ids,
+                                           subgrid_ids=subgrid_ids,
                                            coverland=coverland,
                                            gdal_path=gdal_path)
         else:
@@ -841,13 +843,13 @@ class Equi7Grid(object):
             filename = os.path.join(tile_path, "".join((outbasename, ".tif")))
 
             # using gdalwarp to resample
-            tile_extent = self.get_tile_extent(ftile)
-            tile_project = self.get_sgrid_projection(ftile[0:2])
+            extent_m = self.get_tile_extent_m(ftile)
+            tile_project = self.get_subgrid_projection(ftile[0:2])
 
             # prepare options for gdalwarp
             options = {'-t_srs': tile_project, '-of': 'GTiff',
                        '-r': resampling_type,
-                       '-te': " ".join(map(str, tile_extent)),
+                       '-te': " ".join(map(str, extent_m)),
                        '-tr': "{} -{}".format(self.res, self.res)}
 
             options["-co"] = list()
@@ -890,14 +892,14 @@ class Equi7Tile(object):
         if not Equi7Tile.is_valid(ftile):
             raise ValueError("invalid full tile name!")
         self.ftile = ftile.upper()
-        self._subgrid = self.ftile[0:2]
+        self.subgrid = self.ftile[0:2]
         self.res = int(self.ftile[2:5])
         self.tilecode = self.ftile[-2:]
         self.llx = int(self.ftile[8:11]) * 100000
         self.lly = int(self.ftile[12:15]) * 100000
-        self._tile_span = int(self.ftile[-1]) * 100000
-        self._array_size = int(self._tile_span / self.res)
-        self._subset = self.subset
+        self.tile_span_m = int(self.ftile[-1]) * 100000
+        self.size_px = int(self.tile_span_m / self.res)
+        self._subset_px = (0, 0, self.size_px, self.size_px)
 
 
     @property
@@ -911,54 +913,42 @@ class Equi7Tile(object):
 
 
     @property
-    def subgrid(self):
-        return self._subgrid
-
-
-    @property
-    def tile_span(self):
-        return self._tile_span
-
-    @property
-    def tile_extent(self):
-        """return the tile_extent of the tile in the terms of [minX,minY,maxX,maxY]
+    def extent_m(self):
+        """return the extent_m of the tile in the terms of [minX,minY,maxX,maxY]
         """
         return [self.llx, self.lly,
-                self.llx + self._tile_span, self.lly + self._tile_span]
-
-    @property
-    def array_size(self):
-        return self._array_size
+                self.llx + self.tile_span_m, self.lly + self.tile_span_m]
 
 
     @property
-    def array_shape(self):
-        return (self._array_size, self._array_size)
+    def shape_px(self):
+        return (self.size_px, self.size_px)
 
 
     @property
-    def subset(self):
+    def subset_px(self):
         """
-        holds initial indices of the subset-of-interest
-        :return: subset-of-interest
+        holds indices of the subset_px-of-interest
+        :return: subset_px-of-interest
         """
-        return (0, 0, self.array_size, self.array_size)
+        return self._subset_px
 
-    @subset.setter
-    def subset(self, limits):
+    @subset_px.setter
+    def subset_px(self, limits):
         """
-        changes the indices of the subset-of-interest,
+        changes the indices of the subset_px-of-interest,
         mostly to a smaller extent, for efficient reading
 
         limits : tuple
             the limits of subsets as (xmin, ymin, xmax, ymax).
 
         """
+
         string = ['xmin', 'ymin', 'xmax', 'ymax']
         if len(limits) != 4:
             raise ValueError('Limits are not properly set!')
 
-        _max = self._array_size
+        _max = self.size_px
 
         for l, limit in enumerate(limits):
             if (limit < 0) or (limit >= _max):
@@ -971,7 +961,7 @@ class Equi7Tile(object):
         if ymin >= ymax:
             raise ValueError('ymin >= ymax!')
 
-        self._subset = limits
+        self._subset_px = limits
 
 
     def projection(self):
@@ -993,7 +983,7 @@ class Equi7Tile(object):
 
         """
         geot = [self.llx, self.res, 0,
-                self.lly + self._tile_span, 0, -self.res]
+                self.lly + self.tile_span_m, 0, -self.res]
         return geot
 
     def get_tile_geotags(self):
@@ -1005,9 +995,9 @@ class Equi7Tile(object):
 
         return geotags
 
-    def find_family_tiles(self, res=None, tilecode=None):
-        """find the family tiles which share the same tile_extent but
-        with different resoluion and tilecode
+    def find_family_tiles(self, res=None, target_tilecode=None):
+        """find the family tiles which share the same extent_m but
+        with different resolution and tilecode
 
         Parameters
         ----------
@@ -1029,28 +1019,28 @@ class Equi7Tile(object):
         But if both are given, the res will be used.
         """
         if res is not None:
-            tilecode = Equi7Grid.link_res_2_tile(res)
-        elif tilecode is not None:
-            tilecode = tilecode
+            target_tilecode = Equi7Grid.link_res_2_tile(res)
+        elif target_tilecode is not None:
+            target_tilecode = target_tilecode
         else:
             raise ValueError("either res or tilecode should be given!")
 
         # found family tiles
         family_tiles = list()
 
-        if tilecode >= self.tilecode:
-            t_span = int(tilecode[-1]) * 100000
+        if target_tilecode >= self.tilecode:
+            t_span = int(target_tilecode[-1]) * 100000
             t_east = (self.llx / t_span) * t_span / 100000
             t_north = (self.lly / t_span) * t_span / 100000
-            name = "E{:03d}N{:03d}{}".format(t_east, t_north, tilecode)
+            name = "E{:03d}N{:03d}{}".format(t_east, t_north, target_tilecode)
             family_tiles.append(name)
         else:
-            sub_span = int(tilecode[-1]) * 100000
-            n = int(self.tile_span / sub_span)
+            sub_span = int(target_tilecode[-1]) * 100000
+            n = int(self.tile_span_m / sub_span)
             for x, y in itertools.product(range(n), range(n)):
                 s_east = (self.llx + x * sub_span) / 100000
                 s_north = (self.lly + y * sub_span) / 100000
-                name = "E{:03d}N{:03d}{}".format(s_east, s_north, tilecode)
+                name = "E{:03d}N{:03d}{}".format(s_east, s_north, target_tilecode)
                 family_tiles.append(name)
         return family_tiles
 
@@ -1074,7 +1064,7 @@ class Equi7Tile(object):
         if ftile[5:8] != "M_E" or ftile[11] != "N":
             return False
         # check variables
-        if ftile[0:2] not in Equi7Grid._static_sgrid_ids:
+        if ftile[0:2] not in Equi7Grid._static_subgrid_ids:
             return False
         if int(ftile[2:5]) not in Equi7Grid._static_res:
             return False
@@ -1089,32 +1079,32 @@ class Equi7Tile(object):
 
 @click.command()
 @click.argument('resolution')
-@click.option('--sgrid_ids', '-s',
+@click.option('--subgrid_ids', '-s',
               default=None,
               multiple=True,
               type=click.Choice(['NA', 'EU', 'AS',
                                  'SA', 'AF', 'OC', 'AN']),
               help=('Equi7 subgrid id, '
                     'Default are all subgrids'))
-@click.option('--tile_extent', '-e',
+@click.option('--extent_m', '-e',
               default=(-180.0, -90.0, 180.0, 90.0),
               type=float,
               nargs=4,
-              help='tile_extent to search tiles in. lonmin latmin lonmax latmax')
+              help='extent_m to search tiles in. lonmin latmin lonmax latmax')
 @click.option('--coverland', '-c',
               type=bool,
               default=True,
               help='Only search tile that cover land area.')
 
-def find_tiles(resolution, sgrid_ids, tile_extent, coverland):
+def find_tiles(resolution, subgrid_ids, extent_m, coverland):
     """
     Find Tiles for Equi7 grid of resolution.
     """
     eq7 = Equi7Grid(resolution)
-    if len(sgrid_ids) == 0:
-        sgrid_ids = None
-    for tile in eq7.search_tiles(sgrid_ids=sgrid_ids,
-                                 tile_extent=tile_extent,
+    if len(subgrid_ids) == 0:
+        subgrid_ids = None
+    for tile in eq7.search_tiles(subgrid_ids=subgrid_ids,
+                                 extent_m=extent_m,
                                  coverland=coverland):
         click.echo(tile)
 
