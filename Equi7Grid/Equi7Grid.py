@@ -120,7 +120,7 @@ class Equi7Grid(object):
             self.res = None
             raise ValueError("cannot load Equi7Grid ancillary data!")
 
-        self.tilecode, self.tile_span_m = self.link_res_2_tile(self.res, get_span=True)
+        self.tilecode, self.tile_size_m = self.link_res_2_tile(self.res, get_span=True)
 
         # keep a reference to the _static_equi7_data
         self._equi7_data = Equi7Grid._static_equi7_data
@@ -192,9 +192,9 @@ class Equi7Grid(object):
     def identify_tile_per_xy(self, subgrid_id, location):
         """Return the tile name."""
         east = (int(location[0])
-                / self.tile_span_m) * self.tile_span_m / 100000
+                / self.tile_size_m) * self.tile_size_m / 100000
         north = (int(location[1])
-                 / self.tile_span_m) * self.tile_span_m / 100000
+                 / self.tile_size_m) * self.tile_size_m / 100000
         return "{}{:03d}M_E{:03d}N{:03d}{}".format(subgrid_id, self.res,
                                                    east, north, self.tilecode)
 
@@ -406,7 +406,7 @@ class Equi7Grid(object):
         # check the validation of ftile
         subgrid_id = ftile[0:2]
         res = int(ftile[2:5])
-        tile_span_m = int(ftile[-1]) * 100000
+        tile_size_m = int(ftile[-1]) * 100000
         east = int(ftile[8:11]) * 100000
         north = int(ftile[12:15]) * 100000
         tile_code = ftile[-2:]
@@ -419,7 +419,7 @@ class Equi7Grid(object):
             msg = "Given tile name was not found in land masses tile list!"
             raise ValueError(msg)
 
-        return (subgrid_id, res, tile_span_m, east, north, tile_code)
+        return (subgrid_id, res, tile_size_m, east, north, tile_code)
 
     @staticmethod
     def get_index(dst_ftile, src_ftile, get_px_counts=False):
@@ -449,8 +449,8 @@ class Equi7Grid(object):
 
         # check if dst tile is a sub tile of src tile
         if dtile.llx < stile.llx or dtile.lly < stile.lly \
-           or dtile.llx + dtile.tile_span_m > stile.llx + stile.tile_span_m \
-           or dtile.lly + dtile.tile_span_m > stile.lly + stile.tile_span_m:
+           or dtile.llx + dtile.tile_size_m > stile.llx + stile.tile_size_m \
+           or dtile.lly + dtile.tile_size_m > stile.lly + stile.tile_size_m:
             raise ValueError("dst tile should be a sub tile of src tile!")
 
         index_pattern = {"075T6-500T6": (7, 6, 7),
@@ -489,7 +489,7 @@ class Equi7Grid(object):
         x_idx = x_idx[x_m:x_m + dtile.size_px]
 
         # make y index
-        yoff = (dtile.lly + dtile.tile_span_m - stile.lly - stile.tile_span_m) / -dtile.res
+        yoff = (dtile.lly + dtile.tile_size_m - stile.lly - stile.tile_size_m) / -dtile.res
         y_n, y_m = yoff / pattern_sum, yoff % pattern_sum
         y_idx = idx + (y_n * len(pattern))
         # shift idx to the correct start point
@@ -510,19 +510,19 @@ class Equi7Grid(object):
     def link_res_2_tile(res, get_span=False):
         res = int(res)
         tile_code = None
-        tile_span_m = None
+        tile_size_m = None
         # allowing sampling of [1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80, 75, 64] metres
         if ((res in range(64, 1001)) and (600000 % res == 0)):
             tile_code = "T6"
-            tile_span_m = 600000
+            tile_size_m = 600000
         # allowing sampling of [60, 50, 48, 40, 32, 30, 25, 24, 20] metres
         elif ((res in range(20, 61)) and (300000 % res == 0)):
             tile_code = "T3"
-            tile_span_m = 300000
+            tile_size_m = 300000
         # allowing sampling of [16, 10, 8, 5, 4, 2, 1] metres
         elif ((res in range(1, 17)) and (100000 % res == 0)):
             tile_code = "T1"
-            tile_span_m = 100000
+            tile_size_m = 100000
         else:
             msg = "Error: Given resolution %d is not supported!" % res
             msg += " Supported resolutions: {}".format(
@@ -530,7 +530,7 @@ class Equi7Grid(object):
             raise ValueError(msg)
 
         if get_span == True:
-            result = (tile_code, tile_span_m)
+            result = (tile_code, tile_size_m)
         else:
             result = tile_code
 
@@ -569,8 +569,8 @@ class Equi7Grid(object):
 
         Return
         ------
-        tilenames
-            list of tiles intersecting the bounding box
+        tilenames : list
+            list of tile names intersecting the bounding box,
 
         """
         xmin, ymin, xmax, ymax = bbox
@@ -579,16 +579,16 @@ class Equi7Grid(object):
             raise ValueError("Check order of coordinates of bbox! "
                              "Scheme: [xmin, ymin, xmax, ymax]")
 
-        tcode = self.tilecode # why _?
+        tcode = self.tilecode
         trs = self.res
 
-        sp = self.tile_span_m
+        sp = self.tile_size_m
         sp_multi = sp / 100000
 
-        x_anchors = range(xmin / sp * sp_multi, xmax / sp * sp_multi + 1, sp_multi)
-        y_anchors = range(ymin / sp * sp_multi, ymax / sp * sp_multi + 1, sp_multi)
+        x_anchors_100km = range(xmin / sp * sp_multi, xmax / sp * sp_multi + 1, sp_multi)
+        y_anchors_100km = range(ymin / sp * sp_multi, ymax / sp * sp_multi + 1, sp_multi)
 
-        tx, ty = np.meshgrid(x_anchors, y_anchors)
+        tx, ty = np.meshgrid(x_anchors_100km, y_anchors_100km)
         tx = tx.flatten()
         ty = ty.flatten()
 
@@ -598,7 +598,53 @@ class Equi7Grid(object):
 
         return tilenames
 
+    def get_tiles_per_bbox(self, subgrid_id, bbox):
+        """Light-weight routine that returns
+           the name of tiles intersecting the bounding box.
 
+        Parameters
+        ----------
+        subgrid_id : string
+            sub-grid id string e.g. EU for Europe
+        bbox : list
+            list of equi7-coordinates limiting the bounding box.
+            scheme: [xmin, ymin, xmax, ymax]
+
+        Return
+        ------
+        e7tiles : list
+            list of Equi7Tiles() intersecting the bounding box,
+            with .subset() not exceeding the bounding box.
+
+        """
+        tilenames = self.identify_tiles_per_bbox(subgrid_id, bbox)
+
+        e7tiles = list()
+
+        for t in tilenames:
+
+            tile = Equi7Tile(t)
+
+            le, te, re, be = tile.active_subset_px
+
+            #left_edge
+            if tile.extent_m[0] <= bbox[0]:
+                le = (bbox[0] - tile.extent_m[0]) / tile.res
+            #top_edge
+            if tile.extent_m[1] <= bbox[1]:
+                te = (bbox[1] - tile.extent_m[1]) / tile.res
+            #right_edge
+            if tile.extent_m[2] > bbox[2]:
+                re = (bbox[2] - tile.extent_m[2] + tile.size_m) / tile.res
+            #bottom_edge
+            if tile.extent_m[3] > bbox[3]:
+                be = (bbox[3] - tile.extent_m[3] + tile.size_m) / tile.res
+
+            tile.active_subset_px = le, te, re, be
+
+            e7tiles.append(tile)
+
+        return e7tiles
 
     def search_tiles(self,
                      geom_area=None,
@@ -705,10 +751,10 @@ class Equi7Grid(object):
 
         # get envelope of the Geometry and cal the bounding tile of the
         envelope = intersect.GetEnvelope()
-        x_min = int(envelope[0]) / self.tile_span_m * self.tile_span_m
-        x_max = (int(envelope[1]) / self.tile_span_m + 1) * self.tile_span_m
-        y_min = int(envelope[2]) / self.tile_span_m * self.tile_span_m
-        y_max = (int(envelope[3]) / self.tile_span_m + 1) * self.tile_span_m
+        x_min = int(envelope[0]) / self.tile_size_m * self.tile_size_m
+        x_max = (int(envelope[1]) / self.tile_size_m + 1) * self.tile_size_m
+        y_min = int(envelope[2]) / self.tile_size_m * self.tile_size_m
+        y_max = (int(envelope[3]) / self.tile_size_m + 1) * self.tile_size_m
 
         # make sure x_min and y_min greater or equal 0
         x_min = 0 if x_min < 0 else x_min
@@ -716,10 +762,10 @@ class Equi7Grid(object):
 
         # get overlapped tiles
         overlapped_tiles = list()
-        for x, y in itertools.product(xrange(x_min, x_max, self.tile_span_m),
-                                      xrange(y_min, y_max, self.tile_span_m)):
-            geom_tile = gdalport.extent2polygon((x, y, x + self.tile_span_m,
-                                                 y + self.tile_span_m))
+        for x, y in itertools.product(xrange(x_min, x_max, self.tile_size_m),
+                                      xrange(y_min, y_max, self.tile_size_m)):
+            geom_tile = gdalport.extent2polygon((x, y, x + self.tile_size_m,
+                                                 y + self.tile_size_m))
             if geom_tile.Intersects(intersect):
                 ftile = self.identify_tile_per_xy(subgrid_id, [x, y])
                 if not coverland or self.is_coverland(ftile):
@@ -897,8 +943,8 @@ class Equi7Tile(object):
         self.tilecode = self.ftile[-2:]
         self.llx = int(self.ftile[8:11]) * 100000
         self.lly = int(self.ftile[12:15]) * 100000
-        self.tile_span_m = int(self.ftile[-1]) * 100000
-        self.size_px = int(self.tile_span_m / self.res)
+        self.size_m = int(self.ftile[-1]) * 100000
+        self.size_px = int(self.size_m / self.res)
         self._subset_px = (0, 0, self.size_px, self.size_px)
 
 
@@ -917,7 +963,7 @@ class Equi7Tile(object):
         """return the extent_m of the tile in the terms of [minX,minY,maxX,maxY]
         """
         return [self.llx, self.lly,
-                self.llx + self.tile_span_m, self.lly + self.tile_span_m]
+                self.llx + self.size_m, self.lly + self.size_m]
 
 
     @property
@@ -926,17 +972,17 @@ class Equi7Tile(object):
 
 
     @property
-    def subset_px(self):
+    def active_subset_px(self):
         """
-        holds indices of the subset_px-of-interest
-        :return: subset_px-of-interest
+        holds indices of the active_subset_px-of-interest
+        :return: active_subset_px-of-interest
         """
         return self._subset_px
 
-    @subset_px.setter
-    def subset_px(self, limits):
+    @active_subset_px.setter
+    def active_subset_px(self, limits):
         """
-        changes the indices of the subset_px-of-interest,
+        changes the indices of the active_subset_px-of-interest,
         mostly to a smaller extent, for efficient reading
 
         limits : tuple
@@ -951,7 +997,7 @@ class Equi7Tile(object):
         _max = self.size_px
 
         for l, limit in enumerate(limits):
-            if (limit < 0) or (limit >= _max):
+            if (limit < 0) or (limit > _max):
                 raise ValueError('{} is out of bounds!'.format(string[l]))
 
         xmin, ymin, xmax, ymax = limits
@@ -983,7 +1029,7 @@ class Equi7Tile(object):
 
         """
         geot = [self.llx, self.res, 0,
-                self.lly + self.tile_span_m, 0, -self.res]
+                self.lly + self.size_m, 0, -self.res]
         return geot
 
     def get_tile_geotags(self):
@@ -1036,7 +1082,7 @@ class Equi7Tile(object):
             family_tiles.append(name)
         else:
             sub_span = int(target_tilecode[-1]) * 100000
-            n = int(self.tile_span_m / sub_span)
+            n = int(self.size_m / sub_span)
             for x, y in itertools.product(range(n), range(n)):
                 s_east = (self.llx + x * sub_span) / 100000
                 s_north = (self.lly + y * sub_span) / 100000
