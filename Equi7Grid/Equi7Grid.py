@@ -626,19 +626,20 @@ class Equi7Grid(object):
             tile = Equi7Tile(t)
 
             le, te, re, be = tile.active_subset_px
+            extent = tile.extent_m
 
             #left_edge
-            if tile.extent_m[0] <= bbox[0]:
-                le = (bbox[0] - tile.extent_m[0]) / tile.res
+            if extent[0] <= bbox[0]:
+                le = (bbox[0] - extent[0]) / tile.res
             #top_edge
-            if tile.extent_m[1] <= bbox[1]:
-                te = (bbox[1] - tile.extent_m[1]) / tile.res
+            if extent[1] <= bbox[1]:
+                te = (bbox[1] - extent[1]) / tile.res
             #right_edge
-            if tile.extent_m[2] > bbox[2]:
-                re = (bbox[2] - tile.extent_m[2] + tile.size_m) / tile.res
+            if extent[2] > bbox[2]:
+                re = (bbox[2] - extent[2] + tile.size_m) / tile.res
             #bottom_edge
-            if tile.extent_m[3] > bbox[3]:
-                be = (bbox[3] - tile.extent_m[3] + tile.size_m) / tile.res
+            if extent[3] > bbox[3]:
+                be = (bbox[3] - extent[3] + tile.size_m) / tile.res
 
             tile.active_subset_px = le, te, re, be
 
@@ -965,7 +966,6 @@ class Equi7Tile(object):
         return [self.llx, self.lly,
                 self.llx + self.size_m, self.lly + self.size_m]
 
-
     @property
     def shape_px(self):
         return (self.size_px, self.size_px)
@@ -1011,7 +1011,7 @@ class Equi7Tile(object):
 
 
     def projection(self):
-        return Equi7Grid._static_equi7_data[self._subgrid]["project"]
+        return Equi7Grid._static_equi7_data[self.subgrid]["project"]
 
     def geotransform(self):
         """
@@ -1031,6 +1031,32 @@ class Equi7Tile(object):
         geot = [self.llx, self.res, 0,
                 self.lly + self.size_m, 0, -self.res]
         return geot
+
+
+    def px_2_coord(self, x, y):
+        """
+        Returns the Equi7 coordinates of a tile pixel
+
+        Parameters
+        ----------
+        x : number
+            pixel row number
+        y : number
+            pixel collumn number
+
+
+        Returns
+        -------
+        tuple
+            Equi7 coordinates of a tile pixel
+
+        """
+        gt = self.geotransform()
+
+        xgeo = gt[0] + x * gt[1] + y * gt[2]
+        ygeo = gt[3] + x * gt[4] + y * gt[5]
+
+        return (xgeo, ygeo)
 
     def get_tile_geotags(self):
         """
@@ -1092,7 +1118,7 @@ class Equi7Tile(object):
 
     def covers_land(self):
         """check if tile covers land"""
-        land_tiles = Equi7Grid._static_equi7_data[self._subgrid]["coverland"]
+        land_tiles = Equi7Grid._static_equi7_data[self.subgrid]["coverland"]
         return self.shortname in land_tiles[self.tilecode]
 
     @staticmethod
