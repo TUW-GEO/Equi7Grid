@@ -97,13 +97,15 @@ class Equi7Grid(TiledProjectionSystem):
             self.res = None
             raise ValueError("Resolution {}m is not supported!".format(res))
 
+        # initializing
+        super(Equi7Grid, self).__init__(res)
 
+    def define_subgrids(self):
         subgrids = dict()
         for sg in self._static_subgrid_ids:
             subgrids[sg] = Equi7Subgrid(sg, self.res, self.tile_xsize_m)
+        return subgrids
 
-        # initializing
-        super(Equi7Grid, self).__init__(res, subgrids)
 
 
     @staticmethod
@@ -168,6 +170,12 @@ class Equi7TilingSystem(TilingSystem):
 
         super(Equi7TilingSystem, self).__init__(projection, polygon, res, 0, 0, step, step)
 
+    def ask_tile_cover_land(self):
+        """
+        check if a tile covers land
+        """
+        land_tiles = Equi7Grid._static_equi7_data[self.subgrid]["coverland"]
+        return self.shortname in land_tiles[self.tilecode]
 
 class Equi7Tile(Tile):
     """
@@ -177,4 +185,4 @@ class Equi7Tile(Tile):
     """
 
     def __init__(self):
-        pass
+        super(Equi7Tile).__init__(name, projection, res, limits)

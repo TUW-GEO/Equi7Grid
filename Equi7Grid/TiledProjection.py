@@ -140,14 +140,13 @@ def dummy(self, thing):
 
 class TiledProjectionSystem(object):
 
-    def __init__(self, res, subgrids):
+    def __init__(self, res):
 
         self.res = res
         self.tiletype, \
         self.tile_xsize_m, \
         self.tile_ysize_m = self.link_res_2_tilesize(self.res, get_size=True)
-
-        self.subgrids = subgrids
+        self.subgrids = self.define_subgrids()
         pass
 
     def __getattr__(self, item):
@@ -155,6 +154,11 @@ class TiledProjectionSystem(object):
             return self.subgrids[item]
         else:
             return self.__dict__[item]
+
+    #TODO: check how to force this correctly
+    @abc.abstractmethod
+    def define_subgrids(self):
+        pass
 
     @abc.abstractmethod
     def link_res_2_tilesize(self):
@@ -267,7 +271,7 @@ class TilingSystem(object):
         self.bbox_proj = self.get_boundaries(self.polygon_proj, rounding=self.res)
 
     def get_boundaries(self, geometry, rounding=1):
-        limits = self.extent_proj.GetEnvelope()
+        limits = self.polygon_proj.GetEnvelope()
         limits = [int(x / rounding) * rounding for x in limits]
         return limits
 
@@ -280,9 +284,143 @@ class TilingSystem(object):
 
 
 class Tile(object):
+    """
+    Class defining a tile and providing methods for handling.
 
-    def __init__(self, Projection, name, limits):
+    Parameters
+    ----------
+    projection : :py:class:`Projection`
+        A Projection object defining the spatial reference.
+
+    Attributes (BBM: .stuff that needs to be explained)
+    ----------
+    extent_geog:
+    """
+    def __init__(self, name, projection, res, limits):
         self.name = name
+        self.typename = self.get_type_name()
+        self.projection = projection
+        self.res = res
+        self.llx = limits[0]
+        self.lly = limits[1]
+        self.x_size_m = limits[2] - self.llx
+        self.y_size_m = limits[3] - self.lly
+        self.x_size_px = self.x_size_m / self.res
+        self.y_size_px = self.y_size_m / self.res
+
+    @abc.abstractmethod
+    def get_type_name(self):
+        """
+        :returns the tile type name
+        """
+        return
+
+    def shape_px(self):
+        """
+        :returns the shape of the pixel array
+        """
+        return (self.x_size_px, self.y_size_px)
+
+    def limits_m(self):
+        """
+        :returns the limits of the tile in the terms of (xmin, ymin, xmax, ymax)
+        """
+        return (self.llx, self.lly,
+                self.llx + self.x_size_m, self.lly + self.y_size_m)
+
+    @property
+    def active_subset_px(self):
+        """
+        holds indices of the active_subset_px-of-interest
+        :return: active_subset_px-of-interest
+        """
+        return self._subset_px
+
+    @active_subset_px.setter
+    def active_subset_px(self, limits):
+        """
+        changes the indices of the active_subset_px-of-interest,
+        mostly to a smaller extent, for efficient reading
+
+        limits : tuple
+            the limits of subsets as (xmin, ymin, xmax, ymax).
+
+        """
+
+        string = ['xmin', 'ymin', 'xmax', 'ymax']
+        if len(limits) != 4:
+            raise ValueError('Limits are not properly set!')
+
+        _max = [self.x_size_px, self.y_size_px, self.x_size_px, self.y_size_px]
+
+        for l, limit in enumerate(limits):
+            if (limit < 0) or (limit > _max):
+                raise ValueError('{} is out of bounds!'.format(string[l]))
+
+        xmin, ymin, xmax, ymax = limits
+
+        if xmin >= xmax:
+            raise ValueError('xmin >= xmax!')
+        if ymin >= ymax:
+            raise ValueError('ymin >= ymax!')
+
+        self._subset_px = limits
+
+    def geotransform(self):
+        """
+        :returns the GDAL geotransform list
+
+        Parameters
+        ----------
+        ftile : string
+            full tile name e.g. EU075M_E048N012T6
+
+        Returns
+        -------
+        list
+            a list contain the geotransfrom elements
+
+        """
+        geot = [self.llx, self.res, 0,
+                self.lly + self.size_m, 0, -self.res]
+
+        return geot
+
+    def ij_2_xy(self, i, j):
+        """
+        Returns the projected coordinates of a tile pixel in the TilingSystem
+
+        Parameters
+        ----------
+        i : number
+            pixel row number
+        j : number
+            pixel collumn number
+
+        Returns
+        -------
+        x : number
+            x coordinate in the TilingSystem
+        y : number
+            y coordinate in the TilingSystem
+        """
+
+        gt = self.geotransform()
+
+        x = gt[0] + i * gt[1] + j * gt[2]
+        y = gt[3] + i * gt[4] + j * gt[5]
+
+        return x, y
+
+
+    def get_tile_geotags(self):
+        """
+        Return geotags for given tile used as geoinformation for GDAL
+        """
+        geotags = {'geotransform': self.geotransform(),
+                   'spatialreference': self.projection}
+
+        return geotags
 
 class GlobalTile(object):
 
@@ -338,7 +476,3 @@ class TiledProjectedLocation(object):
         x, y = self.proj2geog(a, b)
         return x, y
 '''
-
-class Equi7Tile(Tile):
-
-    pass
