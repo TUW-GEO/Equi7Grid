@@ -39,6 +39,7 @@ Code for Tiled Projection Systems.
 
 import os
 import abc
+import copy
 import pyproj
 
 import numpy as np
@@ -46,7 +47,27 @@ import numpy as np
 from osgeo import osr
 from osgeo import ogr
 
-class Projection():
+
+class TPSCoreProp(object):
+    """
+    Class holding information needed at every level of `TiledProjectionSystem`,
+    the alltime-valid "core properties".
+    With this, core parameters are everywhere accessible per same name.
+
+    Parameters
+    ----------
+    epsg : integer
+        sdfsd
+    """
+    def __init__(self, tag, projection, res, tile_xsize_m, tile_ysize_m):
+        self.tag = tag
+        self.projection = projection
+        self.res = res
+        self.tile_xsize_m = tile_xsize_m
+        self.tile_ysize_m = tile_ysize_m
+
+
+class TPSProjection():
     """
     Projection class holding and translating the definitions of a projection when initialising.
 
@@ -137,21 +158,27 @@ def dummy(self, thing):
 
     return thing
 
-
 class TiledProjectionSystem(object):
 
-    def __init__(self, res):
+    def __init__(self, res, nametag='TPS'):
 
-        self.res = res
-        self.tiletype, \
-        self.tile_xsize_m, \
-        self.tile_ysize_m = self.link_res_2_tilesize(self.res, get_size=True)
+        tiletype, \
+        tile_xsize_m, \
+        tile_ysize_m = self.link_res_2_tilesize(res, get_size=True)
+
+        self.coreprop = TPSCoreProp(nametag, None, res, tile_xsize_m, tile_ysize_m)
+
         self.subgrids = self.define_subgrids()
         pass
 
     def __getattr__(self, item):
+        '''
+        short link for items of subgrids and coreprop
+        '''
         if item in self.subgrids:
             return self.subgrids[item]
+        elif item in self.coreprop.__dict__:
+            return self.coreprop.__dict__[item]
         else:
             return self.__dict__[item]
 
@@ -173,54 +200,6 @@ class TiledProjectionSystem(object):
         pass
 
 
-
-
-def create_wkt_geometry(geometry_wkt, epsg=4326):
-    """
-    return extent geometry
-
-    Parameters
-    ----------
-    geometry_wkt : string
-        WKT text containing points of geometry (e.g. polygon)
-    epsg : int
-        EPSG code of spatial reference of the points.
-
-    Return
-    ------
-    OGRGeomtery
-        a geometry representing the extent_m of given sub-grid
-
-    """
-    geom = ogr.CreateGeometryFromWkt(geometry_wkt)
-    geo_sr = osr.SpatialReference()
-    geo_sr.SetWellKnownGeogCS("EPSG:{}".format(str(epsg)))
-    geom.AssignSpatialReference(geo_sr)
-    return geom
-
-def transform_geometry(geometry, Projection):
-    """
-    return extent geometry
-
-    Parameters
-    ----------
-    geometry_wkt : string
-        WKT text containing points of geometry (e.g. polygon)
-    epsg : int
-        EPSG code of spatial reference of the points.
-
-    Return
-    ------
-    OGRGeomtery
-        a geometry representing the extent_m of given sub-grid
-
-    """
-
-    out_srs = Projection.osr_spref
-    geometry.TransformTo(out_srs)
-
-    return geometry
-
 class TiledProjection(object):
     """
     Class holding the projection and tiling definition of a tiled projection space.
@@ -234,12 +213,40 @@ class TiledProjection(object):
         If None, the whole space is one single tile.
     """
 
-    def __init__(self, Projection, TilingSystem=None):
-        self.projection = Projection
-        if TilingSystem is None:
-            TilingSystem = GlobalTile(Projection)
-        self.tilingsystem = TilingSystem
+    staticdata = None
 
+    def __init__(self, coreprop, polygon_geog=None, tilingsystem=None):
+
+        self.coreprop = coreprop
+
+        if polygon_geog is None:
+            polygon_geog = GlobalTile(self.projection).polygon()
+        self.polygon_geog = polygon_geog
+        self.polygon_proj= transform_geometry(polygon_geog, self.projection)
+        self.bbox_geog = get_geom_boundaries(self.polygon_geog, rounding=0.001)
+        self.bbox_proj = get_geom_boundaries(self.polygon_proj, rounding=self.res)
+
+        if tilingsystem is None:
+            tilingsystem = GlobalTile(self.projection)
+        self.tilingsystem = tilingsystem
+
+    def __getattr__(self, item):
+        '''
+        short link for items of coreprop
+        '''
+        if item in self.coreprop.__dict__:
+            return self.coreprop.__dict__[item]
+        else:
+            return self.__dict__[item]
+
+    @abc.abstractmethod
+    def get_polygon(self, staticdata=staticdata):
+        return None
+
+    @abc.abstractmethod
+    def get_bbox_geog(self):
+        bbox = self.polygon_geog.GetEnvelope()
+        return bbox
 
 class TilingSystem(object):
     """
@@ -257,23 +264,26 @@ class TilingSystem(object):
     ----------
     extent_geog:
     """
-    def __init__(self, projection, geog_polygon, res,  x0, y0, xstep, ystep):
+    def __init__(self, coreprop, polygon_proj, x0, y0):
 
-        self.projection = Projection
-        self.res = res
+        self.coreprop = coreprop
         self.x0 = x0
         self.y0 = y0
-        self.xstep = xstep
-        self.ystep = ystep
-        self.polygon_geog = geog_polygon
-        self.polygon_proj = transform_geometry(geog_polygon, projection)
-        self.bbox_geog = self.get_boundaries(self.polygon_geog, rounding=0.001)
-        self.bbox_proj = self.get_boundaries(self.polygon_proj, rounding=self.res)
+        self.xstep = coreprop.tile_xsize_m
+        self.ystep = coreprop.tile_ysize_m
+        self.polygon_proj = polygon_proj
+        self.bbox_proj = get_geom_boundaries(self.polygon_proj, rounding=self.res)
 
-    def get_boundaries(self, geometry, rounding=1):
-        limits = self.polygon_proj.GetEnvelope()
-        limits = [int(x / rounding) * rounding for x in limits]
-        return limits
+
+    def __getattr__(self, item):
+        '''
+        short link for items of coreprop
+        '''
+        if item in self.coreprop.__dict__:
+            return self.coreprop.__dict__[item]
+        else:
+            return self.__dict__[item]
+
 
     def get_tile(self, x,y):
         return Tile(self.projection, 'xybounds')
@@ -296,17 +306,27 @@ class Tile(object):
     ----------
     extent_geog:
     """
-    def __init__(self, name, projection, res, limits):
+    def __init__(self, coreprop, name, x0, y0):
         self.name = name
         self.typename = self.get_type_name()
-        self.projection = projection
-        self.res = res
-        self.llx = limits[0]
-        self.lly = limits[1]
-        self.x_size_m = limits[2] - self.llx
-        self.y_size_m = limits[3] - self.lly
+        self.coreprop = coreprop
+        self.llx = x0
+        self.lly = y0
+        self.x_size_m = x0 + self.tile_xsize_m
+        self.y_size_m = y0 + self.tile_ysize_m
         self.x_size_px = self.x_size_m / self.res
         self.y_size_px = self.y_size_m / self.res
+
+
+    def __getattr__(self, item):
+        '''
+        short link for items of coreprop
+        '''
+        if item in self.coreprop.__dict__:
+            return self.coreprop.__dict__[item]
+        else:
+            return self.__dict__[item]
+
 
     @abc.abstractmethod
     def get_type_name(self):
@@ -424,14 +444,72 @@ class Tile(object):
 
 class GlobalTile(object):
 
-    def __init__(self, Projection, name, limits):
+    def __init__(self, projection, name):
+        self.coreprop = projection
         self.name = name
+
+    @abc.abstractmethod
+    def polygon(self):
+        return
 
 
 class Equi7TilingSystem(TilingSystem):
 
     pass
 
+
+def create_wkt_geometry(geometry_wkt, epsg=4326):
+    """
+    return extent geometry
+
+    Parameters
+    ----------
+    geometry_wkt : string
+        WKT text containing points of geometry (e.g. polygon)
+    epsg : int
+        EPSG code of spatial reference of the points.
+
+    Return
+    ------
+    OGRGeomtery
+        a geometry representing the extent_m of given sub-grid
+
+    """
+    geom = ogr.CreateGeometryFromWkt(geometry_wkt)
+    geo_sr = osr.SpatialReference()
+    geo_sr.SetWellKnownGeogCS("EPSG:{}".format(str(epsg)))
+    geom.AssignSpatialReference(geo_sr)
+    return geom
+
+def transform_geometry(geometry, projection):
+    """
+    return extent geometry
+
+    Parameters
+    ----------
+    geometry_wkt : string
+        WKT text containing points of geometry (e.g. polygon)
+    epsg : int
+        EPSG code of spatial reference of the points.
+
+    Return
+    ------
+    OGRGeomtery
+        a geometry representing the extent_m of given sub-grid
+
+    """
+
+    out_srs = projection.osr_spref
+    geometry_out = geometry.Clone()
+    geometry_out.TransformTo(out_srs)
+    geometry = None
+    return geometry_out
+
+
+def get_geom_boundaries(geometry, rounding=1.0):
+    limits = geometry.GetEnvelope()
+    limits = [int(x / rounding) * rounding for x in limits]
+    return limits
 
 '''
 class TiledProjectedLocation(object):

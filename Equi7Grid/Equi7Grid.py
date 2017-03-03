@@ -40,14 +40,14 @@ Code for the Equi7 Grid.
 import os
 import platform
 import pickle
+import copy
 
 from TiledProjection import TiledProjectionSystem
 from TiledProjection import TiledProjection
-from TiledProjection import Projection
+from TiledProjection import TPSProjection
 from TiledProjection import TilingSystem
 from TiledProjection import Tile
 from TiledProjection import create_wkt_geometry
-from TiledProjection import transform_geometry
 
 
 def _load_static_data(module_path):
@@ -98,12 +98,13 @@ class Equi7Grid(TiledProjectionSystem):
             raise ValueError("Resolution {}m is not supported!".format(res))
 
         # initializing
-        super(Equi7Grid, self).__init__(res)
+        super(Equi7Grid, self).__init__(res, nametag='Equi7')
+        self.projection = 'multiple'
 
     def define_subgrids(self):
         subgrids = dict()
         for sg in self._static_subgrid_ids:
-            subgrids[sg] = Equi7Subgrid(sg, self.res, self.tile_xsize_m)
+            subgrids[sg] = Equi7Subgrid(self.coreprop, sg)
         return subgrids
 
 
@@ -147,27 +148,30 @@ class Equi7Grid(TiledProjectionSystem):
 
 class Equi7Subgrid(TiledProjection):
 
-    def __init__(self, continent, res, tile_size_m):
+    def __init__(self, coreprop, continent):
 
         data = Equi7Grid._static_equi7_data[continent]
+        _coreprop = copy.copy(coreprop)
+        _coreprop.tag = continent
+        _coreprop.projection = TPSProjection(wkt=data['project'])
 
-        self.projection = Projection(wkt=data['project'], nametag=continent)
+        self.coreprop = _coreprop
         self.polygon_geog = create_wkt_geometry(data['extent'])
-        self.tilingsystem = Equi7TilingSystem(self.projection, self.polygon_geog, res, tile_size_m)
+        self.tilingsystem = Equi7TilingSystem(self.coreprop, self.polygon_geog)
 
-        super(Equi7Subgrid, self).__init__(self.projection, self.polygon_geog, self.tilingsystem)
+        super(Equi7Subgrid, self).__init__(self.coreprop , self.polygon_geog, self.tilingsystem)
 
 
 class Equi7TilingSystem(TilingSystem):
     """
     Equi7 tiling system class, providing methods for queries and handling.
 
-    A tile in the Equi7 grid system.
+    A tile in the Equi7 coreprop system.
     """
 
-    def __init__(self, projection, polygon, res, step):
+    def __init__(self, coreprop, polygon):
 
-        super(Equi7TilingSystem, self).__init__(projection, polygon, res, 0, 0, step, step)
+        super(Equi7TilingSystem, self).__init__(coreprop, polygon, 0, 0)
 
     def ask_tile_cover_land(self):
         """
