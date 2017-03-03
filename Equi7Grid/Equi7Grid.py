@@ -99,12 +99,12 @@ class Equi7Grid(TiledProjectionSystem):
 
         # initializing
         super(Equi7Grid, self).__init__(res, nametag='Equi7')
-        self.projection = 'multiple'
+        self.core.projection = 'multiple'
 
     def define_subgrids(self):
         subgrids = dict()
         for sg in self._static_subgrid_ids:
-            subgrids[sg] = Equi7Subgrid(self.coreprop, sg)
+            subgrids[sg] = Equi7Subgrid(self.core, sg)
         return subgrids
 
 
@@ -148,30 +148,30 @@ class Equi7Grid(TiledProjectionSystem):
 
 class Equi7Subgrid(TiledProjection):
 
-    def __init__(self, coreprop, continent):
+    def __init__(self, core, continent):
 
         data = Equi7Grid._static_equi7_data[continent]
-        _coreprop = copy.copy(coreprop)
-        _coreprop.tag = continent
-        _coreprop.projection = TPSProjection(wkt=data['project'])
+        _core = copy.copy(core)
+        _core.tag = continent
+        _core.projection = TPSProjection(wkt=data['project'])
 
-        self.coreprop = _coreprop
+        self.core = _core
         self.polygon_geog = create_wkt_geometry(data['extent'])
-        self.tilingsystem = Equi7TilingSystem(self.coreprop, self.polygon_geog)
+        self.tilingsystem = Equi7TilingSystem(self.core, self.polygon_geog)
 
-        super(Equi7Subgrid, self).__init__(self.coreprop , self.polygon_geog, self.tilingsystem)
+        super(Equi7Subgrid, self).__init__(self.core , self.polygon_geog, self.tilingsystem)
 
 
 class Equi7TilingSystem(TilingSystem):
     """
     Equi7 tiling system class, providing methods for queries and handling.
 
-    A tile in the Equi7 coreprop system.
+    A tile in the Equi7 core system.
     """
 
-    def __init__(self, coreprop, polygon):
+    def __init__(self, core, polygon):
 
-        super(Equi7TilingSystem, self).__init__(coreprop, polygon, 0, 0)
+        super(Equi7TilingSystem, self).__init__(core, polygon, 0, 0)
 
     def ask_tile_cover_land(self):
         """

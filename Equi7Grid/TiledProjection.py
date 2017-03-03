@@ -48,7 +48,7 @@ from osgeo import osr
 from osgeo import ogr
 
 
-class TPSCoreProp(object):
+class TPSCoreProperty(object):
     """
     Class holding information needed at every level of `TiledProjectionSystem`,
     the alltime-valid "core properties".
@@ -74,7 +74,7 @@ class TPSProjection():
     Parameters
     ----------
     epsg : integer
-        The EPSG-code of the sptaial reference. As from http://www.epsg-registry.org
+        The EPSG-code of the spatial reference. As from http://www.epsg-registry.org
         Not all reference do have a EPSG code.
     proj4 : string
         The proj4-string defining the spatial reference.
@@ -166,19 +166,19 @@ class TiledProjectionSystem(object):
         tile_xsize_m, \
         tile_ysize_m = self.link_res_2_tilesize(res, get_size=True)
 
-        self.coreprop = TPSCoreProp(nametag, None, res, tile_xsize_m, tile_ysize_m)
+        self.core = TPSCoreProperty(nametag, None, res, tile_xsize_m, tile_ysize_m)
 
         self.subgrids = self.define_subgrids()
         pass
 
     def __getattr__(self, item):
         '''
-        short link for items of subgrids and coreprop
+        short link for items of subgrids and core
         '''
         if item in self.subgrids:
             return self.subgrids[item]
-        elif item in self.coreprop.__dict__:
-            return self.coreprop.__dict__[item]
+        elif item in self.core.__dict__:
+            return self.core.__dict__[item]
         else:
             return self.__dict__[item]
 
@@ -215,27 +215,27 @@ class TiledProjection(object):
 
     staticdata = None
 
-    def __init__(self, coreprop, polygon_geog=None, tilingsystem=None):
+    def __init__(self, core, polygon_geog=None, tilingsystem=None):
 
-        self.coreprop = coreprop
+        self.core = core
 
         if polygon_geog is None:
-            polygon_geog = GlobalTile(self.projection).polygon()
+            polygon_geog = GlobalTile(self.core.projection).polygon()
         self.polygon_geog = polygon_geog
-        self.polygon_proj= transform_geometry(polygon_geog, self.projection)
+        self.polygon_proj= transform_geometry(polygon_geog, self.core.projection)
         self.bbox_geog = get_geom_boundaries(self.polygon_geog, rounding=0.001)
-        self.bbox_proj = get_geom_boundaries(self.polygon_proj, rounding=self.res)
+        self.bbox_proj = get_geom_boundaries(self.polygon_proj, rounding=self.core.res)
 
         if tilingsystem is None:
-            tilingsystem = GlobalTile(self.projection)
+            tilingsystem = GlobalTile(self.core.projection)
         self.tilingsystem = tilingsystem
 
     def __getattr__(self, item):
         '''
-        short link for items of coreprop
+        short link for items of core
         '''
-        if item in self.coreprop.__dict__:
-            return self.coreprop.__dict__[item]
+        if item in self.core.__dict__:
+            return self.core.__dict__[item]
         else:
             return self.__dict__[item]
 
@@ -264,29 +264,29 @@ class TilingSystem(object):
     ----------
     extent_geog:
     """
-    def __init__(self, coreprop, polygon_proj, x0, y0):
+    def __init__(self, core, polygon_proj, x0, y0):
 
-        self.coreprop = coreprop
+        self.core = core
         self.x0 = x0
         self.y0 = y0
-        self.xstep = coreprop.tile_xsize_m
-        self.ystep = coreprop.tile_ysize_m
+        self.xstep = self.core.tile_xsize_m
+        self.ystep = self.core.tile_ysize_m
         self.polygon_proj = polygon_proj
-        self.bbox_proj = get_geom_boundaries(self.polygon_proj, rounding=self.res)
+        self.bbox_proj = get_geom_boundaries(self.polygon_proj, rounding=self.core.res)
 
 
     def __getattr__(self, item):
         '''
-        short link for items of coreprop
+        short link for items of core
         '''
-        if item in self.coreprop.__dict__:
-            return self.coreprop.__dict__[item]
+        if item in self.core.__dict__:
+            return self.core.__dict__[item]
         else:
             return self.__dict__[item]
 
 
     def get_tile(self, x,y):
-        return Tile(self.projection, 'xybounds')
+        return Tile(self.core.projection, 'xybounds')
 
     @abc.abstractmethod
     def get_tile_name(self, x, y):
@@ -306,24 +306,24 @@ class Tile(object):
     ----------
     extent_geog:
     """
-    def __init__(self, coreprop, name, x0, y0):
+    def __init__(self, core, name, x0, y0):
         self.name = name
         self.typename = self.get_type_name()
-        self.coreprop = coreprop
+        self.core = core
         self.llx = x0
         self.lly = y0
-        self.x_size_m = x0 + self.tile_xsize_m
-        self.y_size_m = y0 + self.tile_ysize_m
-        self.x_size_px = self.x_size_m / self.res
-        self.y_size_px = self.y_size_m / self.res
+        self.x_size_m = x0 + self.core.tile_xsize_m
+        self.y_size_m = y0 + self.core.tile_ysize_m
+        self.x_size_px = self.x_size_m / self.core.res
+        self.y_size_px = self.y_size_m / self.core.res
 
 
     def __getattr__(self, item):
         '''
-        short link for items of coreprop
+        short link for items of core
         '''
-        if item in self.coreprop.__dict__:
-            return self.coreprop.__dict__[item]
+        if item in self.core.__dict__:
+            return self.core.__dict__[item]
         else:
             return self.__dict__[item]
 
@@ -445,7 +445,7 @@ class Tile(object):
 class GlobalTile(object):
 
     def __init__(self, projection, name):
-        self.coreprop = projection
+        self.core = projection
         self.name = name
 
     @abc.abstractmethod
