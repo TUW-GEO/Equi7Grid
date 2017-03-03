@@ -107,7 +107,6 @@ class Equi7Grid(TiledProjectionSystem):
         return subgrids
 
 
-
     @staticmethod
     def link_res_2_tilesize(res, get_size=False):
         res = int(res)
@@ -152,11 +151,11 @@ class Equi7Subgrid(TiledProjection):
 
         data = Equi7Grid._static_equi7_data[continent]
 
-        self.projection = Projection(wkt=data['project'])
-        self.polygon = create_wkt_geometry(data['extent'])
-        self.tilingsystem = Equi7TilingSystem(self.projection, self.polygon, res, tile_size_m)
+        self.projection = Projection(wkt=data['project'], nametag=continent)
+        self.polygon_geog = create_wkt_geometry(data['extent'])
+        self.tilingsystem = Equi7TilingSystem(self.projection, self.polygon_geog, res, tile_size_m)
 
-        super(Equi7Subgrid, self).__init__(self.projection, self.tilingsystem)
+        super(Equi7Subgrid, self).__init__(self.projection, self.polygon_geog, self.tilingsystem)
 
 
 class Equi7TilingSystem(TilingSystem):
@@ -174,7 +173,7 @@ class Equi7TilingSystem(TilingSystem):
         """
         check if a tile covers land
         """
-        land_tiles = Equi7Grid._static_equi7_data[self.subgrid]["coverland"]
+        land_tiles = Equi7Grid._static_equi7_data[Equi7Grid.subgrid]["coverland"]
         return self.shortname in land_tiles[self.tilecode]
 
 class Equi7Tile(Tile):
