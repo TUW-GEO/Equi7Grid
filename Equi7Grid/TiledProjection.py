@@ -59,10 +59,11 @@ class TPSCoreProperty(object):
     epsg : integer
         sdfsd
     """
-    def __init__(self, tag, projection, res, tile_xsize_m, tile_ysize_m):
+    def __init__(self, tag, projection, res, tiletype, tile_xsize_m, tile_ysize_m):
         self.tag = tag
         self.projection = projection
         self.res = res
+        self.tiletype = tiletype
         self.tile_xsize_m = tile_xsize_m
         self.tile_ysize_m = tile_ysize_m
 
@@ -166,7 +167,7 @@ class TiledProjectionSystem(object):
         tile_xsize_m, \
         tile_ysize_m = self.link_res_2_tilesize(res, get_size=True)
 
-        self.core = TPSCoreProperty(nametag, None, res, tile_xsize_m, tile_ysize_m)
+        self.core = TPSCoreProperty(nametag, None, res, tiletype, tile_xsize_m, tile_ysize_m)
 
         self.subgrids = self.define_subgrids()
         pass
@@ -223,7 +224,7 @@ class TiledProjection(object):
             polygon_geog = GlobalTile(self.core.projection).polygon()
         self.polygon_geog = polygon_geog
         self.polygon_proj= transform_geometry(polygon_geog, self.core.projection)
-        self.bbox_geog = get_geom_boundaries(self.polygon_geog, rounding=0.001)
+        self.bbox_geog = get_geom_boundaries(self.polygon_geog, rounding=self.core.res/1000000.0)
         self.bbox_proj = get_geom_boundaries(self.polygon_proj, rounding=self.core.res)
 
         if tilingsystem is None:
@@ -317,7 +318,6 @@ class Tile(object):
         self.x_size_px = self.x_size_m / self.core.res
         self.y_size_px = self.y_size_m / self.core.res
 
-
     def __getattr__(self, item):
         '''
         short link for items of core
@@ -402,7 +402,7 @@ class Tile(object):
 
         """
         geot = [self.llx, self.res, 0,
-                self.lly + self.size_m, 0, -self.res]
+                self.lly + self.y_size_m, 0, -self.res]
 
         return geot
 
@@ -432,8 +432,7 @@ class Tile(object):
 
         return x, y
 
-
-    def get_tile_geotags(self):
+    def get_geotags(self):
         """
         Return geotags for given tile used as geoinformation for GDAL
         """
@@ -451,11 +450,6 @@ class GlobalTile(object):
     @abc.abstractmethod
     def polygon(self):
         return
-
-
-class Equi7TilingSystem(TilingSystem):
-
-    pass
 
 
 def create_wkt_geometry(geometry_wkt, epsg=4326):

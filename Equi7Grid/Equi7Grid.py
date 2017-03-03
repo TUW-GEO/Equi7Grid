@@ -49,7 +49,6 @@ from TiledProjection import TilingSystem
 from TiledProjection import Tile
 from TiledProjection import create_wkt_geometry
 
-
 def _load_static_data(module_path):
     # load the data, raise the error if failed to load equi7grid.dat
     equi7_data = None
@@ -107,7 +106,6 @@ class Equi7Grid(TiledProjectionSystem):
             subgrids[sg] = Equi7Subgrid(self.core, sg)
         return subgrids
 
-
     @staticmethod
     def link_res_2_tilesize(res, get_size=False):
         res = int(res)
@@ -159,7 +157,7 @@ class Equi7Subgrid(TiledProjection):
         self.polygon_geog = create_wkt_geometry(data['extent'])
         self.tilingsystem = Equi7TilingSystem(self.core, self.polygon_geog)
 
-        super(Equi7Subgrid, self).__init__(self.core , self.polygon_geog, self.tilingsystem)
+        super(Equi7Subgrid, self).__init__(self.core, self.polygon_geog, self.tilingsystem)
 
 
 class Equi7TilingSystem(TilingSystem):
@@ -172,6 +170,22 @@ class Equi7TilingSystem(TilingSystem):
     def __init__(self, core, polygon):
 
         super(Equi7TilingSystem, self).__init__(core, polygon, 0, 0)
+
+    def create_tile(self, x0, y0):
+
+        name = self.create_tile_name(self.core.tag, x0/10000, y0/10000)
+        return Equi7Tile(self.core, name, x0/ 10000 * 10000, y0 / 10000 * 10000)
+
+    def create_tile_name(self, continent, x0, y0):
+
+        if (x0 % int(self.core.tiletype[1])) != 0:
+            raise ValueError('x0 coordinate does not fit tile type!')
+        if (y0 % int(self.core.tiletype[1])) != 0:
+            raise ValueError('y0 coordinate does not fit tile type!')
+
+        name = "{}{:03d}M_E{:03d}N{:03d}{}".format(continent, self.core.res,
+                                                   x0, y0, self.core.tiletype)
+        return name
 
     def ask_tile_cover_land(self):
         """
@@ -187,5 +201,9 @@ class Equi7Tile(Tile):
     A tile in the Equi7 grid system.
     """
 
-    def __init__(self):
-        super(Equi7Tile).__init__(name, projection, res, limits)
+    def __init__(self, core, name, x0, y0):
+        super(Equi7Tile, self).__init__(core, name, x0, y0)
+
+    @property
+    def shortname(self):
+        return self.name[7:]
