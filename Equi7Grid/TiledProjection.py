@@ -161,6 +161,8 @@ def dummy(self, thing):
 
 class TiledProjectionSystem(object):
 
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, res, nametag='TPS'):
 
         tiletype, \
@@ -201,6 +203,7 @@ class TiledProjectionSystem(object):
         pass
 
 
+
 class TiledProjection(object):
     """
     Class holding the projection and tiling definition of a tiled projection space.
@@ -213,6 +216,8 @@ class TiledProjection(object):
         A TilingSystem object defining the tiling system.
         If None, the whole space is one single tile.
     """
+
+    __metaclass__ = abc.ABCMeta
 
     staticdata = None
 
@@ -229,7 +234,7 @@ class TiledProjection(object):
 
         if tilingsystem is None:
             tilingsystem = GlobalTile(self.core.projection)
-        self.tilingsystem = tilingsystem
+        self.tilesys = tilingsystem
 
     def __getattr__(self, item):
         '''
@@ -241,10 +246,9 @@ class TiledProjection(object):
             return self.__dict__[item]
 
     @abc.abstractmethod
-    def get_polygon(self, staticdata=staticdata):
+    def get_polygon(self):
         return None
 
-    @abc.abstractmethod
     def get_bbox_geog(self):
         bbox = self.polygon_geog.GetEnvelope()
         return bbox
@@ -265,6 +269,9 @@ class TilingSystem(object):
     ----------
     extent_geog:
     """
+
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, core, polygon_proj, x0, y0):
 
         self.core = core
@@ -285,14 +292,98 @@ class TilingSystem(object):
         else:
             return self.__dict__[item]
 
-
-    def get_tile(self, x,y):
-        return Tile(self.core.projection, 'xybounds')
-
     @abc.abstractmethod
-    def get_tile_name(self, x, y):
+    def create_tile(self, name=None, x=None, y=None):
         return
 
+    def round_xy2lowerleft(self, x0, y0):
+        llx = x0 / self.core.tile_xsize_m * self.core.tile_xsize_m
+        lly = y0 / self.core.tile_ysize_m * self.core.tile_ysize_m
+        return llx, lly
+
+    @abc.abstractmethod
+    def point2tilename(self, x, y):
+        return
+
+    @abc.abstractmethod
+    def encode_tilename(self, x, y):
+        return
+
+    @abc.abstractmethod
+    def decode_tilename(self, name):
+        return
+
+    @abc.abstractmethod
+    def identify_tiles_per_bbox(self, bbox):
+        """Light-weight routine that returns
+           the name of tiles intersecting the bounding box.
+
+        Parameters
+        ----------
+        extent_m : list
+            list of equi7-coordinates limiting the bounding box.
+            scheme: [xmin, ymin, xmax, ymax]
+
+        Return
+        ------
+        tilenames : list
+            list of tile names intersecting the bounding box,
+
+        """
+        xmin, ymin, xmax, ymax = bbox
+
+        if (xmin >= xmax) or (ymin >= ymax):
+            raise ValueError("Check order of coordinates of bbox! "
+                             "Scheme: [xmin, ymin, xmax, ymax]")
+
+        tiletype = self.core.tiletype
+        tres = self.core.res
+        tilenames = list()
+        return tilenames
+
+    def create_tiles_per_bbox(self, bbox):
+        """Light-weight routine that returns
+           the name of tiles intersecting the bounding box.
+
+        Parameters
+        ----------
+        bbox : list
+            list of equi7-coordinates limiting the bounding box.
+            scheme: [xmin, ymin, xmax, ymax]
+
+        Return
+        ------
+        tiles : list
+            list of Equi7Tiles() intersecting the bounding box,
+            with .subset() not exceeding the bounding box.
+
+        """
+        tilenames = self.identify_tiles_per_bbox(bbox)
+        tiles = list()
+
+        for t in tilenames:
+
+            tile = self.create_tile(name=t)
+            le, te, re, be = tile.active_subset_px
+            extent = tile.limits_m()
+
+            # left_edge
+            if extent[0] <= bbox[0]:
+                le = (bbox[0] - extent[0]) / tile.core.res
+            # top_edge
+            if extent[1] <= bbox[1]:
+                te = (bbox[1] - extent[1]) / tile.core.res
+            # right_edge
+            if extent[2] > bbox[2]:
+                re = (bbox[2] - extent[2] + self.core.tile_xsize_m) / tile.core.res
+            # bottom_edge
+            if extent[3] > bbox[3]:
+                be = (bbox[3] - extent[3] + self.core.tile_ysize_m) / tile.core.res
+
+            tile.active_subset_px = le, te, re, be
+            tiles.append(tile)
+
+        return tiles
 
 class Tile(object):
     """
@@ -307,16 +398,18 @@ class Tile(object):
     ----------
     extent_geog:
     """
+
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, core, name, x0, y0):
-        self.name = name
-        self.typename = self.get_type_name()
         self.core = core
+        self.name = name
+        self.typename = core.tiletype
         self.llx = x0
         self.lly = y0
-        self.x_size_m = x0 + self.core.tile_xsize_m
-        self.y_size_m = y0 + self.core.tile_ysize_m
-        self.x_size_px = self.x_size_m / self.core.res
-        self.y_size_px = self.y_size_m / self.core.res
+        self.x_size_px = self.core.tile_xsize_m / self.core.res
+        self.y_size_px = self.core.tile_ysize_m / self.core.res
+        self._subset_px = (0, 0, self.x_size_px, self.y_size_px)
 
     def __getattr__(self, item):
         '''
@@ -327,13 +420,6 @@ class Tile(object):
         else:
             return self.__dict__[item]
 
-
-    @abc.abstractmethod
-    def get_type_name(self):
-        """
-        :returns the tile type name
-        """
-        return
 
     def shape_px(self):
         """
@@ -346,7 +432,7 @@ class Tile(object):
         :returns the limits of the tile in the terms of (xmin, ymin, xmax, ymax)
         """
         return (self.llx, self.lly,
-                self.llx + self.x_size_m, self.lly + self.y_size_m)
+                self.llx + self.core.tile_xsize_m, self.lly + self.core.tile_xsize_m)
 
     @property
     def active_subset_px(self):
@@ -443,8 +529,10 @@ class Tile(object):
 
 class GlobalTile(object):
 
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, projection, name):
-        self.core = projection
+        self.projection = projection
         self.name = name
 
     @abc.abstractmethod
