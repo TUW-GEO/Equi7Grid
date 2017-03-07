@@ -38,7 +38,6 @@ Code for the Equi7 Grid.
 '''
 
 import os
-import platform
 import pickle
 import copy
 import itertools
@@ -55,8 +54,7 @@ from TiledProjection import create_wkt_geometry
 def _load_static_data(module_path):
     # load the data, raise the error if failed to load equi7grid.dat
     equi7_data = None
-    system = platform.system()
-    fname = os.path.join(os.path.dirname(module_path), "data", "equi7grid_{0}.dat".format(system))
+    fname = os.path.join(os.path.dirname(module_path), "data", "equi7grid.dat")
     with open(fname, "rb") as f:
         equi7_data = pickle.load(f)
     return equi7_data
@@ -135,14 +133,6 @@ class Equi7Grid(TiledProjectionSystem):
             result = tile_code
 
         return result
-
-
-    def latlon2xy(self):
-        pass
-
-
-    def xy2latlon(self):
-        pass
 
 
     def find_overlapping_tiles(self, tilename, target_tiletype):
@@ -330,12 +320,15 @@ class Equi7TilingSystem(TilingSystem):
         """
         check if a tile covers land
         """
+        # allow also long-form of tilename
+        if len(short_tilename) == 17:
+            short_tilename = short_tilename[7:]
+
         land_tiles = Equi7Grid._static_equi7_data[self.core.tag]["coverland"][self.core.tiletype]
         if all_tiles:
             return land_tiles
         if short_tilename is not None:
             return short_tilename in land_tiles
-
 
 
 class Equi7Tile(Tile):

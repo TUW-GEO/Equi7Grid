@@ -185,23 +185,102 @@ class TiledProjectionSystem(object):
         else:
             return self.__dict__[item]
 
-    #TODO: check how to force this correctly
+
     @abc.abstractmethod
     def define_subgrids(self):
         pass
 
+
+    def locate_geometry_in_subgrids(self, geom):
+        """
+        finds overlapping subgrids of given geometry.
+        """
+        #covering_subgrid = dict()
+        covering_subgrid = list()
+        for x in self.subgrids.keys():
+            if geom.Intersects(self.subgrids.get(x).polygon_geog):
+                #covering_subgrid[x] = self.subgrids.get(x)
+                covering_subgrid.append(x)
+        return covering_subgrid
+
+
+    def create_point_geom(self, u, v, projection):
+
+        geog_spref = projection.osr_spref
+        point_geom = ogr.Geometry(ogr.wkbPoint)
+        point_geom.AddPoint(u, v)
+        point_geom.AssignSpatialReference(geog_spref)
+
+        return point_geom
+
+
+    def lonlat2xy(self, lat, lon, subgrid=None):
+        '''
+        converts latitude and longitude coordinates to TPS grid coordinates
+
+        :param lat:
+        :param lon:
+        :param subgrid:
+        :return:
+        '''
+        if subgrid is None:
+            vfunc = np.vectorize(self._lonlat2xy)
+            return vfunc(lat, lon)
+        else:
+            vfunc = np.vectorize(self._lonlat2xy_subgrid)
+            return vfunc(lat, lon, subgrid)
+
+
+    def _lonlat2xy(self, lat, lon):
+        """
+        finds overlapping subgrids of given geometry and computes the projected coordinates
+        """
+        # create point geometry
+        lonlatprojection = TPSProjection(epsg=4326)
+        point_geom = self.create_point_geom(lon, lat, lonlatprojection)
+
+        # search for co-locating subgrid
+        subgrid = self.locate_geometry_in_subgrids(point_geom)[0]
+
+        # set up spatial references
+        geog_spref = lonlatprojection.osr_spref
+        proj_spref = self.subgrids[subgrid].core.projection.osr_spref
+
+        # tranform the point
+        tx = osr.CoordinateTransformation(geog_spref, proj_spref)
+        x, y, _ = tx.TransformPoint(lon, lat)
+
+        return np.full_like(x, subgrid, dtype='S2'), x, y
+
+
+    def _lonlat2xy_subgrid(self, lat, lon, subgrid):
+        '''
+        computes the projected coordinates in given subgrid
+
+        :param lat:
+        :param lon:
+        :return:
+        '''
+
+        # set up spatial references
+        lonlatprojection = TPSProjection(epsg=4326)
+        geog_spref = lonlatprojection.osr_spref
+        proj_spref = self.subgrids[subgrid].core.projection.osr_spref
+
+        # tranform the point
+        tx = osr.CoordinateTransformation(geog_spref, proj_spref)
+        x, y, _ = tx.TransformPoint(lon, lat)
+
+        return np.full_like(x, subgrid, dtype='S2'), x, y
+
+
+    def xy2lonlat(self):
+        pass
+
+
     @abc.abstractmethod
     def link_res_2_tilesize(self):
         pass
-
-    @abc.abstractmethod
-    def latlon2xy(self):
-        pass
-
-    @abc.abstractmethod
-    def xy2latlon(self):
-        pass
-
 
 
 class TiledProjection(object):
@@ -311,7 +390,8 @@ class TilingSystem(object):
 
     @abc.abstractmethod
     def decode_tilename(self, name):
-        return
+        a = None
+        return a
 
     @abc.abstractmethod
     def identify_tiles_per_bbox(self, bbox):
@@ -563,6 +643,22 @@ def create_wkt_geometry(geometry_wkt, epsg=4326):
     geom.AssignSpatialReference(geo_sr)
     return geom
 
+
+def open_geometry_shapefile(shapefile):
+    '''
+    def __getitem__(key):
+        return geoms[key]
+    '''
+    driver = ogr.GetDriverByName("ESRI Shapefile")
+    ds = driver.Open(shapefile, 0)
+    feature = ds.GetLayer(0).GetFeature(0)
+    geom = feature.GetGeometryRef()
+
+    out = geom.Clone()
+    ds, feature, geom, = None, None, None
+    return out
+
+
 def transform_geometry(geometry, projection):
     """
     return extent geometry
@@ -613,11 +709,11 @@ class TiledProjectedLocation(object):
 
 
     def geog2proj(self, u, v):
-        x, y = self.grid.latlon2xy
+        x, y = self.grid.lonlat2xy
         return x, y
 
     def proj2geog(self, u, v):
-        x, y = self.grid.xy2latlon
+        x, y = self.grid.xy2lonlat
         return x, y
 
     def proj2tile(self, u, v):
