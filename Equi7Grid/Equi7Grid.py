@@ -219,14 +219,16 @@ class Equi7TilingSystem(TilingSystem):
     def create_tile(self, name=None, x=None, y=None):
 
         if x is not None and y is not None and name is None:
-            name = self.point2tilename(self.core.tag, x, y)
             llx, lly = self.round_xy2lowerleft(x, y)
         elif name is not None and x is None and y is None:
             llx, lly = self.tilename2lowerleft(name)
         else:
-            raise AttributeError('"name" or "x" and "y" must be defined!')
+            raise AttributeError('"name" or "x"&"y" must be defined!')
 
-        covers_land = self.check_land_coverage(short_tilename=name[7:])
+        # get name of tile (assures long-form of tilename, even if short-form is given)
+        name = self.encode_tilename(llx, lly)
+        # set True if land in the tile
+        covers_land = self.check_land_coverage(tilename=name[7:])
 
         return Equi7Tile(self.core, name, llx, lly, covers_land=covers_land)
 
@@ -235,7 +237,10 @@ class Equi7TilingSystem(TilingSystem):
         llx, lly = self.round_xy2lowerleft(x0, y0)
         return self.encode_tilename(llx, lly)
 
+
     def encode_tilename(self, llx, lly):
+
+        # gives long-form of tilename (e.g. "EU500M_E012N018T6")
         tilename = "{}{:03d}M_E{:03d}N{:03d}{}".format(self.core.tag, self.core.res,
                                                         llx / 100000, lly / 100000,
                                                         self.core.tiletype)
@@ -244,37 +249,67 @@ class Equi7TilingSystem(TilingSystem):
 
     def decode_tilename(self, name):
 
-        tf = self.core.tile_ysize_m / 100000
+        # allow short-form of tilename (e.g. "E012N018T6")
+        if len(name) == 10:
+            tile_size_m, llx, lly, tile_code = self.decode_short_tilename(name)
+            subgrid_id = self.core.tag
+            res = self.core.res
+            llx /= 100000
+            lly /= 100000
 
-        msg1 = '"name" is not properly defined! Example: ' \
-               '"{}{:03d}M_E012N036{}"'.format(self.core.tag, self.core.res,
-                                           self.core.tiletype)
-        msg2 = 'East and North coordinates of lower-left-pixel must be multiple of {}00km'.format(tf)
+        # checks for long-form of tilename (e.g. "EU500M_E012N018T6")
+        else:
+            tf = self.core.tile_ysize_m / 100000
 
-        if len(name) != 17:
-            raise ValueError(msg1)
+            msg1 = '"name" is not properly defined! Example: ' \
+                   '"{}{:03d}M_E012N036{}"'.format(self.core.tag, self.core.res,
+                                                   self.core.tiletype)
+            msg2 = 'East and North coordinates of lower-left-pixel must be multiple of {}00km'.format(tf)
 
-        subgrid_id = name[0:2]
-        if subgrid_id != self.core.tag:
-            raise ValueError(msg1)
-        res = int(name[2:5])
-        if res != self.core.res:
-            raise ValueError(msg1)
-        tile_size_m = int(name[-1]) * 100000
-        if tile_size_m != self.core.tile_xsize_m:
-            raise ValueError(msg1)
-        llx = int(name[8:11])
-        if llx % tf:
-            raise ValueError(msg2)
-        lly = int(name[12:15])
-        if lly % tf:
-            raise ValueError(msg2)
-        tile_code = name[-2:]
-        if tile_code != self.core.tiletype:
-            raise ValueError(msg1)
+            if len(name) != 17:
+                raise ValueError(msg1)
+            subgrid_id = name[0:2]
+            if subgrid_id != self.core.tag:
+                raise ValueError(msg1)
+            res = int(name[2:5])
+            if res != self.core.res:
+                raise ValueError(msg1)
+            tile_size_m = int(name[-1]) * 100000
+            if tile_size_m != self.core.tile_xsize_m:
+                raise ValueError(msg1)
+            llx = int(name[8:11])
+            if llx % tf:
+                raise ValueError(msg2)
+            lly = int(name[12:15])
+            if lly % tf:
+                raise ValueError(msg2)
+            tile_code = name[-2:]
+            if tile_code != self.core.tiletype:
+                raise ValueError(msg1)
 
         return subgrid_id, res, tile_size_m, llx*100000, lly*100000, tile_code
 
+    def decode_short_tilename(self, short_tilename):
+
+        tf = self.core.tile_ysize_m / 100000
+
+        msg1 = '"name" is not properly defined! Example: "E012N036{}"'.format(self.core.tiletype)
+        msg2 = 'East and North coordinates of lower-left-pixel must be multiple of {}00km'.format(tf)
+
+        tile_size_m = int(short_tilename[-1]) * 100000
+        if tile_size_m != self.core.tile_xsize_m:
+            raise ValueError(msg1)
+        llx = int(short_tilename[1:4])
+        if llx % tf:
+            raise ValueError(msg2)
+        lly = int(short_tilename[5:8])
+        if lly % tf:
+            raise ValueError(msg2)
+        tile_code = short_tilename[-2:]
+        if tile_code != self.core.tiletype:
+            raise ValueError(msg1)
+
+        return tile_size_m, llx*100000, lly*100000, tile_code
 
     def tilename2lowerleft(self, name):
         _, _, _, llx, lly, _ = self.decode_tilename(name)
@@ -316,19 +351,19 @@ class Equi7TilingSystem(TilingSystem):
         return tilenames
 
 
-    def check_land_coverage(self, short_tilename=None, all_tiles=False):
+    def check_land_coverage(self, tilename=None, all_tiles=False):
         """
         check if a tile covers land
         """
         # allow also long-form of tilename
-        if len(short_tilename) == 17:
-            short_tilename = short_tilename[7:]
+        if len(tilename) == 17:
+            tilename = tilename[7:]
 
         land_tiles = Equi7Grid._static_equi7_data[self.core.tag]["coverland"][self.core.tiletype]
         if all_tiles:
             return land_tiles
-        if short_tilename is not None:
-            return short_tilename in land_tiles
+        if tilename is not None:
+            return tilename in land_tiles
 
 
 class Equi7Tile(Tile):

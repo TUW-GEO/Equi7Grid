@@ -204,16 +204,6 @@ class TiledProjectionSystem(object):
         return covering_subgrid
 
 
-    def create_point_geom(self, u, v, projection):
-
-        geog_spref = projection.osr_spref
-        point_geom = ogr.Geometry(ogr.wkbPoint)
-        point_geom.AddPoint(u, v)
-        point_geom.AssignSpatialReference(geog_spref)
-
-        return point_geom
-
-
     def lonlat2xy(self, lat, lon, subgrid=None):
         '''
         converts latitude and longitude coordinates to TPS grid coordinates
@@ -237,18 +227,15 @@ class TiledProjectionSystem(object):
         """
         # create point geometry
         lonlatprojection = TPSProjection(epsg=4326)
-        point_geom = self.create_point_geom(lon, lat, lonlatprojection)
+        point_geom = create_point_geom(lon, lat, lonlatprojection)
 
         # search for co-locating subgrid
         subgrid = self.locate_geometry_in_subgrids(point_geom)[0]
 
-        # set up spatial references
-        geog_spref = lonlatprojection.osr_spref
-        proj_spref = self.subgrids[subgrid].core.projection.osr_spref
-
-        # tranform the point
-        tx = osr.CoordinateTransformation(geog_spref, proj_spref)
-        x, y, _ = tx.TransformPoint(lon, lat)
+        x, y, = uv2xy(lonlatprojection.osr_spref,
+                      self.subgrids[subgrid].core.projection.osr_spref,
+                      lon,
+                      lat)
 
         return np.full_like(x, subgrid, dtype=(np.str, len(subgrid))), x, y
 
@@ -264,18 +251,13 @@ class TiledProjectionSystem(object):
 
         # set up spatial references
         lonlatprojection = TPSProjection(epsg=4326)
-        geog_spref = lonlatprojection.osr_spref
-        proj_spref = self.subgrids[subgrid].core.projection.osr_spref
 
-        # tranform the point
-        tx = osr.CoordinateTransformation(geog_spref, proj_spref)
-        x, y, _ = tx.TransformPoint(lon, lat)
+        x, y, = uv2xy(lonlatprojection.osr_spref,
+                      self.subgrids[subgrid].core.projection.osr_spref,
+                      lon,
+                      lat)
 
         return np.full_like(x, subgrid, dtype=(np.str, len(subgrid))), x, y
-
-
-    def xy2lonlat(self):
-        pass
 
 
     @abc.abstractmethod
@@ -315,6 +297,7 @@ class TiledProjection(object):
             tilingsystem = GlobalTile(self.core.projection)
         self.tilesys = tilingsystem
 
+
     def __getattr__(self, item):
         '''
         short link for items of core
@@ -324,13 +307,33 @@ class TiledProjection(object):
         else:
             return self.__dict__[item]
 
+
     @abc.abstractmethod
     def get_polygon(self):
         return None
 
+
     def get_bbox_geog(self):
         bbox = self.polygon_geog.GetEnvelope()
         return bbox
+
+
+    def xy2lonlat(self, x, y):
+        vfunc = np.vectorize(self._xy2lonlat)
+        return vfunc(x, y)
+
+    def _xy2lonlat(self, x, y):
+        '''
+        convert projected coordinates to WGS84 longitude and latitude
+        :param x:
+        :param y:
+        :return:
+        '''
+
+        # set up spatial references
+        lonlatprojection = TPSProjection(epsg=4326)
+
+        return uv2xy(self.core.projection.osr_spref, lonlatprojection.osr_spref, x, y)
 
 class TilingSystem(object):
     """
@@ -618,6 +621,22 @@ class GlobalTile(object):
     @abc.abstractmethod
     def polygon(self):
         return
+
+
+def uv2xy(src_ref, dst_ref, u, v):
+    # tranform the point
+    tx = osr.CoordinateTransformation(src_ref, dst_ref)
+    x, y, _ = tx.TransformPoint(u, v)
+    return x, y
+
+
+def create_point_geom(u, v, projection):
+    geog_spref = projection.osr_spref
+    point_geom = ogr.Geometry(ogr.wkbPoint)
+    point_geom.AddPoint(u, v)
+    point_geom.AssignSpatialReference(geog_spref)
+
+    return point_geom
 
 
 def create_wkt_geometry(geometry_wkt, epsg=4326):
