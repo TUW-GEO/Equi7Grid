@@ -250,7 +250,7 @@ class TiledProjectionSystem(object):
         tx = osr.CoordinateTransformation(geog_spref, proj_spref)
         x, y, _ = tx.TransformPoint(lon, lat)
 
-        return np.full_like(x, subgrid, dtype='S2'), x, y
+        return np.full_like(x, subgrid, dtype=(np.str, len(subgrid))), x, y
 
 
     def _lonlat2xy_subgrid(self, lat, lon, subgrid):
@@ -271,7 +271,7 @@ class TiledProjectionSystem(object):
         tx = osr.CoordinateTransformation(geog_spref, proj_spref)
         x, y, _ = tx.TransformPoint(lon, lat)
 
-        return np.full_like(x, subgrid, dtype='S2'), x, y
+        return np.full_like(x, subgrid, dtype=(np.str, len(subgrid))), x, y
 
 
     def xy2lonlat(self):
