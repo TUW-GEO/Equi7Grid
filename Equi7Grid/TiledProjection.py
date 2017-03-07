@@ -37,15 +37,12 @@ Code for Tiled Projection Systems.
 
 '''
 
-import os
 import abc
-import copy
-import pyproj
 
 import numpy as np
 
 from osgeo import osr
-from osgeo import ogr
+from geometry import *
 
 
 class TPSCoreProperty(object):
@@ -623,90 +620,7 @@ class GlobalTile(object):
         return
 
 
-def uv2xy(src_ref, dst_ref, u, v):
-    # tranform the point
-    tx = osr.CoordinateTransformation(src_ref, dst_ref)
-    x, y, _ = tx.TransformPoint(u, v)
-    return x, y
 
-
-def create_point_geom(u, v, projection):
-    geog_spref = projection.osr_spref
-    point_geom = ogr.Geometry(ogr.wkbPoint)
-    point_geom.AddPoint(u, v)
-    point_geom.AssignSpatialReference(geog_spref)
-
-    return point_geom
-
-
-def create_wkt_geometry(geometry_wkt, epsg=4326):
-    """
-    return extent geometry
-
-    Parameters
-    ----------
-    geometry_wkt : string
-        WKT text containing points of geometry (e.g. polygon)
-    epsg : int
-        EPSG code of spatial reference of the points.
-
-    Return
-    ------
-    OGRGeomtery
-        a geometry representing the extent_m of given sub-grid
-
-    """
-    geom = ogr.CreateGeometryFromWkt(geometry_wkt)
-    geo_sr = osr.SpatialReference()
-    geo_sr.SetWellKnownGeogCS("EPSG:{}".format(str(epsg)))
-    geom.AssignSpatialReference(geo_sr)
-    return geom
-
-
-def open_geometry_shapefile(shapefile):
-    '''
-    def __getitem__(key):
-        return geoms[key]
-    '''
-    driver = ogr.GetDriverByName("ESRI Shapefile")
-    ds = driver.Open(shapefile, 0)
-    feature = ds.GetLayer(0).GetFeature(0)
-    geom = feature.GetGeometryRef()
-
-    out = geom.Clone()
-    ds, feature, geom, = None, None, None
-    return out
-
-
-def transform_geometry(geometry, projection):
-    """
-    return extent geometry
-
-    Parameters
-    ----------
-    geometry_wkt : string
-        WKT text containing points of geometry (e.g. polygon)
-    epsg : int
-        EPSG code of spatial reference of the points.
-
-    Return
-    ------
-    OGRGeomtery
-        a geometry representing the extent_m of given sub-grid
-
-    """
-
-    out_srs = projection.osr_spref
-    geometry_out = geometry.Clone()
-    geometry_out.TransformTo(out_srs)
-    geometry = None
-    return geometry_out
-
-
-def get_geom_boundaries(geometry, rounding=1.0):
-    limits = geometry.GetEnvelope()
-    limits = [int(x / rounding) * rounding for x in limits]
-    return limits
 
 '''
 class TiledProjectedLocation(object):

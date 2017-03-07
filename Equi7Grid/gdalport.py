@@ -427,61 +427,6 @@ def write_image(image, filename, frmt="GTiff", nodata=None,
     return ds
 
 
-def write_geometry(geom, fname, format="shapefile"):
-    """ write an geometry to a vector file.
-
-    parameters
-    ----------
-    geom : Geometry
-        geometry object
-    fname : string
-        full path of the output file name
-    format : string
-        format name. currently only shape file is supported
-    """
-
-    drv = ogr.GetDriverByName("ESRI Shapefile")
-    dst_ds = drv.CreateDataSource(fname)
-    srs = geom.GetSpatialReference()
-
-    dst_layer = dst_ds.CreateLayer("out", srs=srs)
-    fd = ogr.FieldDefn('DN', ogr.OFTInteger)
-    dst_layer.CreateField(fd)
-    #dst_field = 0
-
-    feature = ogr.Feature(dst_layer.GetLayerDefn())
-    feature.SetField("DN", 1)
-    feature.SetGeometry(geom)
-    dst_layer.CreateFeature(feature)
-    feature.Destroy()
-    # clean tmp file
-    dst_ds.Destroy()
-    return
-
-
-def extent2polygon(extent, wkt=None):
-    """create a polygon geometry from extent.
-
-    extent : list
-        extent in terms of [xmin, ymin, xmax, ymax]
-    wkt : string
-        project string in well known text format
-
-    """
-    area = [(extent[0], extent[1]), ((extent[0] + extent[2])/2, extent[1]), (extent[2], extent[1]),
-            (extent[2], (extent[1] + extent[3])/2),
-            (extent[2], extent[3]), ((extent[0] + extent[2])/2, extent[3]), (extent[0], extent[3]),
-            (extent[0], (extent[1] + extent[3])/2)]
-    edge = ogr.Geometry(ogr.wkbLinearRing)
-    [edge.AddPoint(x, y) for x, y in area]
-    edge.CloseRings()
-    geom_area = ogr.Geometry(ogr.wkbPolygon)
-    geom_area.AddGeometry(edge)
-    if wkt:
-        geo_sr = osr.SpatialReference()
-        geo_sr.ImportFromWkt(wkt)
-        geom_area.AssignSpatialReference(geo_sr)
-    return geom_area
 
 
 def call_gdal_util(util_name, gdal_path=None, src_files=None, dst_file=None,
