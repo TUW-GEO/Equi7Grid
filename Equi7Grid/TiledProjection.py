@@ -40,8 +40,11 @@ Code for Tiled Projection Systems.
 import abc
 
 import numpy as np
+import dask.array as da
 
 from osgeo import osr
+import fractions
+import math
 from geometry import *
 
 
@@ -332,6 +335,49 @@ class TiledProjection(object):
 
         return uv2xy(self.core.projection.osr_spref, lonlatprojection.osr_spref, x, y)
 
+
+    def downsample_image(self, res_target):
+
+        # resolution of grid
+        res_src = self.core.res
+        # target resolution
+        res_tar = res_target
+        if res_src >= res_tar:
+            raise ValueError('"res_target (={}m) must be larger than '
+                             'source grid resolution (={}m)'.format(res_target, res_src))
+
+        pattern = calc_pixel_index_pattern(res_src, res_target)
+
+
+def calc_pixel_index_pattern(res1, res2):
+
+    # get fraction of the two resolutions
+    frac = fractions.Fraction('{}/{}'.format(res1, res2))
+    numerator = frac._numerator
+    denominator = frac._denominator
+
+    # pattern showing digitized relation of pixel sizes.
+    pattern = list()
+
+    # find best periodic representation of overlapping pixels lattices through optimal rounding.
+    # aims for most symmetry
+    n_items = 0
+    excess_sum = 0.0
+    remainder = denominator
+    for i in range(numerator):
+        r = remainder / float(numerator - n_items)
+        item = math.ceil(r)
+        excess = item - r
+        excess_sum += excess
+        if excess_sum >= 0.5:
+            item -= 1
+            excess_sum -= 1.0
+        n_items += 1
+        remainder -= item
+        pattern.append(int(item))
+
+    return pattern
+
 class TilingSystem(object):
     """
     Class defining the tiling system and providing methods for queries and handling.
@@ -421,6 +467,7 @@ class TilingSystem(object):
         tilenames = list()
         return tilenames
 
+
     def create_tiles_per_bbox(self, bbox):
         """Light-weight routine that returns
            the name of tiles intersecting the bounding box.
@@ -464,6 +511,34 @@ class TilingSystem(object):
             tiles.append(tile)
 
         return tiles
+
+
+    def create_daskarray_per_bbox(self, bbox):
+
+        tiles = self.create_tiles_per_bbox(bbox)
+        tilenames = [x.name for x in tiles]
+
+        x_anchors = set([t.llx for t in tiles])
+        y_anchors = set([t.lly for t in tiles])
+
+        box = np.zeros(((bbox[2]-bbox[0])/self.core.res, (bbox[3]-bbox[1])/self.core.res))
+
+        d = da.from_array(box, chunks=1000)
+        for i in y_anchors:
+
+            pass
+        x = np.arange(1200 ** 2).reshape((1200, 1200))
+        d = da.from_array(x, chunks=120)
+        g = da.ghost.ghost(d, depth={0: 1, 1: 1}, boundary={0: da.concatenate, 1: da.concatenate})
+
+        m = g.map_blocks(func)
+
+        y = da.ghost.trim_internal(m, {0: 1, 1: 1})
+
+
+
+def func(block):
+    return np.mean(block)
 
 class Tile(object):
     """
@@ -559,7 +634,7 @@ class Tile(object):
         Parameters
         ----------
         ftile : string
-            full tile name e.g. EU075M_E048N012T6
+            full tile name e.g. EU075M_E048N012
 
         Returns
         -------
