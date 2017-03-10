@@ -336,20 +336,72 @@ class TiledProjection(object):
         return uv2xy(self.core.projection.osr_spref, lonlatprojection.osr_spref, x, y)
 
 
-    def downsample_image(self, res_target):
 
-        # resolution of grid
-        res_src = self.core.res
-        # target resolution
-        res_tar = res_target
-        if res_src >= res_tar:
-            raise ValueError('"res_target (={}m) must be larger than '
-                             'source grid resolution (={}m)'.format(res_target, res_src))
 
-        pattern = calc_pixel_index_pattern(res_src, res_target)
+def translate_indices(res_f, res_c, bbox, get_px_counts=False):
+
+    # resolution of grid
+    res_f = res_f
+    # target resolution
+    res_c = res_c
+    if res_f >= res_c:
+        raise ValueError('"res_c (={}m) must be larger than '
+                         'source grid resolution (={}m)'.format(res_c, res_f))
+
+    xsize_m = bbox[2] - bbox[0]
+    ysize_m = bbox[3] - bbox[1]
+    xsize_f = xsize_m / float(res_f)
+    ysize_f = ysize_m / float(res_f)
+    xsize_c = xsize_m / float(res_c)
+    ysize_c = ysize_m / float(res_c)
+
+    pattern_f = calc_pixel_index_pattern(res_f, res_c)
+
+    pattern_length_f = sum(pattern_f)
+    pattern_length_c = len(pattern_f)
+
+    if (xsize_m % (res_c*pattern_length_c) != 0) or \
+       (ysize_m % (res_c*pattern_length_c) != 0):
+        raise ValueError('"bbox" must have width and height '
+                         'dividable by {}!'.format(res_c*pattern_length_c))
+
+    # create template
+    pattern_tmpl = list()
+    for i in range(len(pattern_f)):
+        pattern_tmpl.extend([i] * pattern_f[i])
+    # kx, ky:  number of patterns that bbox spans in x and y direction
+    kx = int(xsize_f) / pattern_length_f
+    ky = int(ysize_f) / pattern_length_f
+    idx = np.tile(pattern_tmpl, kx)
+    idy = np.tile(pattern_tmpl, ky)
+    idx += np.repeat(np.arange(kx) * len(pattern_f), pattern_length_f)
+    idy += np.repeat(np.arange(ky) * len(pattern_f), pattern_length_f)
+
+    # create index array
+    # TODO: transpose the index? flip the array upside-down?
+    index = np.zeros((ysize_f, xsize_f), dtype=np.uint32)
+    for i, v in enumerate(idy):
+        index[i, :] = idx + v * xsize_c
+
+    # gets a vector holding the fine pixel per coarse pixel
+    if get_px_counts:
+        n_pixels_x = (np.unique(idx, return_counts=True)[1]).astype(np.uint16)
+        n_pixels_y = (np.unique(idy, return_counts=True)[1]).astype(np.uint16)
+        return index, n_pixels_x, n_pixels_y
+    else:
+        return index
 
 
 def calc_pixel_index_pattern(res1, res2):
+    '''
+    finds best  representation of overlapping pixels lattices through optimal rounding.
+    is periodic and aims for most symmetry-
+
+    :param res1:
+    :param res2:
+    :return:
+    '''
+
 
     # get fraction of the two resolutions
     frac = fractions.Fraction('{}/{}'.format(res1, res2))
@@ -359,8 +411,7 @@ def calc_pixel_index_pattern(res1, res2):
     # pattern showing digitized relation of pixel sizes.
     pattern = list()
 
-    # find best periodic representation of overlapping pixels lattices through optimal rounding.
-    # aims for most symmetry
+    # algorithm finding the integers of the pixel lattice relation
     n_items = 0
     excess_sum = 0.0
     remainder = denominator
