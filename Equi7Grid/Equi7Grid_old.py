@@ -449,8 +449,8 @@ class Equi7Grid(object):
 
         # check if dst tile is a sub tile of src tile
         if dtile.llx < stile.llx or dtile.lly < stile.lly \
-           or dtile.llx + dtile.tile_size_m > stile.llx + stile.tile_size_m \
-           or dtile.lly + dtile.tile_size_m > stile.lly + stile.tile_size_m:
+           or dtile.llx + dtile.size_m > stile.llx + stile.size_m \
+           or dtile.lly + dtile.size_m > stile.lly + stile.size_m:
             raise ValueError("dst tile should be a sub tile of src tile!")
 
         index_pattern = {"075T6-500T6": (7, 6, 7),
@@ -458,7 +458,8 @@ class Equi7Grid(object):
                          "010T1-500T6": (50,),
                          "040T3-075T6": (2, 2, 2, 1, 2, 2, 2, 2),
                          "010T1-075T6": (7, 8),
-                         "010T1-040T3": (4,)
+                         "010T1-040T3": (4,),
+                         "010T1-020T1": (4,)
                          }
 
         index_id = "{:03d}{}-{:03d}{}".format(dtile.res, dtile.tilecode,
@@ -489,7 +490,7 @@ class Equi7Grid(object):
         x_idx = x_idx[x_m:x_m + dtile.size_px]
 
         # make y index
-        yoff = (dtile.lly + dtile.tile_size_m - stile.lly - stile.tile_size_m) / -dtile.res
+        yoff = (dtile.lly + dtile.size_m - stile.lly - stile.size_m) / -dtile.res
         y_n, y_m = yoff / pattern_sum, yoff % pattern_sum
         y_idx = idx + (y_n * len(pattern))
         # shift idx to the correct start point

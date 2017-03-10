@@ -287,7 +287,7 @@ class Equi7TilingSystem(TilingSystem):
             subgrid_id = self.core.tag
             res = self.core.res
 
-        # checks for long-form of tilename (e.g. "EU500M_E012N018T6")
+        # allow long-form of tilename (e.g. "EU500M_E012N018T6")
         elif len(name) == 17:
             subgrid_id = name[0:2]
             if subgrid_id != self.core.tag:

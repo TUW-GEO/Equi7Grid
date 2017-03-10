@@ -335,6 +335,102 @@ class TiledProjection(object):
 
         return uv2xy(self.core.projection.osr_spref, lonlatprojection.osr_spref, x, y)
 
+def sigma0_resample_operations(array):
+
+    ind_exclude = (array <= -2000) | (array >= -500)
+    array[ind_exclude] = -9999
+    array_en = array * 0.01
+    array_en[array == -9999] = -9999
+
+    return array
+
+def downsample_via_pixel_indices(array, res_f, res_c, bbox, function=sigma0_resample_operations):
+    """ downsample with pixel averaging and consecutive filtering.
+
+    This method perform the masking, averaging, and resampling
+    (and consecutive gaussian filtering)
+
+    """
+
+    fine_id, n_pixels_x, n_pixels_y = translate_indices(res_f, res_c, bbox, get_px_counts=True)
+    #cum_pixels = np.cumsum(n_pixels).astype(np.uint16)
+
+    ratio = 1.0 * res_c / res_f
+
+    # retrieve the indexes of the course pixels
+    if ratio.is_integer():
+        course_id = (fine_id[0::int(ratio), 0::int(ratio)]).copy()
+    else:
+        # if ratio is float: np.unique is too slow for T1->T6
+        # therefore changes in values of fine_idx are detected by subtraction fine_idx with fine_idx shifted by
+        # one index. With this resulting mask course_idx can be gained.
+        temp_idx = np.append(fine_id[1:, 0] - fine_id[:-1, 0], 1)
+        temp_idy = np.append(fine_id[0, 1:] - fine_id[0, :-1], 1)
+        temp_id_2d = np.outer(temp_idx, temp_idy)
+        course_id = fine_id[temp_id_2d.astype(bool)]
+        course_id = course_id.reshape(int(len(temp_idx)/ratio), int(len(temp_idy)/ratio))
+        temp_idx = 0
+
+    # calculate the  number of pixels (in A tile) overlapping
+    # within each pixel of C tile
+    pix_num = np.outer(n_pixels_y, n_pixels_x)
+    # minimum number of valid fine pixels in coarse pixels
+    limit = (pix_num / 100.0 * 99.0).astype(np.uint16)
+
+    if function is not None:
+        array = function(array)
+
+    pass
+
+
+
+def fast_mask_counting(mask, course_shape, pattern):
+    """
+    counting the number of masked fine pixels in individual coarse pixels.
+    uses jit from numba for speeding up the loops.
+
+    Parameters
+    ----------
+    mask : numpy array
+        logical array: "1" at index of valid fine pixels,
+                       "0" at index of non-valid fine pixels
+    course_shape : tuple
+        (dim_x, dim_y) shape of the target coarse pixel array
+    pattern : numpy array
+        array, telling for each coarse-scale position the highest fine pixel index
+
+    Returns
+    -------
+    result: numpy array
+        array holding the counts of non-valid (masked) fine pixels per coarse pixel
+    """
+
+    # input check
+    error_msg = 'fast_mask_counting: input is not valid!'
+    types = [np.ndarray, np.array, np.memmap, np.flatiter]
+    if (type(mask) not in types) or (type(pattern) not in types) or \
+       (type(course_shape) != tuple) or (mask.dtype != 'int8') or (pattern.dtype != 'uint16'):
+        raise TypeError(error_msg)
+
+    # fast computation using just in time (jit)
+    @jit()
+    def run_fast_mask_counting(mask, course_shape, pattern):
+        m, n = mask.shape
+        result = np.zeros(course_shape, dtype=np.int32)
+        x = 0
+        for i in range(m):
+            if i == pattern[x]:
+                x += 1
+            y = 0
+            for j in range(n):
+                if j == pattern[y]:
+                    y += 1
+                if mask[i, j] != 1:
+                    result[x, y] += 1
+        return result
+
+    result = run_fast_mask_counting(mask, course_shape, pattern)
+    return result
 
 
 
