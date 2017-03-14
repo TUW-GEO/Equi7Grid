@@ -49,7 +49,8 @@ from TiledProjection import TiledProjection
 from TiledProjection import TPSProjection
 from TiledProjection import TilingSystem
 from TiledProjection import Tile
-from TiledProjection import create_wkt_geometry
+
+from geometry import create_wkt_geometry
 
 def _load_static_data(module_path):
     # load the data, raise the error if failed to load equi7grid.dat
@@ -104,37 +105,34 @@ class Equi7Grid(TiledProjectionSystem):
             subgrids[sg] = Equi7Subgrid(self.core, sg)
         return subgrids
 
-    @staticmethod
-    def link_res_2_tilesize(res, get_size=False):
+    def get_tiletype(self, res):
         res = int(res)
         tile_code = None
         tile_size_m = None
         # allowing sampling of [1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80, 75, 64] metres
         if ((res in range(64, 1001)) and (600000 % res == 0)):
             tile_code = "T6"
-            tile_size_m = 600000
         # allowing sampling of [60, 50, 48, 40, 32, 30, 25, 24, 20] metres
         elif ((res in range(20, 61)) and (300000 % res == 0)):
             tile_code = "T3"
-            tile_size_m = 300000
         # allowing sampling of [16, 10, 8, 5, 4, 2, 1] metres
         elif ((res in range(1, 17)) and (100000 % res == 0)):
             tile_code = "T1"
-            tile_size_m = 100000
         else:
             msg = "Error: Given resolution %d is not supported!" % res
             msg += " Supported resolutions: {}".format(
                 str(Equi7Grid._static_res))
             raise ValueError(msg)
 
-        if get_size == True:
-            result = (tile_code, tile_size_m, tile_size_m)
-        else:
-            result = tile_code
+        return tile_code
 
-        return result
+    def get_tilesize(self, res):
+        xsize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[self.get_tiletype(res)]
+        return xsize, xsize
 
 
+    # TODO create function that interrelates two tilingsystems (actually this function more general e.g
+    # tile_2_tilingsystem) and move it to TilingSystem())
     def find_overlapping_tiles(self, tilename, target_tiletype):
         """
         find the family tiles which share the same extent_m but
@@ -233,7 +231,7 @@ class Equi7TilingSystem(TilingSystem):
             raise AttributeError('"name" or "x"&"y" must be defined!')
 
         # get name of tile (assures long-form of tilename, even if short-form is given)
-        name = self.encode_tilename(llx, lly)
+        name = self._encode_tilename(llx, lly)
         # set True if land in the tile
         covers_land = self.check_land_coverage(tilename=name[7:])
 
@@ -242,22 +240,23 @@ class Equi7TilingSystem(TilingSystem):
 
     def point2tilename(self, x0, y0):
         llx, lly = self.round_xy2lowerleft(x0, y0)
-        return self.encode_tilename(llx, lly)
+        return self._encode_tilename(llx, lly)
 
 
-    def tilename2lowerleft(self, name):
-        _, _, _, llx, lly, _ = self.decode_tilename(name)
-        return llx, lly
 
-
-    def encode_tilename(self, llx, lly):
+    def _encode_tilename(self, llx, lly):
 
         # gives long-form of tilename (e.g. "EU500M_E012N018T6")
         tilename = "{}{:03d}M_E{:03d}N{:03d}{}".format(self.core.tag, self.core.res,
                                                         llx / 100000, lly / 100000,
                                                         self.core.tiletype)
+        # TODO: necessary?
+        self.check_tilename(tilename)
         return tilename
 
+    def tilename2lowerleft(self, name):
+        _, _, _, llx, lly, _ = self.decode_tilename(name)
+        return llx, lly
 
     def check_tilename(self, name):
 
@@ -315,7 +314,7 @@ class Equi7TilingSystem(TilingSystem):
         return subgrid_id, res, tile_size_m, llx*100000, lly*100000, tile_code
 
 
-    def identify_tiles_per_bbox(self, bbox):
+    def identify_tiles_overlapping_bbox(self, bbox):
         """Light-weight routine that returns
            the name of tiles intersecting the bounding box.
 
@@ -347,7 +346,7 @@ class Equi7TilingSystem(TilingSystem):
 
         tilenames = list()
         for i, _ in enumerate(tx):
-            tilenames.append(self.encode_tilename(tx[i]*100000, ty[i]*100000))
+            tilenames.append(self._encode_tilename(tx[i]*100000, ty[i]*100000))
         return tilenames
 
 

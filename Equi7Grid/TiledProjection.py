@@ -43,9 +43,9 @@ import numpy as np
 import dask.array as da
 
 from osgeo import osr
-import fractions
-import math
-from geometry import *
+
+import geometry as geometry
+
 
 
 class TPSCoreProperty(object):
@@ -165,9 +165,8 @@ class TiledProjectionSystem(object):
 
     def __init__(self, res, nametag='TPS'):
 
-        tiletype, \
-        tile_xsize_m, \
-        tile_ysize_m = self.link_res_2_tilesize(res, get_size=True)
+        tiletype = self.get_tiletype(res)
+        tile_xsize_m, tile_ysize_m = self.get_tilesize(res)
 
         self.core = TPSCoreProperty(nametag, None, res, tiletype, tile_xsize_m, tile_ysize_m)
 
@@ -213,6 +212,8 @@ class TiledProjectionSystem(object):
         :param subgrid:
         :return:
         '''
+
+        # TODO use pyproj.transform for performance when having many points
         if subgrid is None:
             vfunc = np.vectorize(self._lonlat2xy)
             return vfunc(lat, lon)
@@ -227,12 +228,12 @@ class TiledProjectionSystem(object):
         """
         # create point geometry
         lonlatprojection = TPSProjection(epsg=4326)
-        point_geom = create_point_geom(lon, lat, lonlatprojection)
+        point_geom = geometry.create_point_geom(lon, lat, lonlatprojection)
 
         # search for co-locating subgrid
         subgrid = self.locate_geometry_in_subgrids(point_geom)[0]
 
-        x, y, = uv2xy(lonlatprojection.osr_spref,
+        x, y, = geometry.uv2xy(lonlatprojection.osr_spref,
                       self.subgrids[subgrid].core.projection.osr_spref,
                       lon,
                       lat)
@@ -252,18 +253,20 @@ class TiledProjectionSystem(object):
         # set up spatial references
         lonlatprojection = TPSProjection(epsg=4326)
 
-        x, y, = uv2xy(lonlatprojection.osr_spref,
+        x, y, = geometry.uv2xy(lonlatprojection.osr_spref,
                       self.subgrids[subgrid].core.projection.osr_spref,
                       lon,
                       lat)
 
         return np.full_like(x, subgrid, dtype=(np.str, len(subgrid))), x, y
 
-
     @abc.abstractmethod
-    def link_res_2_tilesize(self):
+    def get_tiletype(self, res):
         pass
 
+    @abc.abstractmethod
+    def get_tilesize(self, res):
+        pass
 
 class TiledProjection(object):
     """
@@ -289,9 +292,9 @@ class TiledProjection(object):
         if polygon_geog is None:
             polygon_geog = GlobalTile(self.core.projection).polygon()
         self.polygon_geog = polygon_geog
-        self.polygon_proj= transform_geometry(polygon_geog, self.core.projection)
-        self.bbox_geog = get_geom_boundaries(self.polygon_geog, rounding=self.core.res/1000000.0)
-        self.bbox_proj = get_geom_boundaries(self.polygon_proj, rounding=self.core.res)
+        self.polygon_proj= geometry.transform_geometry(polygon_geog, self.core.projection)
+        self.bbox_geog = geometry.get_geom_boundaries(self.polygon_geog, rounding=self.core.res/1000000.0)
+        self.bbox_proj = geometry.get_geom_boundaries(self.polygon_proj, rounding=self.core.res)
 
         if tilingsystem is None:
             tilingsystem = GlobalTile(self.core.projection)
@@ -333,197 +336,9 @@ class TiledProjection(object):
         # set up spatial references
         lonlatprojection = TPSProjection(epsg=4326)
 
-        return uv2xy(self.core.projection.osr_spref, lonlatprojection.osr_spref, x, y)
-
-def sigma0_resample_operations(array):
-
-    ind_exclude = (array <= -2000) | (array >= -500)
-    array[ind_exclude] = -9999
-    array_en = array * 0.01
-    array_en[array == -9999] = -9999
-
-    return array
-
-def downsample_via_pixel_indices(array, res_f, res_c, bbox, function=sigma0_resample_operations):
-    """ downsample with pixel averaging and consecutive filtering.
-
-    This method perform the masking, averaging, and resampling
-    (and consecutive gaussian filtering)
-
-    """
-
-    fine_id, n_pixels_x, n_pixels_y = translate_indices(res_f, res_c, bbox, get_px_counts=True)
-    #cum_pixels = np.cumsum(n_pixels).astype(np.uint16)
-
-    ratio = 1.0 * res_c / res_f
-
-    # retrieve the indexes of the course pixels
-    if ratio.is_integer():
-        course_id = (fine_id[0::int(ratio), 0::int(ratio)]).copy()
-    else:
-        # if ratio is float: np.unique is too slow for T1->T6
-        # therefore changes in values of fine_idx are detected by subtraction fine_idx with fine_idx shifted by
-        # one index. With this resulting mask course_idx can be gained.
-        temp_idx = np.append(fine_id[1:, 0] - fine_id[:-1, 0], 1)
-        temp_idy = np.append(fine_id[0, 1:] - fine_id[0, :-1], 1)
-        temp_id_2d = np.outer(temp_idx, temp_idy)
-        course_id = fine_id[temp_id_2d.astype(bool)]
-        course_id = course_id.reshape(int(len(temp_idx)/ratio), int(len(temp_idy)/ratio))
-        temp_idx = 0
-
-    # calculate the  number of pixels (in A tile) overlapping
-    # within each pixel of C tile
-    pix_num = np.outer(n_pixels_y, n_pixels_x)
-    # minimum number of valid fine pixels in coarse pixels
-    limit = (pix_num / 100.0 * 99.0).astype(np.uint16)
-
-    if function is not None:
-        array = function(array)
-
-    pass
+        return geometry.uv2xy(self.core.projection.osr_spref, lonlatprojection.osr_spref, x, y)
 
 
-
-def fast_mask_counting(mask, course_shape, pattern):
-    """
-    counting the number of masked fine pixels in individual coarse pixels.
-    uses jit from numba for speeding up the loops.
-
-    Parameters
-    ----------
-    mask : numpy array
-        logical array: "1" at index of valid fine pixels,
-                       "0" at index of non-valid fine pixels
-    course_shape : tuple
-        (dim_x, dim_y) shape of the target coarse pixel array
-    pattern : numpy array
-        array, telling for each coarse-scale position the highest fine pixel index
-
-    Returns
-    -------
-    result: numpy array
-        array holding the counts of non-valid (masked) fine pixels per coarse pixel
-    """
-
-    # input check
-    error_msg = 'fast_mask_counting: input is not valid!'
-    types = [np.ndarray, np.array, np.memmap, np.flatiter]
-    if (type(mask) not in types) or (type(pattern) not in types) or \
-       (type(course_shape) != tuple) or (mask.dtype != 'int8') or (pattern.dtype != 'uint16'):
-        raise TypeError(error_msg)
-
-    # fast computation using just in time (jit)
-    @jit()
-    def run_fast_mask_counting(mask, course_shape, pattern):
-        m, n = mask.shape
-        result = np.zeros(course_shape, dtype=np.int32)
-        x = 0
-        for i in range(m):
-            if i == pattern[x]:
-                x += 1
-            y = 0
-            for j in range(n):
-                if j == pattern[y]:
-                    y += 1
-                if mask[i, j] != 1:
-                    result[x, y] += 1
-        return result
-
-    result = run_fast_mask_counting(mask, course_shape, pattern)
-    return result
-
-
-
-def translate_indices(res_f, res_c, bbox, get_px_counts=False):
-
-    # resolution of grid
-    res_f = res_f
-    # target resolution
-    res_c = res_c
-    if res_f >= res_c:
-        raise ValueError('"res_c (={}m) must be larger than '
-                         'source grid resolution (={}m)'.format(res_c, res_f))
-
-    xsize_m = bbox[2] - bbox[0]
-    ysize_m = bbox[3] - bbox[1]
-    xsize_f = xsize_m / float(res_f)
-    ysize_f = ysize_m / float(res_f)
-    xsize_c = xsize_m / float(res_c)
-    ysize_c = ysize_m / float(res_c)
-
-    pattern_f = calc_pixel_index_pattern(res_f, res_c)
-
-    pattern_length_f = sum(pattern_f)
-    pattern_length_c = len(pattern_f)
-
-    if (xsize_m % (res_c*pattern_length_c) != 0) or \
-       (ysize_m % (res_c*pattern_length_c) != 0):
-        raise ValueError('"bbox" must have width and height '
-                         'dividable by {}!'.format(res_c*pattern_length_c))
-
-    # create template
-    pattern_tmpl = list()
-    for i in range(len(pattern_f)):
-        pattern_tmpl.extend([i] * pattern_f[i])
-    # kx, ky:  number of patterns that bbox spans in x and y direction
-    kx = int(xsize_f) / pattern_length_f
-    ky = int(ysize_f) / pattern_length_f
-    idx = np.tile(pattern_tmpl, kx)
-    idy = np.tile(pattern_tmpl, ky)
-    idx += np.repeat(np.arange(kx) * len(pattern_f), pattern_length_f)
-    idy += np.repeat(np.arange(ky) * len(pattern_f), pattern_length_f)
-
-    # create index array
-    # TODO: transpose the index? flip the array upside-down?
-    index = np.zeros((ysize_f, xsize_f), dtype=np.uint32)
-    for i, v in enumerate(idy):
-        index[i, :] = idx + v * xsize_c
-
-    # gets a vector holding the fine pixel per coarse pixel
-    if get_px_counts:
-        n_pixels_x = (np.unique(idx, return_counts=True)[1]).astype(np.uint16)
-        n_pixels_y = (np.unique(idy, return_counts=True)[1]).astype(np.uint16)
-        return index, n_pixels_x, n_pixels_y
-    else:
-        return index
-
-
-def calc_pixel_index_pattern(res1, res2):
-    '''
-    finds best  representation of overlapping pixels lattices through optimal rounding.
-    is periodic and aims for most symmetry-
-
-    :param res1:
-    :param res2:
-    :return:
-    '''
-
-
-    # get fraction of the two resolutions
-    frac = fractions.Fraction('{}/{}'.format(res1, res2))
-    numerator = frac._numerator
-    denominator = frac._denominator
-
-    # pattern showing digitized relation of pixel sizes.
-    pattern = list()
-
-    # algorithm finding the integers of the pixel lattice relation
-    n_items = 0
-    excess_sum = 0.0
-    remainder = denominator
-    for i in range(numerator):
-        r = remainder / float(numerator - n_items)
-        item = math.ceil(r)
-        excess = item - r
-        excess_sum += excess
-        if excess_sum >= 0.5:
-            item -= 1
-            excess_sum -= 1.0
-        n_items += 1
-        remainder -= item
-        pattern.append(int(item))
-
-    return pattern
 
 class TilingSystem(object):
     """
@@ -552,7 +367,7 @@ class TilingSystem(object):
         self.xstep = self.core.tile_xsize_m
         self.ystep = self.core.tile_ysize_m
         self.polygon_proj = polygon_proj
-        self.bbox_proj = get_geom_boundaries(self.polygon_proj, rounding=self.core.res)
+        self.bbox_proj = geometry.get_geom_boundaries(self.polygon_proj, rounding=self.core.res)
 
 
     def __getattr__(self, item):
@@ -578,7 +393,7 @@ class TilingSystem(object):
         return
 
     @abc.abstractmethod
-    def encode_tilename(self, x, y):
+    def _encode_tilename(self, x, y):
         return
 
     @abc.abstractmethod
@@ -587,7 +402,7 @@ class TilingSystem(object):
         return a
 
     @abc.abstractmethod
-    def identify_tiles_per_bbox(self, bbox):
+    def identify_tiles_overlapping_bbox(self, bbox):
         """Light-weight routine that returns
            the name of tiles intersecting the bounding box.
 
@@ -615,7 +430,7 @@ class TilingSystem(object):
         return tilenames
 
 
-    def create_tiles_per_bbox(self, bbox):
+    def create_tiles_overlapping_bbox(self, bbox):
         """Light-weight routine that returns
            the name of tiles intersecting the bounding box.
 
@@ -632,7 +447,7 @@ class TilingSystem(object):
             with .subset() not exceeding the bounding box.
 
         """
-        tilenames = self.identify_tiles_per_bbox(bbox)
+        tilenames = self.identify_tiles_overlapping_bbox(bbox)
         tiles = list()
 
         for t in tilenames:
@@ -660,7 +475,7 @@ class TilingSystem(object):
         return tiles
 
 
-    def create_daskarray_per_bbox(self, bbox):
+    def create_daskarray_overlapping_bbox(self, bbox):
 
         tiles = self.create_tiles_per_bbox(bbox)
         tilenames = [x.name for x in tiles]
@@ -794,7 +609,7 @@ class Tile(object):
 
         return geot
 
-    def ij_2_xy(self, i, j):
+    def ij2xy(self, i, j):
         """
         Returns the projected coordinates of a tile pixel in the TilingSystem
 
