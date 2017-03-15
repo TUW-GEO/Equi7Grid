@@ -43,6 +43,7 @@ Gives physical meaningful results through proper filtering.
 
 import fractions
 import math
+import copy
 
 import numpy as np
 from scipy import ndimage
@@ -61,7 +62,7 @@ class PixelDownsampler(object):
 
         self.spacing_fine = spacing_fine
         self.spacing_coarse = spacing_coarse
-        self.bbox = bbox
+        self.target_bbox = bbox
 
         pixelmap_fine, pixelmap_coarse, pixel_count, n_cum_x, n_cum_y= self.translate_pixelmaps()
         self.pixelmap_fine = pixelmap_fine
@@ -110,8 +111,6 @@ class PixelDownsampler(object):
 
     def translate_pixelmaps(self):
 
-        bbox = self.bbox
-
         # resolution of grid
         res_f = self.spacing_fine
         # target resolution
@@ -119,22 +118,31 @@ class PixelDownsampler(object):
 
         ratio = 1.0 * self.spacing_coarse / self.spacing_fine
 
-        xsize_m = bbox[2] - bbox[0]
-        ysize_m = bbox[3] - bbox[1]
-        xsize_f = xsize_m / float(res_f)
-        ysize_f = ysize_m / float(res_f)
-        xsize_c = xsize_m / float(res_c)
-        ysize_c = ysize_m / float(res_c)
-
         pattern_f = self.calc_pixel_index_pattern()
 
         pattern_length_f = sum(pattern_f)
         pattern_length_c = len(pattern_f)
 
-        if (xsize_m % (res_c*pattern_length_c) != 0) or \
-           (ysize_m % (res_c*pattern_length_c) != 0):
+        kgV = res_c * pattern_length_c
+        needed_bbox = copy.copy(self.target_bbox)
+        needed_bbox[0] -= kgV
+        needed_bbox[1] -= kgV
+        needed_bbox[2] += kgV
+        needed_bbox[3] += kgV
+        self.needed_bbox = needed_bbox
+
+        xsize_m = needed_bbox[2] - needed_bbox[0]
+        ysize_m = needed_bbox[3] - needed_bbox[1]
+        if (xsize_m % (kgV) != 0) or (ysize_m % (kgV) != 0):
             raise ValueError('"bbox" must have width and height '
-                             'dividable by {}!'.format(res_c*pattern_length_c))
+                             'dividable by {}!'.format(kgV))
+
+        xsize_f = int(xsize_m / float(res_f))
+        ysize_f = int(ysize_m / float(res_f))
+        xsize_c = int(xsize_m / float(res_c))
+        ysize_c = int(ysize_m / float(res_c))
+
+        self.needed_shape = (ysize_f, xsize_f)
 
         # create template
         pattern_tmpl = list()
@@ -188,6 +196,10 @@ class PixelDownsampler(object):
         (and consecutive gaussian filtering)
 
         """
+        needed_shape =self.pixelmap_fine.shape
+        if array.shape != needed_shape:
+            raise ValueError('Input "array" must have shape={}!'.format(needed_shape))
+
 
         no_data_value = -9999.0
         datatype = None
