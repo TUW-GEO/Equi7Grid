@@ -123,6 +123,7 @@ class PixelDownsampler(object):
         pattern_length_f = sum(pattern_f)
         pattern_length_c = len(pattern_f)
 
+        # for exact filtering enlarge, the area on the edge by on coarse-pixel-row
         kgV = res_c * pattern_length_c
         needed_bbox = copy.copy(self.target_bbox)
         needed_bbox[0] -= kgV
@@ -131,6 +132,7 @@ class PixelDownsampler(object):
         needed_bbox[3] += kgV
         self.needed_bbox = needed_bbox
 
+        # spatial extent data is needed
         xsize_m = needed_bbox[2] - needed_bbox[0]
         ysize_m = needed_bbox[3] - needed_bbox[1]
         if (xsize_m % (kgV) != 0) or (ysize_m % (kgV) != 0):
@@ -196,7 +198,9 @@ class PixelDownsampler(object):
         (and consecutive gaussian filtering)
 
         """
-        needed_shape =self.pixelmap_fine.shape
+
+
+        needed_shape = self.pixelmap_fine.shape
         if array.shape != needed_shape:
             raise ValueError('Input "array" must have shape={}!'.format(needed_shape))
 
@@ -258,6 +262,10 @@ class PixelDownsampler(object):
         array_out = array_ds.reshape(pixelmap_coarse.shape)
         array_out[array_out == np.nan] = no_data_value
         array_out = array_out.astype(datatype)
+
+        # clip to target bbox
+        g = [(a - b)/self.spacing_coarse for a, b in zip(self.target_bbox, self.needed_bbox)]
+        array_out = array_out[g[0]:g[2], g[1]:g[3]]
 
         return array_out
 
