@@ -549,7 +549,7 @@ class Tile(object):
         :returns the limits of the tile in the terms of (xmin, ymin, xmax, ymax)
         """
         return (self.llx, self.lly,
-                self.llx + self.core.tile_xsize_m, self.lly + self.core.tile_xsize_m)
+                self.llx + self.core.tile_xsize_m, self.lly + self.core.tile_ysize_m)
 
     @property
     def active_subset_px(self):
@@ -605,7 +605,7 @@ class Tile(object):
 
         """
         geot = [self.llx, self.res, 0,
-                self.lly + self.y_size_m, 0, -self.res]
+                self.lly + self.core.tile_ysize_m, 0, -self.res]
 
         return geot
 
@@ -623,9 +623,9 @@ class Tile(object):
         Returns
         -------
         x : number
-            x coordinate in the TilingSystem
+            x coordinate in the projection
         y : number
-            y coordinate in the TilingSystem
+            y coordinate in the projection
         """
 
         gt = self.geotransform()
@@ -633,27 +633,57 @@ class Tile(object):
         x = gt[0] + i * gt[1] + j * gt[2]
         y = gt[3] + i * gt[4] + j * gt[5]
 
-        return x, y
+        if self.core.res <= 1.0:
+            precision = len(str(int(1.0/self.core.res)))+1
+            return round(x, precision), round(y, precision)
+        else:
+            return x, y
+
+    def xy2ij(self, x, y):
+        """
+        returns the column and row number (i, j) of a projection coordinate (x, y)
+
+        parameters
+        ----------
+        x : number
+            x coordinate in the projection
+        y : number
+            y coordinate in the projection
+
+        returns
+        -------
+        i : number
+            pixel row number
+        j : number
+            pixel column number
+        """
+
+        gt = self.geotransform()
+
+        #TODO: check if 1) round-to-nearest-integer or 2) round-down-to-integer
+        i = int(round(-1.0*(gt[2] * gt[3] - gt[0] * gt[5] + gt[5] * x - gt[2] * y) /
+                      (gt[2] * gt[4] - gt[1] * gt[5])))
+        j = int(round(-1.0*(-1 * gt[1] * gt[3] + gt[0] * gt[4] - gt[4] * x + gt[1] * y) /
+                      (gt[2] * gt[4] - gt[1] * gt[5])))
+
+        return i, j
 
     def get_geotags(self):
         """
         Return geotags for given tile used as geoinformation for GDAL
         """
         geotags = {'geotransform': self.geotransform(),
-                   'spatialreference': self.projection}
+                   'spatialreference': self.core.projection.wkt}
 
         return geotags
 
-class GlobalTile(object):
+class GlobalTile(Tile):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, projection, name):
-        self.projection = projection
-        self.name = name
+    def __init__(self, core, name):
+        super(GlobalTile, self).__init__(core, name, 0, 0)
 
-    @abc.abstractmethod
-    def polygon(self):
-        return
+
 
 
