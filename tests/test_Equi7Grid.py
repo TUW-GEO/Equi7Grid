@@ -19,12 +19,36 @@ Tests for the equi7 grid class.
 '''
 import os
 
-from Equi7Grid import Equi7Grid
+from Equi7Grid.Equi7Grid.Equi7Grid import Equi7Grid
 
 import numpy as np
 import numpy.testing as nptest
 
+def test_ij2xy():
+    """
+    Test xy to lonlat projection using double numbers.
+    """
+    e7 = Equi7Grid(500)
+    x_should = 3166500
+    y_should = 5178000
+    tile = e7.EU.tilesys.create_tile(x=3245631, y=5146545)
+    x, y = tile.ij2xy(333, 444)
+    nptest.assert_allclose(x_should, x)
+    nptest.assert_allclose(y_should, y)
 
+def test_xy2ij():
+    """
+    Test xy to lonlat projection using double numbers.
+    """
+    e7 = Equi7Grid(500)
+    column_should = 333
+    row_should = 444
+    tile = e7.EU.tilesys.create_tile(x=3245631, y=5146545)
+    column, row = tile.xy2ij(3166500, 5178000)
+    nptest.assert_allclose(column_should, column)
+    nptest.assert_allclose(row_should, row)
+
+'''
 
 def test_equi7xy2lonlat_doubles():
     """
@@ -162,4 +186,8 @@ def test_search_tile_500_lon_lat_extent():
                      'EU500M_E054N012T6',
                      'EU500M_E054N018T6',
                      'AF500M_E042N090T6']
+'''
 
+if __name__ == '__main__':
+    test_ij2xy()
+    test_xy2ij()
