@@ -108,7 +108,6 @@ class Equi7Grid(TiledProjectionSystem):
     def get_tiletype(self, res):
         res = int(res)
         tile_code = None
-        tile_size_m = None
         # allowing sampling of [1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80, 75, 64] metres
         if ((res in range(64, 1001)) and (600000 % res == 0)):
             tile_code = "T6"
@@ -128,7 +127,8 @@ class Equi7Grid(TiledProjectionSystem):
 
     def get_tilesize(self, res):
         xsize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[self.get_tiletype(res)]
-        return xsize, xsize
+        ysize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[self.get_tiletype(res)]
+        return xsize, ysize
 
 
     # TODO create function that interrelates two tilingsystems (actually this function more general e.g
