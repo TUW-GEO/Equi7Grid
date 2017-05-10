@@ -1,8 +1,7 @@
 # Equi7Grid
 Definition of the Equi7Grid - a spatial reference optimized for global high-resolution raster data.
 
-See an overview presentation here:
-http://eurocarto.org/wp-content/uploads/2015/09/3_6_ppt.pdf
+See an overview presentation here: https://github.com/TUW-GEO/Equi7Grid/blob/develope_package/documentation/EuroCarto2015_BBM_Equi7Grid.pdf
 
 The branch "develop_package" is most advanced (June 2016), as this contains the preparations for the full publication of the Equi7 Grid.
 
