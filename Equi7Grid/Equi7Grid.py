@@ -99,6 +99,24 @@ class Equi7Grid(TiledProjectionSystem):
         super(Equi7Grid, self).__init__(res, nametag='Equi7')
         self.core.projection = 'multiple'
 
+    @staticmethod
+    def encode_res(res):
+        if res <= 999:
+            res_string = str(res).rjust(3, '0')
+        if res >= 1000:
+            res_string = "".join((str(res / 1000.0)[0], 'K', str(res / 1000.0)[2]))
+        return res_string
+
+    @staticmethod
+    def decode_res(res_string):
+        if len(res_string) != 3:
+            raise ValueError('Resolution is badly defined!')
+        if res_string[1] == 'K':
+            res = int(res_string[0]) * 1000 + int(res_string[2]) * 100
+        else:
+            res = int(res_string)
+        return res
+
     def define_subgrids(self):
         subgrids = dict()
         for sg in self._static_subgrid_ids:
@@ -130,58 +148,8 @@ class Equi7Grid(TiledProjectionSystem):
         ysize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[self.get_tiletype(res)]
         return xsize, ysize
 
-
-    # TODO create function that interrelates two tilingsystems (actually this function more general e.g
-    # tile_2_tilingsystem) and move it to TilingSystem())
-    def find_overlapping_tiles(self, tilename, target_tiletype):
-        """
-        find the family tiles which share the same extent_m but
-        with different resolution and tilecode
-
-        Parameters
-        ----------
-        ftile : string
-            full tile name e.g. AF075M_E066N030T6
-        res : int
-            the resolution of the grid system
-        tilecode : string
-            tile code string
-
-        Returns
-        -------
-        list
-            list of found tiles.
-
-        Notes
-        -----
-        Either the res or tile code should be given.
-        But if both are given, the res will be used.
-        """
-
-        # found family tiles
-
-        # allow also long-form of tilename
-        if len(tilename) == 17:
-            tilename = tilename[7:]
-
-        family_tiles = list()
-
-        if target_tiletype >= self.core.tiletype:
-            t_span = int(target_tiletype[-1]) * 100000
-            t_east = (self.llx / t_span) * t_span / 100000
-            t_north = (self.lly / t_span) * t_span / 100000
-            name = "E{:03d}N{:03d}{}".format(t_east, t_north, target_tiletype)
-            family_tiles.append(name)
-        else:
-            sub_span = int(target_tiletype[-1]) * 100000
-            n = int(self.core.tile_ysize_m / sub_span)
-            for x, y in itertools.product(range(n), range(n)):
-                s_east = (self.llx + x * sub_span) / 100000
-                s_north = (self.lly + y * sub_span) / 100000
-                name = "E{:03d}N{:03d}{}".format(s_east, s_north, target_tiletype)
-                family_tiles.append(name)
-        return family_tiles
-
+    def create_tile(self, name):
+        return self.subgrids[name[0:2]].tilesys.create_tile(name)
 
 class Equi7Subgrid(TiledProjection):
 
@@ -193,6 +161,7 @@ class Equi7Subgrid(TiledProjection):
         _core.projection = TPSProjection(wkt=data['project'])
 
         self.core = _core
+        self.name = ''.join(('EQUI7_', continent, Equi7Grid.encode_res(core.res), 'M'))
         self.polygon_geog = create_wkt_geometry(data['extent'])
         self.tilesys = Equi7TilingSystem(self.core, self.polygon_geog)
 
@@ -237,22 +206,19 @@ class Equi7TilingSystem(TilingSystem):
 
         return Equi7Tile(self.core, name, llx, lly, covers_land=covers_land)
 
-
     def point2tilename(self, x0, y0):
         llx, lly = self.round_xy2lowerleft(x0, y0)
         return self._encode_tilename(llx, lly)
 
-
+    def encode_tilename(self, llx, lly, res, tilecode):
+        # gives long-form of tilename (e.g. "EU500M_E012N018T6")
+        tilename = "{}{}M_E{:03d}N{:03d}{}".format(self.core.tag, Equi7Grid.encode_res(res),
+                                                        llx / 100000, lly / 100000,
+                                                        tilecode)
+        return tilename
 
     def _encode_tilename(self, llx, lly):
-
-        # gives long-form of tilename (e.g. "EU500M_E012N018T6")
-        tilename = "{}{:03d}M_E{:03d}N{:03d}{}".format(self.core.tag, self.core.res,
-                                                        llx / 100000, lly / 100000,
-                                                        self.core.tiletype)
-        # TODO: necessary?
-        self.check_tilename(tilename)
-        return tilename
+        return self.encode_tilename(llx, lly, self.core.res, self.core.tiletype)
 
     def tilename2lowerleft(self, name):
         _, _, _, llx, lly, _ = self.decode_tilename(name)
@@ -291,7 +257,7 @@ class Equi7TilingSystem(TilingSystem):
             subgrid_id = name[0:2]
             if subgrid_id != self.core.tag:
                 raise ValueError(self.msg1)
-            res = int(name[2:5])
+            res = Equi7Grid.decode_res(name[2:5])
             if res != self.core.res:
                 raise ValueError(self.msg1)
             tile_size_m = int(name[-1]) * 100000
@@ -312,6 +278,52 @@ class Equi7TilingSystem(TilingSystem):
             raise ValueError(self.msg1)
 
         return subgrid_id, res, tile_size_m, llx*100000, lly*100000, tile_code
+
+    def find_overlapping_tiles(self, tile, res, target_tiletype):
+        """
+        find the family tiles which share the same extent_m but
+        with different resolution and tilecode
+
+        Parameters
+        ----------
+        ftile : string
+            full tile name e.g. AF075M_E066N030T6
+        res : int
+            the resolution of the grid system
+        tilecode : string
+            tile code string
+
+        Returns
+        -------
+        list
+            list of found tiles.
+
+        Notes
+        -----
+        Either the res or tile code should be given.
+        But if both are given, the res will be used.
+        """
+
+        # found family tiles
+
+
+        family_tiles = list()
+
+        if target_tiletype >= tile.core.tiletype:
+            t_span = int(target_tiletype[-1]) * 100000
+            t_east = (tile.llx / t_span) * t_span
+            t_north = (tile.lly / t_span) * t_span
+            name = self.encode_tilename(t_east, t_north, res, target_tiletype)
+            family_tiles.append(name)
+        else:
+            sub_span = int(target_tiletype[-1]) * 100000
+            n = int(tile.core.tile_ysize_m / sub_span)
+            for x, y in itertools.product(range(n), range(n)):
+                s_east = (tile.llx + x * sub_span)
+                s_north = (tile.lly + y * sub_span)
+                name = self.encode_tilename(s_east, s_north, res, target_tiletype)
+                family_tiles.append(name)
+        return family_tiles
 
 
     def identify_tiles_overlapping_bbox(self, bbox):
@@ -377,4 +389,5 @@ class Equi7Tile(Tile):
     @property
     def shortname(self):
         return self.name[7:]
+
 
