@@ -53,6 +53,17 @@ def uv2xy(src_ref, dst_ref, u, v):
     x, y, _ = tx.TransformPoint(u, v)
     return x, y
 
+def create_multipoint_geom(u, v, projection):
+    geog_spref = projection.osr_spref
+    point_geom = ogr.Geometry(ogr.wkbMultiPoint)
+    point_geom.AssignSpatialReference(geog_spref)
+    for p, _ in enumerate(u):
+        point = ogr.Geometry(ogr.wkbPoint)
+        point.SetPoint(0, u[p], v[p])
+        point_geom.AddGeometry(point)
+
+
+    return point_geom
 
 def create_point_geom(u, v, projection):
     geog_spref = projection.osr_spref
