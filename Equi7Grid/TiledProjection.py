@@ -261,6 +261,10 @@ class TiledProjectionSystem(object):
         return np.full_like(x, subgrid, dtype=(np.str, len(subgrid))), x, y
 
     @abc.abstractmethod
+    def create_tile(self, name):
+        pass
+
+    @abc.abstractmethod
     def get_tiletype(self, res):
         pass
 
