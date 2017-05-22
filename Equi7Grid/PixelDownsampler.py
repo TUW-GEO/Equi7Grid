@@ -82,7 +82,7 @@ class PixelDownsampler(object):
     def _fast_mask_counting(self, mask):
         return fast_mask_counting(mask, self.pixelmap_coarse.shape, self.n_cum_x, self.n_cum_y)
 
-    def downsample_via_pixel_indices(self, array, apply_filtering=True, no_data_value=no_data_value,
+    def downsample_via_pixel_indices(self, array, apply_filtering=True, no_data_value=-9999.0,
                                       pre_function=None, post_function=None):
         """ downsample with pixel averaging and consecutive filtering.
 
