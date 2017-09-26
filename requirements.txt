@@ -1,4 +1,15 @@
 # Add your requirements here like:
-# numpy
-# scipy>=0.9
+astropy>2.0.1
+numpy>1.13.1
+dask>0.15.3
+toolz>=0.8.2
+pyproj>=1.9.5.1
+dask>0.15.3
+toolz>=0.8.2
+pyproj>=1.9.5.1
+pytileproj>=0.0.1
+
+# gdal - install via conda
+# numba - install via conda
+# scipy - install via conda
 
