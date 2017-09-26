@@ -1,0 +1,49 @@
+name: C:\PythonMiniconda27_4.3.21\envs\TPS
+channels: !!python/tuple
+- !!python/unicode
+  'defaults'
+dependencies:
+- astropy=2.0.1=np113py27_0
+- certifi=2016.2.28=py27_0
+- colorama=0.3.9=py27_0
+- coverage=4.4.1=py27_0
+- curl=7.52.1=vc9_0
+- enum34=1.1.6=py27_0
+- funcsigs=1.0.2=py27_0
+- gdal=2.1.0=py27_0
+- geos=3.5.0=vc9_0
+- hdf4=4.2.12=vc9_1
+- hdf5=1.8.15.1=vc9_4
+- jpeg=9b=vc9_0
+- kealib=1.4.6=vc9_0
+- libgdal=2.1.0=vc9_0
+- libnetcdf=4.3.3.1=vc9_4
+- libtiff=4.0.6=vc9_3
+- llvmlite=0.19.0=py27_0
+- mkl=2017.0.3=0
+- numba=0.34.0=np113py27_0
+- numpy=1.13.1=py27_0
+- pip=9.0.1=py27_1
+- proj4=4.9.2=vc9_0
+- py=1.4.34=py27_0
+- pytest=3.2.1=py27_0
+- pytest-cov=2.3.1=py27_0
+- python=2.7.13=1
+- scipy=0.19.1=np113py27_0
+- setuptools=36.4.0=py27_0
+- singledispatch=3.4.0.3=py27_0
+- six=1.10.0=py27_0
+- vs2008_runtime=9.00.30729.5054=0
+- vs2015_runtime=14.0.25420=0
+- wheel=0.29.0=py27_0
+- wincertstore=0.2=py27_0
+- xerces-c=3.1.4=vc9_0
+- zlib=1.2.11=vc9_0
+- pip:
+  - click==6.7
+  - dask==0.15.3
+  - equi7grid (c:\code\tps\equi7grid)==0.0.post0.dev1+ng28b01b3.dirty
+  - pyproj==1.9.5.1
+  - pytileproj (c:\code\tps\pytileproj)==0.0.post0.dev10+nfe209d0.dirty
+  - toolz==0.8.2
+prefix: C:\PythonMiniconda27_4.3.21\envs\TPS
