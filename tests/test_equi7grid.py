@@ -176,6 +176,7 @@ def test_search_tile_500_lon_lat_extent():
     e7 = Equi7Grid(500)
     tiles = e7.search_tiles_in_geo_roi(extent=[10, 40, 20, 50],
                                        coverland=True)
+
     assert tiles == ['EU500M_E042N006T6',
                      'EU500M_E042N012T6',
                      'EU500M_E048N006T6',
