@@ -2,8 +2,13 @@
 Equi7Grid
 =========
 
+.. image:: https://travis-ci.org/TUW-GEO/Equi7Grid.svg?branch=master
+    :target: https://travis-ci.org/TUW-GEO/Equi7Grid
 
-Add a short description here!
+.. image:: https://badge.fury.io/py/Equi7Grid.svg
+    :target: https://badge.fury.io/py/Equi7Grid
+
+A python class for working with Equi7Grid - how to convert to - how to use the tiling system - etc.
 
 
 Description
