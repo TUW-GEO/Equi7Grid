@@ -42,8 +42,6 @@ dependencies:
 - pip:
   - click==6.7
   - dask==0.15.3
-  - equi7grid (c:\code\tps\equi7grid)==0.0.post0.dev1+ng28b01b3.dirty
   - pyproj==1.9.5.1
-  - pytileproj (c:\code\tps\pytileproj)==0.0.post0.dev10+nfe209d0.dirty
   - toolz==0.8.2
 prefix: C:\PythonMiniconda27_4.3.21\envs\TPS
