@@ -32,7 +32,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -q -n test-environment -c conda-forge python=$TRAVIS_PYTHON_VERSION numpy scipy pytest pip gdal pyproj numba astropy toolz dask
+  - conda create -q -n test-environment -c conda-forge python=$TRAVIS_PYTHON_VERSION numpy scipy pytest pip gdal pyproj numba astropy toolz
   - source activate test-environment
   - pip install pytileproj
   - python setup.py install
