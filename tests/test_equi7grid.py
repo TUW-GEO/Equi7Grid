@@ -161,10 +161,10 @@ def test_proj4_reprojection_accuracy():
         lon, lat = pyproj.transform(p_grid, p_geo, aeqd_x, aeqd_y)
         # print info
 
-        print "testing location {}:".format(i)
+        print("testing location {}:".format(i))
         _info = "   ({:f},{:f}) -> ({:f},{:f}) -> ({:f},{:f})"
-        print _info.format(pt[0], pt[1], aeqd_x, aeqd_y, lon, lat)
-        print "    difference: ({:f},{:f})".format(lon - pt[0], lat - pt[1])
+        print(info.format(pt[0], pt[1], aeqd_x, aeqd_y, lon, lat))
+        print("    difference: ({:f},{:f})".format(lon - pt[0], lat - pt[1]))
         nptest.assert_allclose(pt[0], lon)
         nptest.assert_allclose(pt[1], lat)
 

@@ -691,7 +691,7 @@ class Equi7Grid(object):
                                  " ".join(Equi7Grid._static_subgrid_ids))
 
         if not geom_area and not extent_m:
-            print "Error: either geom or extent_m should be given as the ROI."
+            print("Error: either geom or extent_m should be given as the ROI.")
             return list()
 
         # obtain the geometry of ROI
@@ -764,8 +764,8 @@ class Equi7Grid(object):
 
         # get overlapped tiles
         overlapped_tiles = list()
-        for x, y in itertools.product(xrange(x_min, x_max, self.tile_size_m),
-                                      xrange(y_min, y_max, self.tile_size_m)):
+        for x, y in itertools.product(range(x_min, x_max, self.tile_size_m),
+                                      range(y_min, y_max, self.tile_size_m)):
             geom_tile = gdalport.extent2polygon((x, y, x + self.tile_size_m,
                                                  y + self.tile_size_m))
             if geom_tile.Intersects(intersect):
@@ -839,7 +839,7 @@ class Equi7Grid(object):
                                                             gdal_path=gdal_path,
                                                             nodata=image_nodata)
                     except Exception as e:
-                        print "retrieve_raster_boundary failed:", str(e)
+                        print("retrieve_raster_boundary failed:", str(e))
                         roi_geom = None
                 else:
                     roi_geom = None

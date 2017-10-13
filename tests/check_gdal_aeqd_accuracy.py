@@ -87,7 +87,7 @@ def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gda
         raise RuntimeError(error_message)
     else:
         if not quiet:
-            print 'Success: The proj4 library used by GDAL is accurate when reprojecting between lat/lon and Equi7!'
+            print('Success: The proj4 library used by GDAL is accurate when reprojecting between lat/lon and Equi7!')
 
     # check the gdalwarp is accurate or not
     if check_gdalwarp:
@@ -118,7 +118,7 @@ def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gda
         diff_data = np.abs(expected_data - reprojected_data)
         if diff_data.sum() > 100 or diff_data.max() > 10:
             raise RuntimeError("Error: gdalwrap is not accurate for reprojecton!")
-        print "Info: gdal accuracy test passed!"
+        print("Info: gdal accuracy test passed!")
 
 if __name__ == "__main__":
     check_gdal_aeqd_accuracy()
