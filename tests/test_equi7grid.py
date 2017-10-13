@@ -163,7 +163,7 @@ def test_proj4_reprojection_accuracy():
 
         print("testing location {}:".format(i))
         _info = "   ({:f},{:f}) -> ({:f},{:f}) -> ({:f},{:f})"
-        print(info.format(pt[0], pt[1], aeqd_x, aeqd_y, lon, lat))
+        print(_info.format(pt[0], pt[1], aeqd_x, aeqd_y, lon, lat))
         print("    difference: ({:f},{:f})".format(lon - pt[0], lat - pt[1]))
         nptest.assert_allclose(pt[0], lon)
         nptest.assert_allclose(pt[1], lat)
