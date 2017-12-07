@@ -179,8 +179,6 @@ class Equi7TilingSystem(TilingSystem):
     A tile in the Equi7 core system.
     """
 
-
-
     def __init__(self, core, polygon):
 
         super(Equi7TilingSystem, self).__init__(core, polygon, 0, 0)
