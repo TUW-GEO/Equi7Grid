@@ -177,6 +177,9 @@ def test_search_tile_500_lon_lat_extent():
     tiles = e7.search_tiles_in_geo_roi(extent=[10, 40, 20, 50],
                                        coverland=True)
 
+    tiles_all = e7.search_tiles_in_geo_roi(extent=[-179.9, -89.9, 179.9, 89.9],
+                                           coverland=True)
+    assert len(tiles_all) == 832
     assert tiles == ['EU500M_E042N006T6',
                      'EU500M_E042N012T6',
                      'EU500M_E048N006T6',
@@ -186,3 +189,6 @@ def test_search_tile_500_lon_lat_extent():
                      'EU500M_E054N012T6',
                      'EU500M_E054N018T6',
                      'AF500M_E042N090T6']
+
+
+
