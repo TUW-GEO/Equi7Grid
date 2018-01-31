@@ -14,15 +14,17 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-'''
+
+"""
+
 Tests for the equi7 grid class.
-'''
-import os
+"""
 
 from equi7grid.equi7grid import Equi7Grid
 
 import numpy as np
 import numpy.testing as nptest
+
 
 def test_ij2xy():
     """
@@ -35,6 +37,7 @@ def test_ij2xy():
     x, y = tile.ij2xy(333, 444)
     nptest.assert_allclose(x_should, x)
     nptest.assert_allclose(y_should, y)
+
 
 def test_xy2ij():
     """
@@ -57,7 +60,7 @@ def test_equi7xy2lonlat_doubles():
     x = 5138743.127891
     y = 1307029.157093
     lon_should, lat_should = 15.1, 45.3
-    lon, lat = e7.EU.xy2lonlat(x,y)
+    lon, lat = e7.EU.xy2lonlat(x, y)
     nptest.assert_allclose(lon_should, lon)
     nptest.assert_allclose(lat_should, lat)
 
@@ -70,7 +73,7 @@ def test_equi7xy2lonlat_numpy_array():
     x = np.array([5138743.127891])
     y = np.array([1307029.157093])
     lon_should, lat_should = 15.1, 45.3
-    lon, lat = e7.EU.xy2lonlat(x,y)
+    lon, lat = e7.EU.xy2lonlat(x, y)
     nptest.assert_allclose(lon_should, lon)
     nptest.assert_allclose(lat_should, lat)
 
@@ -189,6 +192,3 @@ def test_search_tile_500_lon_lat_extent():
                      'EU500M_E054N012T6',
                      'EU500M_E054N018T6',
                      'AF500M_E042N090T6']
-
-
-

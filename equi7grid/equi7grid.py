@@ -62,6 +62,7 @@ def _load_static_data(module_path):
 
 
 class Equi7Grid(TiledProjectionSystem):
+
     """
     Equi7 Grid
 
@@ -104,7 +105,8 @@ class Equi7Grid(TiledProjectionSystem):
         if res <= 999:
             res_string = str(res).rjust(3, '0')
         if res >= 1000:
-            res_string = "".join((str(res / 1000.0)[0], 'K', str(res / 1000.0)[2]))
+            res_string = "".join(
+                (str(res / 1000.0)[0], 'K', str(res / 1000.0)[2]))
         return res_string
 
     @staticmethod
@@ -126,7 +128,8 @@ class Equi7Grid(TiledProjectionSystem):
     def get_tiletype(self, res):
         res = int(res)
         tile_code = None
-        # allowing sampling of [1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80, 75, 64] metres
+        # allowing sampling of [1000, 800, 750, 600, 500, 400, 300, 250, 200,
+        # 150, 125, 100, 96, 80, 75, 64] metres
         if ((res in range(64, 1001)) and (600000 % res == 0)):
             tile_code = "T6"
         # allowing sampling of [60, 50, 48, 40, 32, 30, 25, 24, 20] metres
@@ -144,8 +147,10 @@ class Equi7Grid(TiledProjectionSystem):
         return tile_code
 
     def get_tilesize(self, res):
-        xsize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[self.get_tiletype(res)]
-        ysize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[self.get_tiletype(res)]
+        xsize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[
+            self.get_tiletype(res)]
+        ysize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[
+            self.get_tiletype(res)]
         return xsize, ysize
 
     def create_tile(self, name):
@@ -162,17 +167,20 @@ class Equi7Subgrid(TiledProjection):
         _core.projection = TPSProjection(wkt=data['project'])
 
         self.core = _core
-        self.name = ''.join(('EQUI7_', continent, Equi7Grid.encode_res(core.res), 'M'))
+        self.name = ''.join(
+            ('EQUI7_', continent, Equi7Grid.encode_res(core.res), 'M'))
         self.polygon_geog = create_wkt_geometry(data['extent'])
         self.tilesys = Equi7TilingSystem(self.core, self.polygon_geog)
 
-        super(Equi7Subgrid, self).__init__(self.core, self.polygon_geog, self.tilesys)
-
+        super(Equi7Subgrid, self).__init__(
+            self.core, self.polygon_geog, self.tilesys)
 
     def get_polygon(self):
         pass
 
+
 class Equi7TilingSystem(TilingSystem):
+
     """
     Equi7 tiling system class, providing methods for queries and handling.
 
@@ -185,9 +193,11 @@ class Equi7TilingSystem(TilingSystem):
 
         self.msg1 = '"tilename" is not properly defined! Examples: ' \
                     '"{0}{1:03d}M_E012N036{2}" ' \
-                    'or "E012N036{2}"'.format(self.core.tag, self.core.res, self.core.tiletype)
+                    'or "E012N036{2}"'.format(
+                        self.core.tag, self.core.res, self.core.tiletype)
         self.msg2 = 'East and North coordinates of lower-left-pixel ' \
-                    'must be multiples of {}00km!'.format(self.core.tile_ysize_m / 100000)
+                    'must be multiples of {}00km!'.format(
+                        self.core.tile_ysize_m / 100000)
 
     def create_tile(self, name=None, x=None, y=None):
 
@@ -198,7 +208,8 @@ class Equi7TilingSystem(TilingSystem):
         else:
             raise AttributeError('"name" or "x"&"y" must be defined!')
 
-        # get name of tile (assures long-form of tilename, even if short-form is given)
+        # get name of tile (assures long-form of tilename, even if short-form
+        # is given)
         name = self._encode_tilename(llx, lly)
         # set True if land in the tile
         covers_land = self.check_land_coverage(tilename=name)
@@ -210,10 +221,27 @@ class Equi7TilingSystem(TilingSystem):
         return self._encode_tilename(llx, lly, shortform=shortform)
 
     def encode_tilename(self, llx, lly, res, tilecode, shortform=False):
+        """
+        Encode tilename
+
+        Parameters
+        ----------
+        llx : int
+            Lower left x coordinate.
+        lly : int
+            Lower left y coordinate.
+        res : int
+            Resolution.
+        tilecode : str
+            Tile code.
+        shortform : boolean, optional
+            Shortform (default: False).
+        """
         # gives long-form of tilename (e.g. "EU500M_E012N018T6")
-        tilename = "{}{}M_E{:03d}N{:03d}{}".format(self.core.tag, Equi7Grid.encode_res(res),
-                                                        llx // 100000, lly // 100000,
-                                                        tilecode)
+        tilename = "{}{}M_E{:03d}N{:03d}{}".format(
+            self.core.tag, Equi7Grid.encode_res(res),
+            np.int(llx) // 100000, np.int(lly) // 100000, tilecode)
+
         if shortform:
             tilename = tilename[7:]
 
@@ -285,7 +313,7 @@ class Equi7TilingSystem(TilingSystem):
         else:
             raise ValueError(self.msg1)
 
-        return subgrid_id, res, tile_size_m, llx*100000, lly*100000, tile_code
+        return subgrid_id, res, tile_size_m, llx * 100000, lly * 100000, tile_code
 
     def find_overlapping_tiles(self, tile, res, target_tiletype):
         """
@@ -314,7 +342,6 @@ class Equi7TilingSystem(TilingSystem):
 
         # found family tiles
 
-
         family_tiles = list()
 
         if target_tiletype >= tile.core.tiletype:
@@ -329,10 +356,10 @@ class Equi7TilingSystem(TilingSystem):
             for x, y in itertools.product(range(n), range(n)):
                 s_east = (tile.llx + x * sub_span)
                 s_north = (tile.lly + y * sub_span)
-                name = self.encode_tilename(s_east, s_north, res, target_tiletype)
+                name = self.encode_tilename(
+                    s_east, s_north, res, target_tiletype)
                 family_tiles.append(name)
         return family_tiles
-
 
     def identify_tiles_overlapping_xybbox(self, bbox):
         """Light-weight routine that returns
@@ -358,24 +385,27 @@ class Equi7TilingSystem(TilingSystem):
         tsize = self.core.tile_xsize_m
         factor = tsize // 100000
 
-        llxs = list(range(xmin // tsize * factor, xmax // tsize * factor + 1, factor))
-        llys = list(range(ymin // tsize * factor, ymax // tsize * factor + 1, factor))
+        llxs = list(
+            range(xmin // tsize * factor, xmax // tsize * factor + 1, factor))
+        llys = list(
+            range(ymin // tsize * factor, ymax // tsize * factor + 1, factor))
         tx, ty = np.meshgrid(llxs, llys)
         tx = tx.flatten()
         ty = ty.flatten()
 
         tilenames = list()
         for i, _ in enumerate(tx):
-            tilenames.append(self._encode_tilename(tx[i]*100000, ty[i]*100000))
+            tilenames.append(
+                self._encode_tilename(tx[i] * 100000, ty[i] * 100000))
         return tilenames
-
 
     def check_land_coverage(self, tilename=None, all_tiles=False):
         """
         check if a tile covers land
         """
 
-        land_tiles = Equi7Grid._static_data[self.core.tag]["coverland"][self.core.tiletype]
+        land_tiles = Equi7Grid._static_data[
+            self.core.tag]["coverland"][self.core.tiletype]
         if all_tiles:
             return list(land_tiles)
         if tilename is not None:
@@ -385,6 +415,7 @@ class Equi7TilingSystem(TilingSystem):
 
 
 class Equi7Tile(Tile):
+
     """
     Equi7 Tile class
 
@@ -398,5 +429,3 @@ class Equi7Tile(Tile):
     @property
     def shortname(self):
         return self.name[7:]
-
-
