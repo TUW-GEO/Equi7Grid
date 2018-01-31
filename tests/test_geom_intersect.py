@@ -1,13 +1,14 @@
 from osgeo import ogr, osr
-import pytest
 
 from equi7grid.equi7grid import Equi7Grid
+
 
 def test_geom_intersect():
     geom_roi = setup_geom_roi()
 
     # reference file list
-    ref_tiles = ['EU500M_E012N012T6', 'EU500M_E012N018T6', 'EU500M_E018N006T6', 'EU500M_E024N006T6',
+    ref_tiles = [
+        'EU500M_E012N012T6', 'EU500M_E012N018T6', 'EU500M_E018N006T6', 'EU500M_E024N006T6',
                  'EU500M_E024N012T6', 'EU500M_E030N006T6', 'EU500M_E030N012T6', 'EU500M_E030N024T6',
                  'EU500M_E036N006T6', 'EU500M_E036N012T6', 'EU500M_E036N018T6', 'EU500M_E036N024T6',
                  'EU500M_E036N030T6', 'EU500M_E036N036T6', 'EU500M_E036N042T6', 'EU500M_E042N000T6',
@@ -28,6 +29,7 @@ def test_geom_intersect():
     res_tiles = grid._search_sgrid_tiles(geom_roi, 'EU', True)
 
     assert sorted(ref_tiles) == sorted(res_tiles)
+
 
 def setup_geom_roi():
     ring_global = ogr.Geometry(ogr.wkbLinearRing)
@@ -57,4 +59,3 @@ def setup_geom_roi():
     poly_global.AssignSpatialReference(geom_global_sr)
 
     return poly_global
-
