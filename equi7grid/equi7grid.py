@@ -212,7 +212,7 @@ class Equi7TilingSystem(TilingSystem):
     def encode_tilename(self, llx, lly, res, tilecode, shortform=False):
         # gives long-form of tilename (e.g. "EU500M_E012N018T6")
         tilename = "{}{}M_E{:03d}N{:03d}{}".format(self.core.tag, Equi7Grid.encode_res(res),
-                                                        llx / 100000, lly / 100000,
+                                                        llx // 100000, lly // 100000,
                                                         tilecode)
         if shortform:
             tilename = tilename[7:]
@@ -356,10 +356,10 @@ class Equi7TilingSystem(TilingSystem):
                              "Scheme: [xmin, ymin, xmax, ymax]")
 
         tsize = self.core.tile_xsize_m
-        factor = tsize / 100000
+        factor = tsize // 100000
 
-        llxs = range(xmin / tsize * factor, xmax / tsize * factor + 1, factor)
-        llys = range(ymin / tsize * factor, ymax / tsize * factor + 1, factor)
+        llxs = list(range(xmin // tsize * factor, xmax // tsize * factor + 1, factor))
+        llys = list(range(ymin // tsize * factor, ymax // tsize * factor + 1, factor))
         tx, ty = np.meshgrid(llxs, llys)
         tx = tx.flatten()
         ty = ty.flatten()
