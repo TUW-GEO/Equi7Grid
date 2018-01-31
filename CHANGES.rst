@@ -2,9 +2,17 @@
 Changelog
 =========
 
-Version 0.1
-===========
+Version v0.0.3
+==============
 
-- Feature A added
-- FIX: nasty bug #1729 fixed
-- add your changes here!
+- Fix Python 3 issues
+
+Version v0.0.2
+==============
+
+- Second draft
+
+Version v0.0.1
+==============
+
+- First draft

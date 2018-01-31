@@ -11,12 +11,6 @@ Equi7Grid
 A python class for working with Equi7Grid - how to convert to - how to use the tiling system - etc.
 
 
-Description
-===========
-
-A LONGER DESCRIPTION OF YOUR PROJECT GOES HERE...
-
-
 Note
 ====
 
