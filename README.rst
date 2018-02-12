@@ -14,5 +14,10 @@ A python class for working with Equi7Grid - how to convert to - how to use the t
 Note
 ====
 
-This project has been set up using PyScaffold 2.5.6. For details and usage
-information on PyScaffold see http://pyscaffold.readthedocs.org/.
+A detailed documentation on the Equi7Grid definition is at:
+
+~/docs/doc_files/
+
+Overlays for visualisation in Google Earth can be found here:
+
+~/docs/doc_files/google_earth_overlays/
