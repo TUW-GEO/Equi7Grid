@@ -14,6 +14,8 @@ A python class for working with Equi7Grid - how to convert to - how to use the t
 Note
 ====
 
+Installs for numba, scripy and gdal are required from conda or conda-forge.
+
 A detailed documentation on the Equi7Grid definition is at:
 
 ~/docs/doc_files/
