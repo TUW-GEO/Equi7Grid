@@ -174,7 +174,7 @@ def test_proj4_reprojection_accuracy():
 
 def test_search_tile_500_lon_lat_extent():
     """
-    Test searching of tile with input of lon lat extent
+    Test searching for tiles with input of lon lat extent
     """
     e7 = Equi7Grid(500)
     tiles = e7.search_tiles_in_geo_roi(extent=[10, 40, 20, 50],
@@ -189,4 +189,18 @@ def test_search_tile_500_lon_lat_extent():
                      'AF500M_E042N090T6']
 
     assert len(tiles_all) == 832
+    assert sorted(tiles) == sorted(desired_tiles)
+
+
+def test_search_tile_500_lon_lat_extent_by_points():
+    """
+    Test searching for tiles with input of lon lat points
+    """
+    e7 = Equi7Grid(500)
+    tiles = e7.search_tiles_in_geo_roi(extent=[(10, 40), (5, 50), (-90.9, -1.2)],
+                                       coverland=True)
+
+    desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N018T6',
+                     'SA500M_E036N066T6', 'AF500M_E042N090T6']
+
     assert sorted(tiles) == sorted(desired_tiles)
