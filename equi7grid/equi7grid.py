@@ -49,7 +49,7 @@ from pytileproj.base import TiledProjection
 from pytileproj.base import TPSProjection
 from pytileproj.base import TilingSystem
 from pytileproj.base import Tile
-from pytileproj.geometry import create_wkt_geometry
+from pytileproj.geometry import create_geometry_from_wkt
 
 
 def _load_static_data(module_path):
@@ -169,7 +169,7 @@ class Equi7Subgrid(TiledProjection):
         self.core = _core
         self.name = ''.join(
             ('EQUI7_', continent, Equi7Grid.encode_res(core.res), 'M'))
-        self.polygon_geog = create_wkt_geometry(data['extent'])
+        self.polygon_geog = create_geometry_from_wkt(data['extent'])
         self.tilesys = Equi7TilingSystem(self.core, self.polygon_geog)
 
         super(Equi7Subgrid, self).__init__(
@@ -315,7 +315,9 @@ class Equi7TilingSystem(TilingSystem):
 
         return subgrid_id, res, tile_size_m, llx * 100000, lly * 100000, tile_code
 
-    def find_overlapping_tiles(self, tile, res, target_tiletype):
+    def find_overlapping_tilenames(self, fulltilename,
+                                   target_res=None,
+                                   target_tiletype=None):
         """
         find the family tiles which share the same extent_m but
         with different resolution and tilecode
@@ -342,24 +344,46 @@ class Equi7TilingSystem(TilingSystem):
 
         # found family tiles
 
-        family_tiles = list()
+        if target_res is None:
+            shortform = True
+        else:
+            shortform = False
 
-        if target_tiletype >= tile.core.tiletype:
-            t_span = int(target_tiletype[-1]) * 100000
-            t_east = (tile.llx / t_span) * t_span
-            t_north = (tile.lly / t_span) * t_span
-            name = self.encode_tilename(t_east, t_north, res, target_tiletype)
+        if target_res is not None and target_tiletype is None:
+            res = target_res
+        if target_res is None and target_tiletype is not None:
+            if target_tiletype == 'T1':
+                res = 10
+            if target_tiletype == 'T3':
+                res = 20
+            if target_tiletype == 'T6':
+                res = 500
+        target_grid = Equi7Grid(res=res)
+
+        target_tiletype = target_grid.core.tiletype
+        target_tilesize = target_grid.core.tile_xsize_m
+
+        _, src_res, src_tile_size_m, src_llx, src_lly, src_tiletype = \
+            self.decode_tilename(fulltilename)
+
+        family_tiles = list()
+        if target_tiletype >= src_tiletype:
+            t_east = (src_llx / target_tilesize) * target_tilesize
+            t_north = (src_lly / target_tilesize) * target_tilesize
+            name = self.encode_tilename(t_east, t_north, res,
+                                        target_tiletype, shortform=shortform)
             family_tiles.append(name)
         else:
-            sub_span = int(target_tiletype[-1]) * 100000
-            n = int(tile.core.tile_ysize_m / sub_span)
+            n = int(src_tile_size_m / target_tilesize)
             for x, y in itertools.product(range(n), range(n)):
-                s_east = (tile.llx + x * sub_span)
-                s_north = (tile.lly + y * sub_span)
+                s_east = (src_llx  + x * target_tilesize)
+                s_north = (src_lly  + y * target_tilesize)
                 name = self.encode_tilename(
-                    s_east, s_north, res, target_tiletype)
+                    s_east, s_north, res,
+                    target_tiletype, shortform=shortform)
                 family_tiles.append(name)
         return family_tiles
+
 
     def identify_tiles_overlapping_xybbox(self, bbox):
         """Light-weight routine that returns
@@ -398,6 +422,7 @@ class Equi7TilingSystem(TilingSystem):
             tilenames.append(
                 self._encode_tilename(tx[i] * 100000, ty[i] * 100000))
         return tilenames
+
 
     def check_land_coverage(self, tilename=None, all_tiles=False):
         """

@@ -126,7 +126,8 @@ class CopernicusSubgrid(TiledProjection):
         _core.projection = TPSProjection(epsg=4326)
 
         self.core = _core
-        self.polygon_geog = extent2polygon([-180,-90,180,90], wkt=self.core.projection.wkt)
+        self.polygon_geog = extent2polygon([-180,-90,180,90],
+                                           self.core.projection.osr_spref)
         self.tilesys = CopernicusTilingSystem(self.core, self.polygon_geog)
 
         super(CopernicusSubgrid, self).__init__(self.core, self.polygon_geog, self.tilesys)

@@ -172,6 +172,60 @@ def test_proj4_reprojection_accuracy():
         nptest.assert_allclose(pt[1], lat)
 
 
+def test_decode_tilename():
+    """
+    test the decoding of tilenames
+
+    """
+    e7_500 = Equi7Grid(500)
+    e7_10 = Equi7Grid(10)
+
+    assert e7_500.EU.tilesys.decode_tilename('EU500M_E042N006T6') == \
+           ('EU', 500, 600000, 4200000, 600000, 'T6')
+    assert e7_10.OC.tilesys.decode_tilename('OC010M_E085N091T1') == \
+           ('OC', 10, 100000, 8500000, 9100000, 'T1')
+
+    assert e7_500.EU.tilesys.decode_tilename('E042N006T6') == \
+           ('EU', 500, 600000, 4200000, 600000, 'T6')
+    assert e7_10.OC.tilesys.decode_tilename('E085N091T1') == \
+           ('OC', 10, 100000, 8500000, 9100000, 'T1')
+
+    with nptest.assert_raises(ValueError) as excinfo:
+        e7_10.EU.tilesys.decode_tilename('E042N006T6')
+    assert str(excinfo.exception).startswith('"tilename" is not properly defined!')
+
+
+def test_find_overlapping_tilenames():
+    """
+    tests search for tiles which share the same extent_m but
+    with different resolution and tilecode
+    """
+    e7_500 = Equi7Grid(500)
+    e7_10 = Equi7Grid(10)
+
+    tiles1_should = ['EU025M_E042N006T3', 'EU025M_E042N009T3',
+                     'EU025M_E045N006T3', 'EU025M_E045N009T3']
+    tiles1 = e7_500.EU.tilesys.find_overlapping_tilenames('EU500M_E042N006T6',
+                                                        target_res=25)
+    assert sorted(tiles1) == sorted(tiles1_should)
+
+    tiles2_should =['E042N006T3', 'E042N009T3', 'E045N006T3', 'E045N009T3']
+    tiles2 = e7_500.EU.tilesys.find_overlapping_tilenames('E042N006T6',
+                                                        target_tiletype='T3')
+    assert sorted(tiles2) == sorted(tiles2_should)
+
+    tiles3_should =['EU500M_E042N012T6']
+
+    tiles3 = e7_10.EU.tilesys.find_overlapping_tilenames('E044N015T1',
+                                                        target_res=500)
+    assert sorted(tiles3) == sorted(tiles3_should)
+
+    tiles4_should =['E039N009T3']
+    tiles4 = e7_10.EU.tilesys.find_overlapping_tilenames('E041N011T1',
+                                                        target_tiletype='T3')
+    assert sorted(tiles4) == sorted(tiles4_should)
+
+
 def test_search_tile_500_lon_lat_extent():
     """
     Test searching for tiles with input of lon lat extent
@@ -204,3 +258,29 @@ def test_search_tile_500_lon_lat_extent_by_points():
                      'SA500M_E036N066T6', 'AF500M_E042N090T6']
 
     assert sorted(tiles) == sorted(desired_tiles)
+
+
+def test_identify_tiles_overlapping_xybbox():
+    """
+    tests identification of tiles covering a bounding box
+    given in equi7 coordinats
+    """
+
+    e7_500 = Equi7Grid(500)
+    e7_10 = Equi7Grid(10)
+
+    tiles1_should = ['EU500M_E048N006T6', 'EU500M_E054N006T6',
+                     'EU500M_E060N006T6', 'EU500M_E048N012T6',
+                     'EU500M_E054N012T6', 'EU500M_E060N012T6']
+
+    tiles2_should = ['EU010M_E051N011T1', 'EU010M_E052N011T1',
+                     'EU010M_E051N012T1', 'EU010M_E052N012T1']
+
+    tiles1 = e7_500.EU.tilesys.identify_tiles_overlapping_xybbox(
+                                         [5138743, 1111111, 6200015, 1534657])
+
+    tiles2 = e7_10.EU.tilesys.identify_tiles_overlapping_xybbox(
+                                         [5138743, 1111111, 5299999, 1234657])
+
+    assert sorted(tiles1) == sorted(tiles1_should)
+    assert sorted(tiles2) == sorted(tiles2_should)
