@@ -73,18 +73,18 @@ class CopernicusGrid(TiledProjectionSystem):
     # set True if one single global tile is needed
     _global_tile = True
 
-    def __init__(self, res):
+    def __init__(self, sampling):
         """
         construct Copernicus grid system.
 
         """
 
-        # check if res is allowed
-        if res not in CopernicusGrid._static_res:
-            raise ValueError("Resolution {}m is not supported!".format(res))
+        # check if sampling is allowed
+        if sampling not in CopernicusGrid._static_res:
+            raise ValueError("Resolution {}m is not supported!".format(sampling))
 
         # initializing
-        super(CopernicusGrid, self).__init__(res, nametag='Equi7')
+        super(CopernicusGrid, self).__init__(sampling, nametag='Equi7')
         self.core.projection = 'Latlon'
 
     def define_subgrids(self):
@@ -93,24 +93,24 @@ class CopernicusGrid(TiledProjectionSystem):
             subgrids[sg] = CopernicusSubgrid(self.core, sg)
         return subgrids
 
-    def get_tiletype(self, res, global_tile=_global_tile):
-        res = res
+    def get_tiletype(self, sampling, global_tile=_global_tile):
+        sampling = sampling
         tile_code = None
         if global_tile:
             tile_code = "GLOBAL"
-        elif (res == 1.0/112) and (10.0 % res <= 0.000000001):
+        elif (sampling == 1.0 / 112) and (10.0 % sampling <= 0.000000001):
             tile_code = "T10"
         else:
-            msg = "Error: Given resolution %d is not supported!" % res
+            msg = "Error: Given resolution %d is not supported!" % sampling
             msg += " Supported resolutions: {}".format(
                 str(CopernicusGrid._static_res))
             raise ValueError(msg)
 
         return tile_code
 
-    def get_tilesize(self, res):
-        xsize = {'T10': 10.0, 'GLOBAL': 360.0}[self.get_tiletype(res)]
-        ysize = {'T10': 10.0, 'GLOBAL': 180.0}[self.get_tiletype(res)]
+    def get_tilesize(self, sampling):
+        xsize = {'T10': 10.0, 'GLOBAL': 360.0}[self.get_tiletype(sampling)]
+        ysize = {'T10': 10.0, 'GLOBAL': 180.0}[self.get_tiletype(sampling)]
         return xsize, ysize
 
     def create_tile(self, name):
