@@ -26,7 +26,9 @@ def test_geom_intersect():
                  'EU500M_E078N012T6']
 
     grid = Equi7Grid(500)
-    res_tiles = grid._search_sgrid_tiles(geom_roi, 'EU', True)
+    res_tiles = grid.search_tiles_in_roi(geom_roi,
+                                         subgrid_ids='EU',
+                                         coverland=True)
 
     assert sorted(ref_tiles) == sorted(res_tiles)
 
