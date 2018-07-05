@@ -19,16 +19,17 @@
 
 Tests for the equi7 grid class.
 """
-
-from equi7grid.equi7grid import Equi7Grid
-
 import numpy as np
 import numpy.testing as nptest
+from osgeo import osr
+import pyproj
+
+from equi7grid.equi7grid import Equi7Grid
 
 
 def test_ij2xy():
     """
-    Test xy to lonlat projection using double numbers.
+    Tests xy to lonlat projection using double numbers.
     """
     e7 = Equi7Grid(500)
     x_should = 3166500
@@ -41,7 +42,7 @@ def test_ij2xy():
 
 def test_xy2ij():
     """
-    Test xy to lonlat projection using double numbers.
+    Tests xy to lonlat projection using double numbers.
     """
     e7 = Equi7Grid(500)
     column_should = 333
@@ -54,7 +55,7 @@ def test_xy2ij():
 
 def test_equi7xy2lonlat_doubles():
     """
-    Test xy to lonlat projection using double numbers.
+    Tests xy to lonlat projection using double numbers.
     """
     e7 = Equi7Grid(500)
     x = 5138743.127891
@@ -67,7 +68,7 @@ def test_equi7xy2lonlat_doubles():
 
 def test_equi7xy2lonlat_numpy_array():
     """
-    Test xy to lonlat projection using numpy arrays.
+    Tests xy to lonlat projection using numpy arrays.
     """
     e7 = Equi7Grid(500)
     x = np.array([5138743.127891])
@@ -80,7 +81,7 @@ def test_equi7xy2lonlat_numpy_array():
 
 def test_lonlat2equi7xy_doubles():
     """
-    Test lonlat to xy projection using double numbers.
+    Tests lonlat to xy projection using double numbers.
     """
     e7 = Equi7Grid(500)
     x_should = 5138743.127891
@@ -94,7 +95,7 @@ def test_lonlat2equi7xy_doubles():
 
 def test_lonlat2equi7xy_numpy_array():
     """
-    Test lonlat to xy projection using numpy arrays.
+    Tests lonlat to xy projection using numpy arrays.
     """
     e7 = Equi7Grid(500)
     x_should = np.array([5138743.127891,
@@ -111,7 +112,7 @@ def test_lonlat2equi7xy_numpy_array():
 
 def test_lonlat2equi7xy_numpy_array_no_sgrid():
     """
-    Test lonlat to xy projection using numpy arrays.
+    Tests lonlat to xy projection using numpy arrays.
     """
     e7 = Equi7Grid(500)
     x_should = np.array([5138743.127891,
@@ -127,11 +128,9 @@ def test_lonlat2equi7xy_numpy_array_no_sgrid():
 
 
 def test_proj4_reprojection_accuracy():
-
-    # test the proj4 reproject accuracy by forward and backward reprojection
-    from osgeo import osr
-    import pyproj
-
+    """
+    Tests the proj4 reproject accuracy by forward and backward reprojection.
+    """
     geo_sr = osr.SpatialReference()
     geo_sr.SetWellKnownGeogCS("EPSG:4326")
     # Africa
@@ -174,8 +173,7 @@ def test_proj4_reprojection_accuracy():
 
 def test_decode_tilename():
     """
-    test the decoding of tilenames
-
+    Tests the decoding of tilenames.
     """
     e7_500 = Equi7Grid(500)
     e7_10 = Equi7Grid(10)
@@ -197,8 +195,8 @@ def test_decode_tilename():
 
 def test_find_overlapping_tilenames():
     """
-    tests search for tiles which share the same extent_m but
-    with different resolution and tilecode
+    Tests search for tiles which share the same extent_m but
+    with different resolution and tilecode.
     """
     e7_500 = Equi7Grid(500)
     e7_10 = Equi7Grid(10)
@@ -206,7 +204,7 @@ def test_find_overlapping_tilenames():
     tiles1_should = ['EU025M_E042N006T3', 'EU025M_E042N009T3',
                      'EU025M_E045N006T3', 'EU025M_E045N009T3']
     tiles1 = e7_500.EU.tilesys.find_overlapping_tilenames('EU500M_E042N006T6',
-                                                        target_res=25)
+                                                          target_sampling=25)
     assert sorted(tiles1) == sorted(tiles1_should)
 
     tiles2_should =['E042N006T3', 'E042N009T3', 'E045N006T3', 'E045N009T3']
@@ -217,7 +215,7 @@ def test_find_overlapping_tilenames():
     tiles3_should =['EU500M_E042N012T6']
 
     tiles3 = e7_10.EU.tilesys.find_overlapping_tilenames('E044N015T1',
-                                                        target_res=500)
+                                                         target_sampling=500)
     assert sorted(tiles3) == sorted(tiles3_should)
 
     tiles4_should =['E039N009T3']
@@ -228,14 +226,14 @@ def test_find_overlapping_tilenames():
 
 def test_search_tile_500_lon_lat_extent():
     """
-    Test searching for tiles with input of lon lat extent
+    Tests searching for tiles with input of lon lat extent
     """
     e7 = Equi7Grid(500)
-    tiles = e7.search_tiles_in_geo_roi(extent=[10, 40, 20, 50],
-                                       coverland=True)
+    tiles = e7.search_tiles_in_roi(extent=[10, 40, 20, 50],
+                                   coverland=True)
 
-    tiles_all = e7.search_tiles_in_geo_roi(extent=[-179.9, -89.9, 179.9, 89.9],
-                                           coverland=True)
+    tiles_all = e7.search_tiles_in_roi(extent=[-179.9, -89.9, 179.9, 89.9],
+                                       coverland=True)
     desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N012T6',
                      'EU500M_E048N006T6', 'EU500M_E048N012T6',
                      'EU500M_E048N018T6', 'EU500M_E054N006T6',
@@ -248,11 +246,11 @@ def test_search_tile_500_lon_lat_extent():
 
 def test_search_tile_500_lon_lat_extent_by_points():
     """
-    Test searching for tiles with input of lon lat points
+    Tests searching for tiles with input of lon lat points
     """
     e7 = Equi7Grid(500)
-    tiles = e7.search_tiles_in_geo_roi(extent=[(10, 40), (5, 50), (-90.9, -1.2)],
-                                       coverland=True)
+    tiles = e7.search_tiles_in_roi(extent=[(10, 40), (5, 50), (-90.9, -1.2)],
+                                   coverland=True)
 
     desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N018T6',
                      'SA500M_E036N066T6', 'AF500M_E042N090T6']
@@ -262,7 +260,7 @@ def test_search_tile_500_lon_lat_extent_by_points():
 
 def test_identify_tiles_overlapping_xybbox():
     """
-    tests identification of tiles covering a bounding box
+    Tests identification of tiles covering a bounding box
     given in equi7 coordinats
     """
 

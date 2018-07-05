@@ -44,7 +44,7 @@ Note:
 
     terminology:
     grid =  grid name (Equi7)
-    res= grid resolution/grid spacing (5,10,40,75,500 meters)
+    sampling= grid resolution/grid spacing (5,10,40,75,500 meters)
     subgrid= subgrid full name (e.g. "AF500M")
     subgrid_id= sub-grid ini (e.g. "AF")
     tile= tile name ("E036N090T6")
@@ -1088,15 +1088,15 @@ class Equi7Tile(object):
 
         Notes
         -----
-        Either the res or tile code should be given.
-        But if both are given, the res will be used.
+        Either the sampling or tile code should be given.
+        But if both are given, the sampling will be used.
         """
         if res is not None:
             target_tilecode = Equi7Grid.link_res_2_tile(res)
         elif target_tilecode is not None:
             target_tilecode = target_tilecode
         else:
-            raise ValueError("either res or tilecode should be given!")
+            raise ValueError("either sampling or tilecode should be given!")
 
         # found family tiles
         family_tiles = list()
