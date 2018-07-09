@@ -84,7 +84,7 @@ class CopernicusGrid(TiledProjectionSystem):
             raise ValueError("Resolution {}m is not supported!".format(sampling))
 
         # initializing
-        super(CopernicusGrid, self).__init__(sampling, nametag='Equi7')
+        super(CopernicusGrid, self).__init__(sampling, tag='Equi7')
         self.core.projection = 'Latlon'
 
     def define_subgrids(self):

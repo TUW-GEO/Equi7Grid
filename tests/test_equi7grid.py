@@ -25,6 +25,7 @@ from osgeo import osr
 import pyproj
 
 from equi7grid.equi7grid import Equi7Grid
+from pytileproj.geometry import setup_test_geom_spitzbergen
 
 
 def test_ij2xy():
@@ -224,7 +225,7 @@ def test_find_overlapping_tilenames():
     assert sorted(tiles4) == sorted(tiles4_should)
 
 
-def test_search_tile_500_lon_lat_extent():
+def test_search_tiles_lon_lat_extent():
     """
     Tests searching for tiles with input of lon lat extent
     """
@@ -244,7 +245,7 @@ def test_search_tile_500_lon_lat_extent():
     assert sorted(tiles) == sorted(desired_tiles)
 
 
-def test_search_tile_500_lon_lat_extent_by_points():
+def test_search_tiles_lon_lat_extent_by_points():
     """
     Tests searching for tiles with input of lon lat points
     """
@@ -256,6 +257,23 @@ def test_search_tile_500_lon_lat_extent_by_points():
                      'SA500M_E036N066T6', 'AF500M_E042N090T6']
 
     assert sorted(tiles) == sorted(desired_tiles)
+
+
+def test_search_tiles_spitzbergen():
+    """
+    Tests the tile searching over Spitzbergen in the polar zone; ROI defined
+    by a 4-corner polygon over high latitudes (is much curved on the globe)
+    """
+
+    grid = Equi7Grid(500)
+
+    spitzbergen_geom = setup_test_geom_spitzbergen()
+    spitzbergen_geom_tiles = sorted(['EU500M_E054N042T6', 'EU500M_E054N048T6',
+                                     'EU500M_E060N042T6', 'EU500M_E060N048T6'])
+    tiles = sorted(grid.search_tiles_in_roi(spitzbergen_geom, subgrid_ids='EU',
+                                            coverland=False))
+
+    assert sorted(tiles) == sorted(spitzbergen_geom_tiles)
 
 
 def test_identify_tiles_overlapping_xybbox():

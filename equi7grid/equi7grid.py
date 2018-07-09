@@ -128,7 +128,7 @@ class Equi7Grid(TiledProjectionSystem):
             raise ValueError("Sampling {}m is not supported!".format(sampling))
 
         # initializing
-        super(Equi7Grid, self).__init__(sampling, nametag='Equi7')
+        super(Equi7Grid, self).__init__(sampling, tag='Equi7')
         self.core.projection = 'multiple'
 
     @staticmethod
@@ -362,6 +362,10 @@ class Equi7TilingSystem(TilingSystem):
         -------
         Equi7Tile
             object containing info of the specified tile
+
+        Notes
+        -----
+        either name, or x and y, must be given.
         """
 
         # use the x and y coordinates for specifing the tile
@@ -384,7 +388,8 @@ class Equi7TilingSystem(TilingSystem):
 
     def point2tilename(self, x, y, shortform=False):
         """
-        Returns the name string of an Equi7Tile specified by
+        Returns the name string of an Equi7Tile in which the point,
+        defined by x and y coordinates (in metres), is located.
 
         Parameters
         ----------
@@ -411,14 +416,14 @@ class Equi7TilingSystem(TilingSystem):
 
     def encode_tilename(self, llx, lly, sampling, tilecode, shortform=False):
         """
-        Encode tilename
+        Encodes a tilename
 
         Parameters
         ----------
         llx : int
-            Lower left x coordinate.
+            Lower-left x coordinate.
         lly : int
-            Lower left y coordinate.
+            Lower-left y coordinate.
         sampling : int
             the grid sampling = size of pixels; in metres.
         tilecode : str
@@ -446,7 +451,8 @@ class Equi7TilingSystem(TilingSystem):
 
     def _encode_tilename(self, llx, lly, shortform=False):
         """
-        Encoding tilename, using inherent information
+        Encodes a tilename defined by the lower-left coordinates of the tile,
+        using inherent information
 
         Parameters
         ----------
@@ -692,47 +698,6 @@ class Equi7TilingSystem(TilingSystem):
         return family_tiles
 
 
-    def identify_tiles_overlapping_xybbox(self, bbox):
-        """Light-weight routine that returns
-           the name of tiles overlapping the bounding box.
-
-        Parameters
-        ----------
-        bbox : list of int
-            list of equi7-coordinates limiting the bounding box.
-            format: [xmin, ymin, xmax, ymax]
-
-        Return
-        ------
-        tilenames : list of str
-            list of tilenames overlapping the bounding box
-
-        """
-
-        xmin, ymin, xmax, ymax = bbox
-        if (xmin >= xmax) or (ymin >= ymax):
-            raise ValueError("Check order of coordinates of bbox! "
-                             "Scheme: [xmin, ymin, xmax, ymax]")
-
-        tsize = self.core.tile_xsize_m
-        factor = tsize // 100000
-
-        llxs = list(
-            range(xmin // tsize * factor, xmax // tsize * factor + 1, factor))
-        llys = list(
-            range(ymin // tsize * factor, ymax // tsize * factor + 1, factor))
-        tx, ty = np.meshgrid(llxs, llys)
-        tx = tx.flatten()
-        ty = ty.flatten()
-
-        tilenames = list()
-        for i, _ in enumerate(tx):
-            tilenames.append(
-                self._encode_tilename(tx[i] * 100000, ty[i] * 100000))
-
-        return tilenames
-
-
     def check_tile_covers_land(self, tilename=None):
         """
         checks if a tile covers land
@@ -775,8 +740,8 @@ class Equi7Tile(Tile):
     A tile in the Equi7Grid system, holding characteristics of the tile.
     """
 
-    def __init__(self, core, name, x0, y0, covers_land):
-        super(Equi7Tile, self).__init__(core, name, x0, y0)
+    def __init__(self, core, name, xll, yll, covers_land):
+        super(Equi7Tile, self).__init__(core, name, xll, yll)
         self.covers_land = covers_land
 
     @property
