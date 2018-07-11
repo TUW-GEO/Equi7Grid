@@ -82,7 +82,7 @@ def make_equi7data(outpath, version="V13"):
         os.makedirs(outpath)
 
     module_path = os.path.dirname(os.path.abspath(__file__))
-    grids_path = os.path.join(module_path, "../grids")
+    grids_path = os.path.join(os.path.dirname(module_path), "grids")
     
     subgrids = ["AF", "AN", "AS", "EU", "NA", "OC", "SA"] 
     tilecodes = ["T1", "T3", "T6"]
@@ -176,5 +176,7 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys
+    sys.argv.append("C:\code\TPS\Equi7Grid\equi7grid\data")
     main()
 
