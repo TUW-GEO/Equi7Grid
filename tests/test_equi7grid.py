@@ -26,6 +26,7 @@ import pyproj
 
 from equi7grid.equi7grid import Equi7Grid
 from pytileproj.geometry import setup_test_geom_spitzbergen
+from pytileproj.geometry import setup_geom_kamchatka
 
 
 def test_ij2xy():
@@ -230,15 +231,15 @@ def test_search_tiles_lon_lat_extent():
     Tests searching for tiles with input of lon lat extent
     """
     e7 = Equi7Grid(500)
-    tiles = e7.search_tiles_in_roi(extent=[10, 40, 20, 50],
+    tiles = e7.search_tiles_in_roi(extent=[0, 30, 10, 40],
                                    coverland=True)
 
     tiles_all = e7.search_tiles_in_roi(extent=[-179.9, -89.9, 179.9, 89.9],
                                        coverland=True)
-    desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N012T6',
-                     'EU500M_E048N006T6', 'EU500M_E048N012T6',
-                     'EU500M_E048N018T6', 'EU500M_E054N006T6',
-                     'EU500M_E054N012T6', 'EU500M_E054N018T6',
+    desired_tiles = ['EU500M_E036N006T6', 'EU500M_E042N000T6',
+                     'EU500M_E042N006T6', 'AF500M_E030N084T6',
+                     'AF500M_E030N090T6', 'AF500M_E036N084T6',
+                     'AF500M_E036N090T6', 'AF500M_E042N084T6',
                      'AF500M_E042N090T6']
 
     assert len(tiles_all) == 832
@@ -250,11 +251,12 @@ def test_search_tiles_lon_lat_extent_by_points():
     Tests searching for tiles with input of lon lat points
     """
     e7 = Equi7Grid(500)
-    tiles = e7.search_tiles_in_roi(extent=[(10, 40), (5, 50), (-90.9, -1.2)],
-                                   coverland=True)
+    tiles = e7.search_tiles_in_roi(
+        extent=[(10, 40), (5, 50), (-90.9, -1.2), (-175.2, 66)],
+        coverland=True)
 
     desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N018T6',
-                     'SA500M_E036N066T6', 'AF500M_E042N090T6']
+                     'AS500M_E072N090T6', 'SA500M_E036N066T6']
 
     assert sorted(tiles) == sorted(desired_tiles)
 
@@ -262,7 +264,7 @@ def test_search_tiles_lon_lat_extent_by_points():
 def test_search_tiles_spitzbergen():
     """
     Tests the tile searching over Spitzbergen in the polar zone; ROI defined
-    by a 4-corner polygon over high latitudes (is much curved on the globe)
+    by a 4-corner polygon over high latitudes (is much curved on the globe).
     """
 
     grid = Equi7Grid(500)
@@ -270,10 +272,41 @@ def test_search_tiles_spitzbergen():
     spitzbergen_geom = setup_test_geom_spitzbergen()
     spitzbergen_geom_tiles = sorted(['EU500M_E054N042T6', 'EU500M_E054N048T6',
                                      'EU500M_E060N042T6', 'EU500M_E060N048T6'])
-    tiles = sorted(grid.search_tiles_in_roi(spitzbergen_geom, subgrid_ids='EU',
+    tiles = sorted(grid.search_tiles_in_roi(spitzbergen_geom,
                                             coverland=False))
 
     assert sorted(tiles) == sorted(spitzbergen_geom_tiles)
+
+    spitzbergen_geom_tiles = sorted(['EU500M_E054N042T6', 'EU500M_E054N048T6',
+                                     'EU500M_E060N048T6'])
+    tiles = sorted(grid.search_tiles_in_roi(spitzbergen_geom,
+                                            coverland=True))
+
+    assert sorted(tiles) == sorted(spitzbergen_geom_tiles)
+
+
+def test_search_tiles_kamchatka():
+    """
+    Tests the tile searching over Kamchatka in far east Sibiria;
+
+    This test is especially nice, as it contains also a tile that covers both,
+    the ROI and the continental zone, but the intersection of the tile and
+    the ROI is outside of the zone.
+
+    Furthermore, it also covers zones that consist of a multipolygon, as it
+    is located at the 180deg/dateline.
+    """
+
+    grid = Equi7Grid(500)
+
+    kamchatka_geom = setup_geom_kamchatka()
+    kamchatka_geom_tiles = sorted(['AS500M_E072N078T6', 'AS500M_E078N078T6',
+                                   'AS500M_E078N084T6', 'NA500M_E036N078T6',
+                                   'NA500M_E036N084T6', 'NA500M_E042N078T6',
+                                   'NA500M_E042N084T6'])
+    tiles = sorted(grid.search_tiles_in_roi(kamchatka_geom, coverland=False))
+
+    assert sorted(tiles) == sorted(kamchatka_geom_tiles)
 
 
 def test_identify_tiles_overlapping_xybbox():
