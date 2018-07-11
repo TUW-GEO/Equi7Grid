@@ -65,8 +65,8 @@ def _load_static_data(module_path):
     -------
     equi7data : dict
         dictionary containing for each subgrid...
-            a) the multipolygon 'extent'
-            b) the WKT-string 'project'
+            a) the multipolygon 'zone_extent'
+            b) the WKT-string 'projection'
             c) the sets for T6/T3/T1-tiles covering land 'coverland'
             d) the Equi7Grid version 'version'
 
@@ -87,8 +87,8 @@ class Equi7Grid(TiledProjectionSystem):
     ----------
     _static_data  : dict
         dictionary containing for each subgrid...
-            a) the multipolygon 'extent'
-            b) the WKT-string 'project'
+            a) the multipolygon 'zone_extent'
+            b) the WKT-string 'projection'
             c) the sets for T6/T3/T1-tiles covering land 'coverland'
             d) the Equi7Grid version 'version'
     _static_subgrid_ids : list of strings
@@ -293,7 +293,7 @@ class Equi7Subgrid(TiledProjection):
 
         _core = copy.copy(core)
         _core.tag = continent
-        _core.projection = TPSProjection(wkt=data['project'])
+        _core.projection = TPSProjection(wkt=data['projection'])
 
         # holds core parameters of the (sub-) grid
         self.core = _core
@@ -303,7 +303,7 @@ class Equi7Subgrid(TiledProjection):
             ('EQUI7_', continent, Equi7Grid.encode_sampling(core.sampling), 'M'))
 
         # holds the extent of the subgrid in the latlon-space
-        self.polygon_geog = create_geometry_from_wkt(data['extent'])
+        self.polygon_geog = create_geometry_from_wkt(data['zone_extent'])
 
         # defines the tilingsystem of the subgrid
         self.tilesys = Equi7TilingSystem(self.core, self.polygon_geog)
