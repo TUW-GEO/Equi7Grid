@@ -76,8 +76,7 @@ def make_equi7data(outpath, version="V13"):
     
     outfile = os.path.join(outpath, "equi7grid.dat")
     if os.path.exists(outfile):
-        print "Error: File Already Exist!"
-        return -1
+        raise IOError("Error: File Already Exist!")
     if not os.path.exists(outpath):
         os.makedirs(outpath)
 
