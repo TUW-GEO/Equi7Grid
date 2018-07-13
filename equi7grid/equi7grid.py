@@ -131,6 +131,7 @@ class Equi7Grid(TiledProjectionSystem):
         super(Equi7Grid, self).__init__(sampling, tag='Equi7')
         self.core.projection = 'multiple'
 
+
     @staticmethod
     def encode_sampling(sampling):
         """
@@ -195,6 +196,7 @@ class Equi7Grid(TiledProjectionSystem):
             subgrids[sg] = Equi7Subgrid(self.core, sg)
         return subgrids
 
+
     def get_tiletype(self, sampling):
         """
         Returns the tilecode defined for the grid's sampling
@@ -229,6 +231,7 @@ class Equi7Grid(TiledProjectionSystem):
             raise ValueError(msg)
 
         return tilecode
+
 
     def get_tilesize(self, sampling):
         """

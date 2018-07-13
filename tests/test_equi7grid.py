@@ -16,9 +16,9 @@
 
 
 """
-
-Tests for the equi7 grid class.
+Tests for the Equi7Grid().
 """
+
 import numpy as np
 import numpy.testing as nptest
 from osgeo import osr
@@ -29,33 +29,7 @@ from pytileproj.geometry import setup_test_geom_spitzbergen
 from pytileproj.geometry import setup_geom_kamchatka
 
 
-def test_ij2xy():
-    """
-    Tests xy to lonlat projection using double numbers.
-    """
-    e7 = Equi7Grid(500)
-    x_should = 3166500
-    y_should = 5178000
-    tile = e7.EU.tilesys.create_tile(x=3245631, y=5146545)
-    x, y = tile.ij2xy(333, 444)
-    nptest.assert_allclose(x_should, x)
-    nptest.assert_allclose(y_should, y)
-
-
-def test_xy2ij():
-    """
-    Tests xy to lonlat projection using double numbers.
-    """
-    e7 = Equi7Grid(500)
-    column_should = 333
-    row_should = 444
-    tile = e7.EU.tilesys.create_tile(x=3245631, y=5146545)
-    column, row = tile.xy2ij(3166500, 5178000)
-    nptest.assert_allclose(column_should, column)
-    nptest.assert_allclose(row_should, row)
-
-
-def test_equi7xy2lonlat_doubles():
+def test_xy2lonlat_doubles():
     """
     Tests xy to lonlat projection using double numbers.
     """
@@ -68,7 +42,7 @@ def test_equi7xy2lonlat_doubles():
     nptest.assert_allclose(lat_should, lat)
 
 
-def test_equi7xy2lonlat_numpy_array():
+def test_xy2lonlat_numpy_array():
     """
     Tests xy to lonlat projection using numpy arrays.
     """
@@ -81,7 +55,7 @@ def test_equi7xy2lonlat_numpy_array():
     nptest.assert_allclose(lat_should, lat)
 
 
-def test_lonlat2equi7xy_doubles():
+def test_lonlat2xy_doubles():
     """
     Tests lonlat to xy projection using double numbers.
     """
@@ -95,7 +69,7 @@ def test_lonlat2equi7xy_doubles():
     nptest.assert_allclose(y_should, y)
 
 
-def test_lonlat2equi7xy_numpy_array():
+def test_lonlat2xy_numpy_array():
     """
     Tests lonlat to xy projection using numpy arrays.
     """
@@ -112,7 +86,7 @@ def test_lonlat2equi7xy_numpy_array():
     nptest.assert_allclose(y_should, y)
 
 
-def test_lonlat2equi7xy_numpy_array_no_sgrid():
+def test_lonlat2xy_numpy_array_no_sgrid():
     """
     Tests lonlat to xy projection using numpy arrays.
     """
@@ -127,6 +101,31 @@ def test_lonlat2equi7xy_numpy_array_no_sgrid():
     nptest.assert_array_equal(sgrid_id, np.array(['EU', 'EU']))
     nptest.assert_allclose(x_should, x)
     nptest.assert_allclose(y_should, y)
+
+def test_ij2xy():
+    """
+    Tests tile indices to xy coordination in the subgrid projection
+    """
+    e7 = Equi7Grid(500)
+    x_should = 3166500
+    y_should = 5178000
+    tile = e7.EU.tilesys.create_tile(x=3245631, y=5146545)
+    x, y = tile.ij2xy(333, 444)
+    nptest.assert_allclose(x_should, x)
+    nptest.assert_allclose(y_should, y)
+
+
+def test_xy2ij():
+    """
+    Tests xy to tile array indices.
+    """
+    e7 = Equi7Grid(500)
+    column_should = 333
+    row_should = 444
+    tile = e7.EU.tilesys.create_tile(x=3245631, y=5146545)
+    column, row = tile.xy2ij(3166500, 5178000)
+    nptest.assert_allclose(column_should, column)
+    nptest.assert_allclose(row_should, row)
 
 
 def test_proj4_reprojection_accuracy():

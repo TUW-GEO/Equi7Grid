@@ -10,6 +10,10 @@ Equi7Grid
 
 A python class for working with Equi7Grid - how to convert to - how to use the tiling system - etc.
 
+It's a python package that handles the geometric and geographic operations of a gridded and tiled projection system.
+It was designed for data cubes ingesting satellite imagery and builds the basis for the Equi7Grid (see https://github
+.com/TUW-GEO/Equi7Grid).
+
 
 Note
 ====
