@@ -342,7 +342,7 @@ class Equi7TilingSystem(TilingSystem):
                         self.core.tag, self.core.sampling, self.core.tiletype)
         self.msg2 = 'East and North coordinates of lower-left-pixel ' \
                     'must be multiples of {}00km!'.format(
-                        self.core.tile_ysize_m / 100000)
+                        self.core.tile_ysize_m // 100000)
         self.msg3 = 'Tilecode must be one of T6, T3, T1!'
 
 
@@ -564,7 +564,7 @@ class Equi7TilingSystem(TilingSystem):
         tilecode : str
             tilecode (related the tile size of the grid)
         """
-        tf = self.core.tile_ysize_m / 100000
+        tf = self.core.tile_ysize_m // 100000
 
         # allow short-form of tilename (e.g. "E012N018T6")
         if len(tilename) == 10:
@@ -676,8 +676,8 @@ class Equi7TilingSystem(TilingSystem):
 
         # for larger tiles
         if target_tiletype >= src_tiletype:
-            t_east = (src_llx / target_tilesize) * target_tilesize
-            t_north = (src_lly / target_tilesize) * target_tilesize
+            t_east = (src_llx // target_tilesize) * target_tilesize
+            t_north = (src_lly // target_tilesize) * target_tilesize
             name = target_grid.subgrids[self.core.tag].\
                                 tilesys.encode_tilename(t_east, t_north,
                                                         sampling,
@@ -687,7 +687,7 @@ class Equi7TilingSystem(TilingSystem):
 
         # for smaller tiles
         else:
-            n = int(src_tile_size_m / target_tilesize)
+            n = int(src_tile_size_m // target_tilesize)
             for x, y in itertools.product(range(n), range(n)):
                 s_east = (src_llx  + x * target_tilesize)
                 s_north = (src_lly  + y * target_tilesize)
