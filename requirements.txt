@@ -1,9 +1,7 @@
 # Add your requirements here like:
-astropy>=2.0.1
 numpy>=1.13.1
-toolz>=0.8.2
 pyproj>=1.9.5.1
-pytileproj>=0.0.4
+pytileproj>=0.0.7
 
 # gdal - install via conda
 # numba - install via conda

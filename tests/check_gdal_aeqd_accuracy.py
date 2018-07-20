@@ -41,7 +41,8 @@ import os
 import tempfile
 import numpy as np
 from osgeo import osr
-from pytileproj import gdalport
+from equi7grid.image2equi7grid import call_gdal_util
+from equi7grid.image2equi7grid import open_image
 
 
 def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gdal_path=None):
@@ -91,8 +92,7 @@ def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gda
 
     # check the gdalwarp is accurate or not
     if check_gdalwarp:
-        test_data_dir = os.path.join(
-            lib_dir, r"tests/prj_accuracy_test")
+        test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), r"prj_accuracy_test")
         in_image = os.path.join(test_data_dir,
                                 r"gdalwarp_check_equi7.tif")
         reprojected_image = tempfile.NamedTemporaryFile(suffix=".tif", delete=False).name
@@ -107,14 +107,14 @@ def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gda
                "-dstnodata": -9999,
                "-overwrite": " "
                }
-        succeed, _ = gdalport.call_gdal_util("gdalwarp", src_files=in_image, dst_file=reprojected_image,
+        succeed, _ = call_gdal_util("gdalwarp", src_files=in_image, dst_file=reprojected_image,
                                              gdal_path=gdal_path,  options=opt)
         if not succeed:
             raise RuntimeError("Error: gdalwrap is not working!")
         # check the reproject accuracy
-        reprojected_data = gdalport.open_image(reprojected_image).read_band(1)
+        reprojected_data = open_image(reprojected_image).read_band(1)
         os.remove(reprojected_image)
-        expected_data = gdalport.open_image(expected_image).read_band(1)
+        expected_data = open_image(expected_image).read_band(1)
         diff_data = np.abs(expected_data - reprojected_data)
         if diff_data.sum() > 100 or diff_data.max() > 10:
             raise RuntimeError("Error: gdalwrap is not accurate for reprojecton!")
