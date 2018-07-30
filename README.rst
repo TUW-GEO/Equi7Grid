@@ -17,8 +17,15 @@ Equi7Grid
 A python class for working with Equi7Grid - how to convert to - how to use the tiling system - etc.
 
 It's a python package that handles the geometric and geographic operations of a gridded and tiled projection system.
-It was designed for data cubes ingesting satellite imagery and builds the basis for the Equi7Grid (see https://github
-.com/TUW-GEO/Equi7Grid).
+It was designed for data cubes ingesting satellite imagery and builds the basis for the Equi7Grid (see https://github.com/TUW-GEO/Equi7Grid).
+
+A detailed documentation on the Equi7Grid definition is at:
+
+~/docs/doc_files/
+
+Overlays for visualisation in Google Earth can be found here:
+
+~/docs/doc_files/google_earth_overlays/
 
 Citation
 ========
@@ -43,6 +50,8 @@ This package should be installable through pip:
 .. code::
 
     pip install Equi7Grid
+
+Installs for numba, scripy and gdal are required from conda or conda-forge.
 
 Contribute
 ==========
@@ -102,12 +111,5 @@ If you want to contribute please follow these steps:
 Note
 ====
 
-Installs for numba, scripy and gdal are required from conda or conda-forge.
-
-A detailed documentation on the Equi7Grid definition is at:
-
-~/docs/doc_files/
-
-Overlays for visualisation in Google Earth can be found here:
-
-~/docs/doc_files/google_earth_overlays/
+This project has been set up using PyScaffold 2.5.11. For details and usage
+information on PyScaffold see http://pyscaffold.readthedocs.org/.
