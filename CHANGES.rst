@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version v0.0.X
+==============
+
+- Update readme structure
+- Add read the docs
+
 Version v0.0.3
 ==============
 
