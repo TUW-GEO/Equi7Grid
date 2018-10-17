@@ -1,7 +1,7 @@
 # Add your requirements here like:
 numpy>=1.13.1
 pyproj>=1.9.5.1
-pytileproj>=0.0.7
+pytileproj>=0.0.8
 
 # gdal - install via conda
 # numba - install via conda
