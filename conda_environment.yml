@@ -65,5 +65,4 @@ dependencies:
   - xz=5.2.4=h2fa13f4_4
   - zlib=1.2.11=h8395fce_2
   - pip:
-    - equi7grid==0.0.3.post0.dev18+ng4b491b5.dirty
-    - pytileproj==0.0.6.post0.dev14+ngc1c8c1c
+    - pytileproj==0.0.8

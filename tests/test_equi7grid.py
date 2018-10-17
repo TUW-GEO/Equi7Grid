@@ -332,3 +332,29 @@ def test_identify_tiles_overlapping_xybbox():
 
     assert sorted(tiles1) == sorted(tiles1_should)
     assert sorted(tiles2) == sorted(tiles2_should)
+
+
+def test_get_covering_tiles():
+    """
+    Tests the search for co-locating tiles of other type.
+    """
+
+    e7g_40 = Equi7Grid(40)
+    e7g_10 = Equi7Grid(10)
+
+    fine_tiles = ['EU010M_E005N058T1', 'EU010M_E005N059T1',
+                  'EU010M_E005N060T1', 'EU010M_E005N061T1']
+
+    target_tiletype = e7g_40.get_tiletype()
+    target_sampling = e7g_40.core.sampling
+
+    # invoke the results as tile name in short form
+    coarse_tiles_shortform = e7g_10.EU.tilesys.get_covering_tiles(fine_tiles,
+                                             target_tiletype=target_tiletype)
+
+    # invoke the results as tile name in long form
+    coarse_tiles_longform = e7g_10.EU.tilesys.get_covering_tiles(fine_tiles,
+                                           target_sampling=target_sampling)
+
+    assert sorted(coarse_tiles_shortform) == ['E003N057T3', 'E003N060T3']
+    assert sorted(coarse_tiles_longform) == ['EU040M_E003N057T3', 'EU040M_E003N060T3']
