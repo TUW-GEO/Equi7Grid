@@ -176,6 +176,12 @@ class CopernicusTilingSystem(TilingSystem):
     def identify_tiles_overlapping_xybbox(self, bbox):
         return
 
+    def find_overlapping_tilenames(self, tilename,
+                                   target_sampling=None,
+                                   target_tiletype=None):
+
+        return
+
 
 
 class CopernicusTile(Tile):
