@@ -16,38 +16,40 @@
 
 '''
 Tests for the CopernicusGrid class.
+
 '''
+import unittest
 
 from equi7grid.copernicusgrid import CopernicusGrid
 
 import numpy.testing as nptest
 
+class TestCopernicusGrid(unittest.TestCase):
 
-def test_ij2xy():
-    """
-    Test xy to lonlat projection using double numbers.
-    """
-    cg = CopernicusGrid(1.0 / 112)
-    lon_should = -150.2411
-    lat_should = 50.3214
-    globaltile = cg.GLOBAL.tilesys.create_tile()
-    lon, lat = globaltile.ij2xy(3333, 4444)
-    nptest.assert_allclose(lon_should, lon)
-    nptest.assert_allclose(lat_should, lat)
+    def test_ij2xy(self):
+        """
+        Test xy to lonlat projection using double numbers.
+        """
+        cg = CopernicusGrid(1.0 / 112)
+        lon_should = -150.2411
+        lat_should = 50.3214
+        globaltile = cg.GLOBAL.tilesys.create_tile()
+        lon, lat = globaltile.ij2xy(3333, 4444)
+        nptest.assert_allclose(lon_should, lon)
+        nptest.assert_allclose(lat_should, lat)
 
 
-def test_xy2ij():
-    """
-    Test xy to lonlat projection using double numbers.
-    """
-    cg = CopernicusGrid(1.0 / 112)
-    column_should = 3333
-    row_should = 4444
-    globaltile = cg.GLOBAL.tilesys.create_tile()
-    column, row = globaltile.xy2ij(-150.2411, 50.3214)
-    nptest.assert_allclose(column_should, column)
-    nptest.assert_allclose(row_should, row)
+    def test_xy2ij(self):
+        """
+        Test xy to lonlat projection using double numbers.
+        """
+        cg = CopernicusGrid(1.0 / 112)
+        column_should = 3333
+        row_should = 4444
+        globaltile = cg.GLOBAL.tilesys.create_tile()
+        column, row = globaltile.xy2ij(-150.2411, 50.3214)
+        nptest.assert_allclose(column_should, column)
+        nptest.assert_allclose(row_should, row)
 
 if __name__ == '__main__':
-    test_ij2xy()
-    test_xy2ij()
+    unittest.main()
