@@ -277,6 +277,44 @@ class Equi7Grid(TiledProjectionSystem):
         return self.subgrids[name[0:2]].tilesys.create_tile(name)
 
 
+    def lonlat2ij_in_tile(self, lon, lat, lowerleft=False):
+        """
+        finds the tile and the pixel indices of a given point in lon-lat-space.
+        pixel indices comprise the column and row number (i, j)
+
+        columns go from left to right (easting)
+        rows go either
+            top to bottom (lowerleft=False)
+            bottom to top (lowerleft=True)
+
+        Parameters
+        ----------
+        lon : number
+            longitude coordinate
+        lat : number
+            latitude coordinate)
+        lowerleft : bool, optional
+            should the row numbering start at the bottom?
+            If yes, it returns lowerleft indices.
+
+        Returns
+        -------
+        tilename : str
+            long form of the tilename containing the lon-lat position
+        i : integer
+            pixel column number; starts with 0
+        j : integer
+            pixel row number; starts with 0
+
+        """
+        # get the xy-coordinates
+        subgrid, x, y = self._lonlat2xy(lon, lat)
+
+        tilename, i, j = self.subgrids[str(subgrid)].tilesys.xy2ij_in_tile(x, y, lowerleft=lowerleft)
+
+        return tilename, i, j
+
+
 class Equi7Subgrid(TiledProjection):
     """
     Equi7Subgrid class object, inheriting TiledProjection() from pytileproj.

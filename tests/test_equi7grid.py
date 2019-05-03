@@ -32,6 +32,7 @@ from pytileproj.geometry import setup_geom_kamchatka
 
 class TestEqui7Grid(unittest.TestCase):
 
+
     def test_xy2lonlat_doubles(self):
         """
         Tests xy to lonlat projection using double numbers.
@@ -104,7 +105,8 @@ class TestEqui7Grid(unittest.TestCase):
         nptest.assert_array_equal(sgrid_id, np.array(['EU', 'EU']))
         nptest.assert_allclose(x_should, x)
         nptest.assert_allclose(y_should, y)
-    
+
+
     def test_ij2xy(self):
         """
         Tests tile indices to xy coordination in the subgrid projection
@@ -114,6 +116,14 @@ class TestEqui7Grid(unittest.TestCase):
         y_should = 5178000
         tile = e7.EU.tilesys.create_tile(x=3245631, y=5146545)
         x, y = tile.ij2xy(333, 444)
+        nptest.assert_allclose(x_should, x)
+        nptest.assert_allclose(y_should, y)
+
+        # lowerleft case
+        x_should = 5399500
+        y_should = 1200000
+        tile = e7.EU.tilesys.create_tile(x=4800123, y=1200123)
+        x, y = tile.ij2xy(1199, 0, lowerleft=True)
         nptest.assert_allclose(x_should, x)
         nptest.assert_allclose(y_should, y)
     
@@ -129,7 +139,22 @@ class TestEqui7Grid(unittest.TestCase):
         column, row = tile.xy2ij(3166500, 5178000)
         nptest.assert_allclose(column_should, column)
         nptest.assert_allclose(row_should, row)
-    
+
+
+    def test_lonlat2ij_in_tile(self):
+        """
+        Tests the identification of column n rows indices in a Equi7Grid's tile
+
+        """
+        e7 = Equi7Grid(500)
+        column_should = 1199
+        row_should = 0
+        tile_should = 'EU500M_E048N012T6'
+        tilename, i, j = e7.lonlat2ij_in_tile(18.507, 44.571, lowerleft=True)
+        nptest.assert_equal(i, column_should)
+        nptest.assert_equal(j, row_should)
+        nptest.assert_equal(tilename, tile_should)
+
     
     def test_proj4_reprojection_accuracy(self):
         """
