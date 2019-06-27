@@ -361,7 +361,26 @@ class TestEqui7Grid(unittest.TestCase):
         assert sorted(tiles1) == sorted(tiles1_should)
         assert sorted(tiles2) == sorted(tiles2_should)
     
-    
+
+    def test_create_tiles_overlapping_xybbox(self):
+
+        e7_500 = Equi7Grid(500)
+
+        tiles = e7_500.EU.tilesys.create_tiles_overlapping_xybbox(
+                                            [5138743, 1111111, 6200015, 1777777])
+
+        nptest.assert_equal(tiles.shape, (2, 3))
+
+        nptest.assert_equal([x.name for x in tiles.flatten()],
+            ['EU500M_E048N012T6', 'EU500M_E054N012T6', 'EU500M_E060N012T6', 'EU500M_E048N006T6', 'EU500M_E054N006T6', 'EU500M_E060N006T6'])
+
+        nptest.assert_equal(tiles[0,0].active_subset_px, (677, 0, 1200, 1155))
+        nptest.assert_equal(tiles[1,0].active_subset_px, (677, 1022, 1200, 1200))
+        nptest.assert_equal(tiles[0,2].active_subset_px, (0, 0, 400, 1155))
+
+
+
+
     def test_get_covering_tiles(self):
         """
         Tests the search for co-locating tiles of other type.
