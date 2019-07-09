@@ -28,7 +28,6 @@ import pyproj
 from equi7grid.equi7grid import Equi7Grid
 from pytileproj.geometry import setup_test_geom_spitzbergen
 from pytileproj.geometry import setup_geom_kamchatka
-from pytileproj.geometry import setup_test_geom_siberia_antimeridian
 from pytileproj.geometry import setup_test_geom_siberia_antimeridian_180plus
 from pytileproj.geometry import setup_test_geom_siberia_alaska
 
@@ -341,14 +340,28 @@ class TestEqui7Grid(unittest.TestCase):
 
 
     def test_search_tiles_lon_lat_extent_antimeridian(self):
+        """
+        test antimeridian crossing bounding box
+        &
+        is only correct when segmentation in the function is done properly
+            (as the curvature at this high latitude region is significant)
 
+        """
         e7 = Equi7Grid(500)
-        tiles = e7.search_tiles_in_roi(extent=[179, 66, 210, 67])
 
-        desired_tiles = ['NA500M_E078N084T6', 'NA500M_E078N090T6',
-                         'NA500M_E084N084T6', 'NA500M_E084N090T6']
+        tiles = e7.search_tiles_in_roi(extent=[179, 66, 210, 67.85])
+
+        desired_tiles = ['AS500M_E066N090T6', 'AS500M_E066N096T6',
+                         'AS500M_E072N090T6', 'AS500M_E072N096T6',
+                         'NA500M_E054N072T6', 'NA500M_E054N078T6',
+                         'NA500M_E060N072T6']
 
         assert sorted(tiles) == sorted(desired_tiles)
+
+        # test values violating min/max order
+        tiles = e7.search_tiles_in_roi(extent=[179, 66, -150, 67.85])
+        assert tiles == []
+
 
     def test_search_tiles_spitzbergen(self):
         """
@@ -363,33 +376,37 @@ class TestEqui7Grid(unittest.TestCase):
                                          'EU500M_E060N042T6', 'EU500M_E060N048T6'])
         tiles = sorted(grid.search_tiles_in_roi(spitzbergen_geom,
                                                 coverland=False))
-    
+
+        assert sorted(tiles) == sorted(spitzbergen_geom_tiles)
+
+
     def test_search_tiles_siberia_antimeridian(self):
         """
-        Tests the tile searching over Spitzbergen in the polar zone; ROI defined
+        Tests the tile searching over Siberia and Alaska in the polar zone; ROI defined
         by a 4-corner polygon over high latitudes (is much curved on the globe).
+
+        Comprises:
+            - do not return tiles when not intersecting the zone
+            - interpret correctly longitudes higher than 180 degrees
         """
     
         grid = Equi7Grid(500)
-    
-        poly_siberia_antim = setup_test_geom_siberia_antimeridian()
+
+        geom_siberia_tiles = sorted(['AS500M_E066N090T6', 'AS500M_E072N090T6'])
         poly_siberia_antim_180plus = setup_test_geom_siberia_antimeridian_180plus()
+        tiles = sorted(grid.search_tiles_in_roi(poly_siberia_antim_180plus, coverland=False))
+
+        assert sorted(tiles) == sorted(geom_siberia_tiles)
+
+        geom_siberia_alaska_tiles = sorted(['AS500M_E066N090T6', 'AS500M_E072N090T6',
+                                            'AS500M_E072N096T6',
+                                            'NA500M_E054N072T6', 'NA500M_E054N078T6',
+                                            'NA500M_E060N078T6'])
         poly_siberia_alaska = setup_test_geom_siberia_alaska()
-        spitzbergen_geom = setup_test_geom_spitzbergen()
+        tiles = sorted(grid.search_tiles_in_roi(poly_siberia_alaska, coverland=True))
 
+        assert sorted(tiles) == sorted(geom_siberia_alaska_tiles)
 
-        spitzbergen_geom_tiles = sorted(['EU500M_E054N042T6', 'EU500M_E054N048T6',
-                                         'EU500M_E060N042T6', 'EU500M_E060N048T6'])
-        tiles = sorted(grid.search_tiles_in_roi(poly_siberia_alaska, coverland=False))
-    
-        assert sorted(tiles) == sorted(spitzbergen_geom_tiles)
-    
-        spitzbergen_geom_tiles = sorted(['EU500M_E054N042T6', 'EU500M_E054N048T6',
-                                         'EU500M_E060N048T6'])
-        tiles = sorted(grid.search_tiles_in_roi(spitzbergen_geom, coverland=True))
-    
-        assert sorted(tiles) == sorted(spitzbergen_geom_tiles)
-    
     
     def test_search_tiles_kamchatka(self):
         """
@@ -451,7 +468,8 @@ class TestEqui7Grid(unittest.TestCase):
         nptest.assert_equal(tiles.shape, (2, 3))
 
         nptest.assert_equal([x.name for x in tiles.flatten()],
-            ['EU500M_E048N012T6', 'EU500M_E054N012T6', 'EU500M_E060N012T6', 'EU500M_E048N006T6', 'EU500M_E054N006T6', 'EU500M_E060N006T6'])
+            ['EU500M_E048N012T6', 'EU500M_E054N012T6', 'EU500M_E060N012T6',
+             'EU500M_E048N006T6', 'EU500M_E054N006T6', 'EU500M_E060N006T6'])
 
         nptest.assert_equal(tiles[0,0].active_subset_px, (677, 0, 1200, 1155))
         nptest.assert_equal(tiles[1,0].active_subset_px, (677, 1022, 1200, 1200))
