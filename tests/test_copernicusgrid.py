@@ -44,7 +44,7 @@ class TestCopernicusGrid(unittest.TestCase):
         Test xy to lonlat projection using double numbers.
         """
         cg = CopernicusGrid(1.0 / 112)
-        column_should = 3333
+        column_should = 3332
         row_should = 4444
         globaltile = cg.GLOBAL.tilesys.create_tile()
         column, row = globaltile.xy2ij(-150.2411, 50.3214)
