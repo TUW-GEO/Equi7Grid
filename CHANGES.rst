@@ -2,11 +2,25 @@
 Changelog
 =========
 
-Version v0.0.X
+Version v0.0.7
 ==============
 
-- Update readme structure
-- Add read the docs
+- fixed issues on antimeridian/dateline
+
+Version v0.0.6
+==============
+
+- minor update on lonlat2xy functions
+
+Version v0.0.5
+==============
+
+- minor update on tilesystem functions
+
+Version v0.0.4
+==============
+
+- python3_ready
 
 Version v0.0.3
 ==============

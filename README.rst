@@ -51,7 +51,7 @@ This package should be installable through pip:
 
     pip install Equi7Grid
 
-Installs for numba, scripy and gdal are required from conda or conda-forge.
+Installs for scripy and gdal are required from conda or conda-forge.
 
 Contribute
 ==========
@@ -76,7 +76,7 @@ like system. Miniconda will be installed into ``$HOME/miniconda``.
    wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
    bash miniconda.sh -b -p $HOME/miniconda
    export PATH="$HOME/miniconda/bin:$PATH"
-   conda create -n equi7grid_env python=2.7 numpy scipy pip gdal pyproj numba
+   conda create -n equi7grid_env python=3.6 numpy scipy pip gdal pyproj shapely
    source activate equi7grid_env
    pip install pytileproj
 
