@@ -518,14 +518,14 @@ class Equi7TilingSystem(TilingSystem):
         return self.encode_tilename(llx, lly, self.core.sampling, self.core.tiletype, shortform=shortform)
 
 
-    def tilename2short(self, longform):
+    def tilename2short(self, tilename):
         """
         Converts a tilename in longform to shortform
         e.g. 'EU500M_E012N018T6' --> 'E012N018T6'
 
         Parameters
         ----------
-        longform : str
+        tilename : str
             longform of the tilename
 
         Returns
@@ -534,10 +534,10 @@ class Equi7TilingSystem(TilingSystem):
             shortform of the tilename
 
         """
-        self.check_tilename(longform)
-        if len(longform) == 17:
-            shortform = longform[7:]
-        return shortform
+        self.check_tilename(tilename)
+        if len(tilename) == 17:
+            tilename = tilename[7:]
+        return tilename
 
 
     def tilename2lowerleft(self, tilename):
@@ -653,12 +653,12 @@ class Equi7TilingSystem(TilingSystem):
         return subgrid_id, sampling, tile_size_m, llx * 100000, lly * 100000, tilecode
 
 
-    def find_overlapping_tilenames(self, tilename,
-                                   target_sampling=None,
-                                   target_tiletype=None):
+    def get_congruent_tiles_from_tilename(self, tilename,
+                                          target_sampling=None,
+                                          target_tiletype=None):
         """
         finds the "family tiles", which share a congruent or partial overlap,
-        but with different resolution and tilecode
+        but with different sampling and tilecode
 
         Parameters
         ----------

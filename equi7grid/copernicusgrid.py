@@ -176,9 +176,9 @@ class CopernicusTilingSystem(TilingSystem):
     def identify_tiles_overlapping_xybbox(self, bbox):
         return
 
-    def find_overlapping_tilenames(self, tilename,
-                                   target_sampling=None,
-                                   target_tiletype=None):
+    def get_congruent_tiles_from_tilename(self, tilename,
+                                          target_sampling=None,
+                                          target_tiletype=None):
 
         return
 

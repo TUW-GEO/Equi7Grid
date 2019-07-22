@@ -269,24 +269,24 @@ class TestEqui7Grid(unittest.TestCase):
     
         tiles1_should = ['EU025M_E042N006T3', 'EU025M_E042N009T3',
                          'EU025M_E045N006T3', 'EU025M_E045N009T3']
-        tiles1 = e7_500.EU.tilesys.find_overlapping_tilenames('EU500M_E042N006T6',
-                                                              target_sampling=25)
+        tiles1 = e7_500.EU.tilesys.get_congruent_tiles_from_tilename('EU500M_E042N006T6',
+                                                                     target_sampling=25)
         assert sorted(tiles1) == sorted(tiles1_should)
     
         tiles2_should =['E042N006T3', 'E042N009T3', 'E045N006T3', 'E045N009T3']
-        tiles2 = e7_500.EU.tilesys.find_overlapping_tilenames('E042N006T6',
-                                                            target_tiletype='T3')
+        tiles2 = e7_500.EU.tilesys.get_congruent_tiles_from_tilename('E042N006T6',
+                                                                     target_tiletype='T3')
         assert sorted(tiles2) == sorted(tiles2_should)
     
         tiles3_should =['EU500M_E042N012T6']
     
-        tiles3 = e7_10.EU.tilesys.find_overlapping_tilenames('E044N015T1',
-                                                             target_sampling=500)
+        tiles3 = e7_10.EU.tilesys.get_congruent_tiles_from_tilename('E044N015T1',
+                                                                    target_sampling=500)
         assert sorted(tiles3) == sorted(tiles3_should)
     
         tiles4_should =['E039N009T3']
-        tiles4 = e7_10.EU.tilesys.find_overlapping_tilenames('E041N011T1',
-                                                            target_tiletype='T3')
+        tiles4 = e7_10.EU.tilesys.get_congruent_tiles_from_tilename('E041N011T1',
+                                                                    target_tiletype='T3')
         assert sorted(tiles4) == sorted(tiles4_should)
 
 
@@ -295,9 +295,8 @@ class TestEqui7Grid(unittest.TestCase):
         Tests searching for tiles with input of lon lat points
         """
         e7 = Equi7Grid(500)
-        tiles = e7.search_tiles_in_roi(
-            extent=[(10, 40), (5, 50), (-90.9, -1.2), (-175.2, 66)],
-            coverland=True)
+        tiles = e7.search_tiles_in_roi(extent=[(10, 40), (5, 50), (-90.9, -1.2), (-175.2, 66)],
+                                       coverland=True)
 
         desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N018T6',
                          'AS500M_E072N090T6', 'SA500M_E036N066T6']
@@ -493,12 +492,12 @@ class TestEqui7Grid(unittest.TestCase):
         target_sampling = e7g_40.core.sampling
     
         # invoke the results as tile name in short form
-        coarse_tiles_shortform = e7g_10.EU.tilesys.get_covering_tiles(fine_tiles,
-                                                 target_tiletype=target_tiletype)
+        coarse_tiles_shortform = e7g_10.EU.tilesys.collect_congruent_tiles(fine_tiles,
+                                                                           target_tiletype=target_tiletype)
     
         # invoke the results as tile name in long form
-        coarse_tiles_longform = e7g_10.EU.tilesys.get_covering_tiles(fine_tiles,
-                                               target_sampling=target_sampling)
+        coarse_tiles_longform = e7g_10.EU.tilesys.collect_congruent_tiles(fine_tiles,
+                                                                          target_sampling=target_sampling)
     
         assert sorted(coarse_tiles_shortform) == ['E003N057T3', 'E003N060T3']
         assert sorted(coarse_tiles_longform) == ['EU040M_E003N057T3', 'EU040M_E003N060T3']
