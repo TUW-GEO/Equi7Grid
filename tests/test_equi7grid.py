@@ -475,8 +475,6 @@ class TestEqui7Grid(unittest.TestCase):
         nptest.assert_equal(tiles[0,2].active_subset_px, (0, 0, 400, 1155))
 
 
-
-
     def test_get_covering_tiles(self):
         """
         Tests the search for co-locating tiles of other type.
@@ -501,7 +499,26 @@ class TestEqui7Grid(unittest.TestCase):
     
         assert sorted(coarse_tiles_shortform) == ['E003N057T3', 'E003N060T3']
         assert sorted(coarse_tiles_longform) == ['EU040M_E003N057T3', 'EU040M_E003N060T3']
-    
+
+    def test_tile_get_extent_geometry_geog(self):
+        """
+        Tests the geometry functions of the tile object.
+
+        """
+        e7g = Equi7Grid(500)
+
+        tile_up_north = e7g.create_tile('EU500M_E054N054T6')
+
+        nptest.assert_almost_equal(tile_up_north.bbox_geog,
+                                   (-35.42781, 81.57133, 55.67043, 87.77280),
+                                   decimal=5)
+
+
+        tile_antimeridian = e7g.create_tile('NA500M_E042N078T6')
+
+        nptest.assert_almost_equal(tile_antimeridian.bbox_geog,
+                                   (174.93808, 54.32175, -172.33224, 60.55437),
+                                   decimal=5)
 
 if __name__ == '__main__':
     unittest.main()
