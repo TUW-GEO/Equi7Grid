@@ -50,7 +50,7 @@ from pytileproj.base import TPSProjection
 from pytileproj.base import TilingSystem
 from pytileproj.base import Tile
 
-from pytileproj.geometry import extent2polygon
+from pytileproj.geometry import bbox2polygon
 
 
 
@@ -126,8 +126,8 @@ class CopernicusSubgrid(TiledProjection):
         _core.projection = TPSProjection(epsg=4326)
 
         self.core = _core
-        self.polygon_geog = extent2polygon([-180,-90,180,90],
-                                           self.core.projection.osr_spref)
+        self.polygon_geog = bbox2polygon([(-179.9999999, -90.0), (179.9999999, 90.0)],
+                                         self.core.projection.osr_spref)
         self.tilesys = CopernicusTilingSystem(self.core, self.polygon_geog)
 
         super(CopernicusSubgrid, self).__init__(self.core, self.polygon_geog, self.tilesys)

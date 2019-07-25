@@ -43,7 +43,6 @@ spatial reference, using the Equi7TilingSystem() for the file tiling.
 '''
 
 import os
-import platform
 import subprocess
 from datetime import datetime
 import numpy as np
@@ -307,24 +306,17 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
             else:
                 geo_extent = None
             if geo_extent:
-                ftiles = e7grid.search_tiles_in_roi(
-                                             geom_area=geo_extent,
-                                             subgrid_ids=subgrid_ids)
+                ftiles = e7grid.search_tiles_in_roi(roi_geometry=geo_extent,
+                                                    subgrid_ids=subgrid_ids)
             else:
                 ds = open_image(image)
                 img_extent = ds.get_extent()
+                bbox = (img_extent[0:2], img_extent[2:4])
                 img_spref = osr.SpatialReference()
                 img_spref.ImportFromWkt(ds.projection())
-                geo_extent = geometry.extent2polygon(img_extent,
-                                                     img_spref,
-                                                     segment=True)
-                ftiles = e7grid.search_tiles_in_roi(
-                                             geom_area=geo_extent,
-                                             subgrid_ids=subgrid_ids)
+                ftiles = e7grid.search_tiles_in_roi(bbox=bbox, subgrid_ids=subgrid_ids)
         else:
-            ftiles = e7grid.search_tiles_in_roi(
-                                         geom_area=geo_extent,
-                                         subgrid_ids=subgrid_ids)
+            ftiles = e7grid.search_tiles_in_roi(roi_geometry=roi, subgrid_ids=subgrid_ids)
     else:
         if type(ftiles) != list:
             ftiles = [ftiles]
@@ -352,13 +344,13 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
         filename = os.path.join(tile_path, "".join((outbasename, ".tif")))
 
         # using gdalwarp to resample
-        extent_m = e7grid.get_tile_limits_m(ftile)
+        bbox = e7grid.get_tile_bbox_proj(ftile)
         tile_project = e7grid.subgrids[ftile[0:2]].core.projection.wkt
 
         # prepare options for gdalwarp
         options = {'-t_srs': tile_project, '-of': 'GTiff',
                    '-r': resampling_type,
-                   '-te': " ".join(map(str, extent_m)),
+                   '-te': " ".join(map(str, bbox)),
                    '-tr': "{} -{}".format(e7grid.core.sampling,
                                           e7grid.core.sampling)}
 
@@ -480,8 +472,9 @@ def call_gdal_util(util_name, gdal_path=None, src_files=None, dst_file=None,
     cmd.append('"%s"' % dst_file)
 
     # create the directory if not exists
-    if not os.path.exists(os.path.dirname(dst_file)):
-        platform.makedirs(os.path.dirname(dst_file))
+    if dst_file is not None:
+        if not os.path.exists(os.path.dirname(dst_file)):
+            os.makedirs(os.path.dirname(dst_file))
 
     output = subprocess.check_output(" ".join(cmd), shell=True, cwd=gdal_path)
     succeed = _analyse_gdal_output(output)
@@ -627,15 +620,69 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
     return geom
 
 
+def equi72lonlat(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
+                 accurate_boundary=True, e7_folder=True, ftiles=None,
+                 roi=None, outshortname=None,
+                 withtilenameprefix=False, withtilenamesuffix=True,
+                 compress=True, compresstype="LZW",
+                 resampling_type="bilinear",
+                 overwrite=False, image_nodata=None, tile_nodata=None,
+                 tiledtiff=True, blocksize=512):
+
+    ftile = 'EU010M_E073N032T1'
+    tile_path= r'D:\temp\out'
+    outshortname = 'aaaaa'
+    # make output filename
+    outbasename = outshortname
+    if withtilenameprefix:
+        outbasename = "_".join((ftile, outbasename))
+    if withtilenamesuffix:
+        outbasename = "_".join((outbasename, ftile))
+    filename = os.path.join(tile_path, "".join((outbasename, ".tif")))
+
+    # using gdalwarp to resample
+
+    res500 = 0.0000892857142857142857142857142857
+    extent_m = e7grid.get_tile_bbox_geog(ftile)
+
+    # prepare options for gdalwarp
+    options = {'-t_srs': 'EPSG:4326', '-of': 'GTiff',
+               '-r': 'bilinear', '': '-overwrite',
+               '-te': " ".join(map(str, extent_m)),
+               '-tr': "{} -{}".format(res500, res500)}
+
+    options["-co"] = list()
+    if compress:
+        options["-co"].append("COMPRESS={0}".format(compresstype))
+    if image_nodata != None:
+        options["-srcnodata"] = image_nodata
+    if tile_nodata != None:
+        options["-dstnodata"] = tile_nodata
+    if overwrite:
+        options["-overwrite"] = " "
+    if tiledtiff:
+        options["-co"].append("TILED=YES")
+        options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
+        options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
+
+    # call gdalwarp for resampling
+    succeed, _ = call_gdal_util('gdalwarp', src_files=image,
+                                dst_file=filename, gdal_path=gdal_path,
+                                options=options)
+
+
 if __name__ == '__main__':
 
-    targetres = 500
-    e7g = Equi7Grid(targetres)
-
-    infile = r'R:\Datapool_raw\ASTER_GDEM\datasets\TIF\ASTGTM_N47E010_num.tif'
-    outdir = r'D:\Arbeit\ctemp\image2equi7grid'
+    # gdal_path = r'C:\Program Files\GDAL'
+    # targetres = 500
+    # e7g = Equi7Grid(targetres)
+    # infile = r"D:\temp\e7g_to_epsg4326\epsg4326\AS010M_E021N069T1.tif"
+    # outdir = r'D:\temp\e7g_to_epsg4326\out'
+    # image2equi7grid(e7g, infile, outdir, gdal_path=gdal_path)
 
     gdal_path = r'C:\Program Files\GDAL'
-
-    image2equi7grid(e7g, infile, outdir, gdal_path=gdal_path)
-
+    infile = r'D:\temp\e7g_to_epsg4326\egui7grid\M20160703_20171231_TMENSIG38_S1-IWGRDH1VV-_---_B0104_AS010M_E021N069T1.tif'
+    infile = r'D:\temp\e7g_to_epsg4326\egui7grid\M20160703_20171231_TMENSIG38_S1-IWGRDH1VV-_---_B0104_EU010M_E073N032T1.tif'
+    outdir = r'D:\temp\e7g_to_epsg4326\out'
+    e7g = Equi7Grid(10)
+    equi72lonlat(e7g, infile, outdir, gdal_path=gdal_path)

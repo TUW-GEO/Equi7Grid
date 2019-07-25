@@ -295,7 +295,8 @@ class TestEqui7Grid(unittest.TestCase):
         Tests searching for tiles with input of lon lat points
         """
         e7 = Equi7Grid(500)
-        tiles = e7.search_tiles_in_roi(extent=[(10, 40), (5, 50), (-90.9, -1.2), (-175.2, 66)],
+        tiles = e7.search_tiles_in_roi(points=[(10, 40), (5, 50),
+                                               (-90.9, -1.2), (-175.2, 66)],
                                        coverland=True)
 
         desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N018T6',
@@ -309,10 +310,10 @@ class TestEqui7Grid(unittest.TestCase):
         Tests searching for tiles with input of lon lat extent
         """
         e7 = Equi7Grid(500)
-        tiles = e7.search_tiles_in_roi(extent=[0, 30, 10, 40],
+        tiles = e7.search_tiles_in_roi(bbox=[(0, 30), (10, 40)],
                                        coverland=True)
     
-        tiles_all = e7.search_tiles_in_roi(extent=[-179.9, -89.9, 179.9, 89.9],
+        tiles_all = e7.search_tiles_in_roi(bbox=[(-179.9, -89.9), (179.9, 89.9)],
                                            coverland=True)
         desired_tiles = ['EU500M_E036N006T6', 'EU500M_E042N000T6',
                          'EU500M_E042N006T6', 'AF500M_E030N084T6',
@@ -328,12 +329,12 @@ class TestEqui7Grid(unittest.TestCase):
 
         e7 = Equi7Grid(500)
 
-        tiles = e7.search_tiles_in_roi(extent=[-170, 88, 150.0, 90])
+        tiles = e7.search_tiles_in_roi(bbox=[(-170, 88), (150.0, 90)])
         desired_tiles = ['NA500M_E078N084T6', 'NA500M_E078N090T6',
                          'NA500M_E084N084T6', 'NA500M_E084N090T6']
         assert sorted(tiles) == sorted(desired_tiles)
 
-        tiles = e7.search_tiles_in_roi(extent=[-170, -90, 150.0, -89])
+        tiles = e7.search_tiles_in_roi(bbox=[(-170, -90), (150.0, -89)])
         desired_tiles = ['AN500M_E036N030T6']
         assert tiles == desired_tiles
 
@@ -348,18 +349,19 @@ class TestEqui7Grid(unittest.TestCase):
         """
         e7 = Equi7Grid(500)
 
-        tiles = e7.search_tiles_in_roi(extent=[179, 66, 210, 67.85])
+        # test longitude values larger than 180 degrees
+        tiles1 = e7.search_tiles_in_roi(bbox=[(179, 66), (210, 67.85)])
 
         desired_tiles = ['AS500M_E066N090T6', 'AS500M_E066N096T6',
                          'AS500M_E072N090T6', 'AS500M_E072N096T6',
                          'NA500M_E054N072T6', 'NA500M_E054N078T6',
                          'NA500M_E060N072T6']
 
-        assert sorted(tiles) == sorted(desired_tiles)
+        assert sorted(tiles1) == sorted(desired_tiles)
 
-        # test values violating min/max order
-        tiles = e7.search_tiles_in_roi(extent=[179, 66, -150, 67.85])
-        assert tiles == []
+        # test longitudes that are more eastern, but lower in value
+        tiles2 = e7.search_tiles_in_roi(bbox=[(179, 66), (-150, 67.85)])
+        assert sorted(tiles2) == sorted(desired_tiles)
 
 
     def test_search_tiles_spitzbergen(self):
