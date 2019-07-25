@@ -41,11 +41,17 @@ import os
 import tempfile
 import numpy as np
 from osgeo import osr
+from osgeo import gdal
 from equi7grid.image2equi7grid import call_gdal_util
 from equi7grid.image2equi7grid import open_image
+from equi7grid.image2equi7grid import _find_gdal_path
 
 
-def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gdal_path=None):
+def check_gdal_aeqd_accuracy(quiet=False, check_gdalwarp=True, lib_dir=None, gdal_path=None):
+
+    print("\nTesting GDAL used via python-bindings.")
+    print("Version: {}".format(gdal.__version__))
+
     # check if the osgeo with GDAL is accurate
     # test point in lat/lon projection
     points = [(-31.627336, 30.306273), (-14.589038, -43.880131), (79.423313, -35.261658)]
@@ -72,7 +78,6 @@ def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gda
         # from aeqd to lat/lon
         backward_tx = osr.CoordinateTransformation(geo_sr, aeqd_sr)
         (geo_x, geo_y, _) = backward_tx.TransformPoint(aeqd_x, aeqd_y)
-        # print info
 
         if abs(geo_x - pt[0]) < 1e-6 and abs(geo_y - pt[1]) < 1e-6:
             test_results.append(True)
@@ -81,26 +86,37 @@ def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gda
 
     is_osgeo_accurate = all(test_results)
     if not is_osgeo_accurate:
-        error_message = ("Error: The proj4 library used by GDAL is"
-                         " not accurate when reprojecting between lat/lon"
-                         " and Equi7! Please contact GEO TUWien for the"
-                         " modified proj4 library.")
+        error_message = ("Error: The proj4 library used by GDAL-python-bindings is "
+                         "not accurately reprojecting between WGS84-lon/lat "
+                         "and Equi7Grid! Please updated GDAL, or "
+                         "contact GEO TUWien for the modified proj4 library.")
         raise RuntimeError(error_message)
     else:
         if not quiet:
-            print('Success: The proj4 library used by GDAL is accurate when reprojecting between lat/lon and Equi7!')
+            print("Success: The proj4 library used by GDAL-python-bindings is "
+                  "accurately reprojecting between WGS84-lon/lat and Equi7Grid!")
 
     # check the gdalwarp is accurate or not
     if check_gdalwarp:
+
+        _, gdal_cmd_version = call_gdal_util("gdalinfo", gdal_path=gdal_path, options={'': '--version'})
+        pos_str = str(gdal_cmd_version).find('GDAL')
+        version = str(gdal_cmd_version)[pos_str + 5: pos_str + 10]
+
+        if not gdal_path:
+            gdal_path = _find_gdal_path()
+        print("\nTesting GDAL used via cmd-line at path {}".format(gdal_path))
+        print("Version: {}".format(version))
+
+        #subprocess.check_output(gdalinfo_cmd, shell=True, cwd=gdal_path)
+
         test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), r"prj_accuracy_test")
-        in_image = os.path.join(test_data_dir,
-                                r"gdalwarp_check_equi7.tif")
+        in_image = os.path.join(test_data_dir, r"gdalwarp_check_equi7.tif")
         reprojected_image = tempfile.NamedTemporaryFile(suffix=".tif", delete=False).name
 
-        expected_image = os.path.join(test_data_dir,
-                                      r"gdalwarp_check_geo_expected.tif")
+        expected_image = os.path.join(test_data_dir, r"gdalwarp_check_geo_expected.tif")
         opt = {"-co": ["COMPRESS=LZW"],
-               "-t_srs": geo_sr.ExportToWkt(),
+               "-t_srs": '"' + geo_sr.ExportToProj4() + '"',
                '-r': "bilinear",
                '-te': "105.4082405648948964 10.2925555314242310 105.5284882612181860 10.4047867146593056",
                '-tr': "0.000668043 -0.000668043",
@@ -108,7 +124,7 @@ def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gda
                "-overwrite": " "
                }
         succeed, _ = call_gdal_util("gdalwarp", src_files=in_image, dst_file=reprojected_image,
-                                             gdal_path=gdal_path,  options=opt)
+                                    gdal_path=gdal_path, options=opt)
         if not succeed:
             raise RuntimeError("Error: gdalwrap is not working!")
         # check the reproject accuracy
@@ -117,8 +133,8 @@ def check_gdal_aeqd_accuracy(quiet=True, check_gdalwarp=False, lib_dir=None, gda
         expected_data = open_image(expected_image).read_band(1)
         diff_data = np.abs(expected_data - reprojected_data)
         if diff_data.sum() > 100 or diff_data.max() > 10:
-            raise RuntimeError("Error: gdalwrap is not accurate for reprojecton!")
-        print("Info: gdal accuracy test passed!")
+            raise RuntimeError("Error: gdalwarp cmd-line-tool is not accurately reprojecting images!")
+        print("Success: gdalwarp cmd-line-tool is accurately reprojecting images!")
 
 if __name__ == "__main__":
     check_gdal_aeqd_accuracy()
