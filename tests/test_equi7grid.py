@@ -248,17 +248,17 @@ class TestEqui7Grid(unittest.TestCase):
                ('EU', 500, 600000, 4200000, 600000, 'T6')
         assert e7_10.OC.tilesys.decode_tilename('OC010M_E085N091T1') == \
                ('OC', 10, 100000, 8500000, 9100000, 'T1')
-    
+
         assert e7_500.EU.tilesys.decode_tilename('E042N006T6') == \
                ('EU', 500, 600000, 4200000, 600000, 'T6')
-        assert e7_10.OC.tilesys.decode_tilename('E085N091T1') == \
-               ('OC', 10, 100000, 8500000, 9100000, 'T1')
-    
+
+
+
         with nptest.assert_raises(ValueError) as excinfo:
             e7_10.EU.tilesys.decode_tilename('E042N006T6')
         assert str(excinfo.exception).startswith('"tilename" is not properly defined!')
-    
-    
+
+
     def test_find_overlapping_tilenames(self):
         """
         Tests search for tiles which share the same extent_m but
@@ -426,7 +426,8 @@ class TestEqui7Grid(unittest.TestCase):
                                        'AS500M_E078N084T6', 'NA500M_E036N078T6',
                                        'NA500M_E036N084T6', 'NA500M_E042N078T6',
                                        'NA500M_E042N084T6'])
-        tiles = sorted(grid.search_tiles_in_roi(kamchatka_geom, coverland=False))
+
+        tiles = grid.search_tiles_in_roi(kamchatka_geom, coverland=False)
     
         assert sorted(tiles) == sorted(kamchatka_geom_tiles)
     
@@ -510,7 +511,7 @@ class TestEqui7Grid(unittest.TestCase):
         tile_up_north = e7g.create_tile('EU500M_E054N054T6')
 
         nptest.assert_almost_equal(tile_up_north.bbox_geog,
-                                   (-35.42781, 81.57133, 55.67043, 87.77280),
+                                   (-35.42781, 81.57133, 55.67043, 87.77239),
                                    decimal=5)
 
 
