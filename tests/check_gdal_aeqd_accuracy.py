@@ -45,6 +45,7 @@ from osgeo import gdal
 from equi7grid.image2equi7grid import call_gdal_util
 from equi7grid.image2equi7grid import open_image
 from equi7grid.image2equi7grid import _find_gdal_path
+from equi7grid.equi7grid import Equi7Grid
 
 
 def check_gdal_aeqd_accuracy(quiet=False, check_gdalwarp=True, lib_dir=None, gdal_path=None):
@@ -108,33 +109,66 @@ def check_gdal_aeqd_accuracy(quiet=False, check_gdalwarp=True, lib_dir=None, gda
         print("\nTesting GDAL used via cmd-line at path {}".format(gdal_path))
         print("Version: {}".format(version))
 
-        #subprocess.check_output(gdalinfo_cmd, shell=True, cwd=gdal_path)
+        # 10m in degrees
+        sampling_10m = 0.0000892857142857142857142857142857
 
         test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), r"prj_accuracy_test")
-        in_image = os.path.join(test_data_dir, r"gdalwarp_check_equi7.tif")
+        input_image = os.path.join(test_data_dir, r"lake_in_russia_equi7grid.tif")
         reprojected_image = tempfile.NamedTemporaryFile(suffix=".tif", delete=False).name
+        re_reprojected_image = tempfile.NamedTemporaryFile(suffix=".tif", delete=False).name
 
-        expected_image = os.path.join(test_data_dir, r"gdalwarp_check_geo_expected.tif")
+        expected_image = os.path.join(test_data_dir, r"lake_in_russia_lonlat.tif")
+
         opt = {"-co": ["COMPRESS=LZW"],
                "-t_srs": '"' + geo_sr.ExportToProj4() + '"',
                '-r': "bilinear",
-               '-te': "105.4082405648948964 10.2925555314242310 105.5284882612181860 10.4047867146593056",
-               '-tr': "0.000668043 -0.000668043",
+               '-tr': "{} -{}".format(sampling_10m, sampling_10m),
                "-dstnodata": -9999,
                "-overwrite": " "
                }
-        succeed, _ = call_gdal_util("gdalwarp", src_files=in_image, dst_file=reprojected_image,
+
+        succeed, _ = call_gdal_util("gdalwarp", src_files=input_image, dst_file=reprojected_image,
                                     gdal_path=gdal_path, options=opt)
+
         if not succeed:
             raise RuntimeError("Error: gdalwrap is not working!")
+
         # check the reproject accuracy
         reprojected_data = open_image(reprojected_image).read_band(1)
-        os.remove(reprojected_image)
+
         expected_data = open_image(expected_image).read_band(1)
         diff_data = np.abs(expected_data - reprojected_data)
         if diff_data.sum() > 100 or diff_data.max() > 10:
-            raise RuntimeError("Error: gdalwarp cmd-line-tool is not accurately reprojecting images!")
-        print("Success: gdalwarp cmd-line-tool is accurately reprojecting images!")
+            raise RuntimeError("Error: gdalwarp cmd-line-tool is not accurately reprojecting images to lonlat!")
+
+        # reproject back to inital Equi7Grid format
+        e7g = Equi7Grid(10)
+        opt = {"-co": ["COMPRESS=LZW"],
+               "-t_srs": '"' + e7g.AS.core.projection.proj4 + '"',
+               '-r': "bilinear",
+               '-tr': "{} -{}".format(10, 10),
+               '-te': "2116900 6970860 2125490 6978790",
+               "-srcnodata": -9999,
+               "-dstnodata": -9999,
+               "-overwrite": " "
+               }
+
+        succeed, _ = call_gdal_util("gdalwarp", src_files=reprojected_image, dst_file=re_reprojected_image,
+                                    gdal_path=gdal_path, options=opt)
+
+        # check the reproject accuracy
+        re_reprojected_data = open_image(re_reprojected_image).read_band(1)
+        indnan = np.where(re_reprojected_data != -9999)
+
+        input_data = open_image(input_image).read_band(1)
+        diff_data = input_data[indnan] - re_reprojected_data[indnan]
+        if np.abs(diff_data.mean()) > 0.001 or np.abs(diff_data).sum() > 500000 or np.abs(diff_data).max() > 25:
+            raise RuntimeError("Error: gdalwarp cmd-line-tool is not accurately reprojecting images back to Equi7Grid!")
+
+        os.remove(reprojected_image)
+        os.remove(re_reprojected_image)
+
+        print("Success: gdalwarp cmd-line-tool is accurately (re-) projecting images!")
 
 if __name__ == "__main__":
     check_gdal_aeqd_accuracy()
