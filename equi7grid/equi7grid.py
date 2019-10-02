@@ -102,7 +102,7 @@ class Equi7Grid(TiledProjectionSystem):
     # static attribute
     _static_data = _load_static_data(__file__)
     # sub grid IDs
-    _static_subgrid_ids = ["NA", "EU", "AS", "SA", "AF", "OC", "AN"]
+    _static_subgrid_ids = list(_static_data.keys())
     # supported tile widths (linked to the grid sampling)
     _static_tilecodes = ["T6", "T3", "T1"]
     # supported grid spacing ( = the pixel sampling)
@@ -338,23 +338,21 @@ class Equi7Subgrid(TiledProjection):
 
         _core = copy.copy(core)
         _core.tag = continent
-        _core.projection = TPSProjection(wkt=data['projection'])
+        _core.projection = TPSProjection(wkt=data['wkt'])
 
         # holds core parameters of the (sub-) grid
         self.core = _core
 
         # holds name of the subgrid
-        self.name = ''.join(
-            ('EQUI7_', continent, Equi7Grid.encode_sampling(core.sampling), 'M'))
+        self.name = ''.join(('EQUI7_', continent, Equi7Grid.encode_sampling(core.sampling), 'M'))
 
-        # holds the extent of the subgrid in the latlon-space
-        self.polygon_geog = create_geometry_from_wkt(data['zone_extent'])
+        # holds the extent of the subgrid in the lonlat-space
+        self.polygon_geog = create_geometry_from_wkt(data['zone_extent'], epsg=4326)
 
         # defines the tilingsystem of the subgrid
         self.tilesys = Equi7TilingSystem(self.core, self.polygon_geog)
 
-        super(Equi7Subgrid, self).__init__(
-            self.core, self.polygon_geog, self.tilesys)
+        super(Equi7Subgrid, self).__init__(self.core, self.polygon_geog, self.tilesys)
 
 
 class Equi7TilingSystem(TilingSystem):
