@@ -241,6 +241,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
                     withtilenameprefix=False, withtilenamesuffix=True,
                     compress=True, compresstype="LZW",
                     resampling_type="bilinear",
+                    subfolder=None,
                     overwrite=False, image_nodata=None, tile_nodata=None,
                     tiledtiff=True, blocksize=512):
 
@@ -276,6 +277,9 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
         The output tiles is compressed or not.
     resampling_type : string
         Resampling method.
+    subfolder : str
+        If it's not None, it creates the subfolder within tile folder where the
+        image will be resampled to.
     overwrite : bool
         Overwrite the old tile or not.
     image_nodata : double
@@ -341,7 +345,10 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
             outbasename = "_".join((ftile, outbasename))
         if withtilenamesuffix:
             outbasename = "_".join((outbasename, ftile))
-        filename = os.path.join(tile_path, "".join((outbasename, ".tif")))
+        if subfolder:
+            filename = os.path.join(tile_path, subfolder, "".join((outbasename, ".tif")))
+        else:
+            filename = os.path.join(tile_path, "".join((outbasename, ".tif")))
 
         # using gdalwarp to resample
         bbox = e7grid.get_tile_bbox_proj(ftile)
