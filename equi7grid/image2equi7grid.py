@@ -55,8 +55,6 @@ try:
     from equi7grid.equi7grid import Equi7Grid
 except:
     from equi7grid import Equi7Grid
-from pytileproj import geometry
-
 
 # dict for transfer the datatype and resample type
 gdal_datatype = {"uint8": gdal.GDT_Byte,
@@ -352,7 +350,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
 
         # using gdalwarp to resample
         bbox = e7grid.get_tile_bbox_proj(ftile)
-        tile_project = e7grid.subgrids[ftile[0:2]].core.projection.wkt
+        tile_project = '"{}"'.format(e7grid.subgrids[ftile[0:2]].core.projection.proj4)
 
         # prepare options for gdalwarp
         options = {'-t_srs': tile_project, '-of': 'GTiff',
@@ -611,11 +609,15 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
     if gdal.CE_None == gdal.Polygonize(binary_band, maskband,
                                        dst_layer, dst_field, callback=None):
         # get polygons from dataset
-        multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
-        for feature in dst_ds.GetLayer():
-            multipolygon.AddGeometry(feature.GetGeometryRef())
-        multipolygon.AssignSpatialReference(dst_ds.GetLayer(0).GetSpatialRef())
-        geom = multipolygon
+        polygon = ogr.Geometry(ogr.wkbMultiPolygon)
+        for feature in dst_ds.GetLayerByIndex():
+            polygon.AddGeometry(feature.GetGeometryRef())
+        polygon.AssignSpatialReference(dst_ds.GetLayer(0).GetSpatialRef())
+
+        # BBM: why should we have here a multipolygon?
+        polygon = ogr.ForceToPolygon(polygon)
+
+        geom = polygon
 
     # clean tmp file
     dst_ds.Destroy()
@@ -688,8 +690,7 @@ if __name__ == '__main__':
     # image2equi7grid(e7g, infile, outdir, gdal_path=gdal_path)
 
     gdal_path = r'C:\Program Files\GDAL'
-    infile = r'D:\temp\e7g_to_epsg4326\egui7grid\M20160703_20171231_TMENSIG38_S1-IWGRDH1VV-_---_B0104_AS010M_E021N069T1.tif'
-    infile = r'D:\temp\e7g_to_epsg4326\egui7grid\M20160703_20171231_TMENSIG38_S1-IWGRDH1VV-_---_B0104_EU010M_E073N032T1.tif'
-    outdir = r'D:\temp\e7g_to_epsg4326\out'
-    e7g = Equi7Grid(10)
-    equi72lonlat(e7g, infile, outdir, gdal_path=gdal_path)
+    infile = r"D:\temp\out\S1B_EW_GRDH_1SDH_20191002T214344_20191002T214444_018302_02279D_7471_SIG0_HH_lambert.tif"
+    outdir = r'D:\temp\out'
+    e7g = Equi7Grid(500)
+    image2equi7grid(e7g, infile, outdir, gdal_path=gdal_path)
