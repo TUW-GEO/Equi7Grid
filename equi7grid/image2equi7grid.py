@@ -609,15 +609,12 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
     if gdal.CE_None == gdal.Polygonize(binary_band, maskband,
                                        dst_layer, dst_field, callback=None):
         # get polygons from dataset
-        polygon = ogr.Geometry(ogr.wkbMultiPolygon)
+        multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
         for feature in dst_ds.GetLayerByIndex():
-            polygon.AddGeometry(feature.GetGeometryRef())
-        polygon.AssignSpatialReference(dst_ds.GetLayer(0).GetSpatialRef())
+            multipolygon.AddGeometry(feature.GetGeometryRef())
+        multipolygon.AssignSpatialReference(dst_ds.GetLayer(0).GetSpatialRef())
 
-        # BBM: why should we have here a multipolygon?
-        polygon = ogr.ForceToPolygon(polygon)
-
-        geom = polygon
+        geom = multipolygon
 
     # clean tmp file
     dst_ds.Destroy()
@@ -690,7 +687,7 @@ if __name__ == '__main__':
     # image2equi7grid(e7g, infile, outdir, gdal_path=gdal_path)
 
     gdal_path = r'C:\Program Files\GDAL'
-    infile = r"D:\temp\out\S1B_EW_GRDH_1SDH_20191002T214344_20191002T214444_018302_02279D_7471_SIG0_HH_lambert.tif"
+    infile = r"D:\temp\out\S1B_EW_GRDH_1SDH_20191002T214344_20191002T214444_018302_02279D_7471_SIG0_HH_lonlat.tif"
     outdir = r'D:\temp\out'
     e7g = Equi7Grid(500)
     image2equi7grid(e7g, infile, outdir, gdal_path=gdal_path)
