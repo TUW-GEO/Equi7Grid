@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version v0.0.8
+===============
+
+- extended search_tiles_in_roi()
+- fixes issues with projection strings when using GDAL>=3.0.0
+
 Version v0.0.7
 ==============
 
