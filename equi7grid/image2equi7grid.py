@@ -611,7 +611,17 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
         # get polygons from dataset
         multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
         for feature in dst_ds.GetLayerByIndex():
-            multipolygon.AddGeometry(feature.GetGeometryRef())
+            polygon = feature.GetGeometryRef()
+
+            # When the polygon has hole inside, only the out line ring will 
+            # be used as extent polygon
+            if polygon.GetGeometryCount() > 1:
+                ring = polygon.GetGeometryRef(0)
+                poly = ogr.Geometry(ogr.wkbPolygon)
+                poly.AddGeometry(ring)
+                polygon = poly
+
+            multipolygon.AddGeometry(polygon)
         multipolygon.AssignSpatialReference(dst_ds.GetLayer(0).GetSpatialRef())
 
         geom = multipolygon
