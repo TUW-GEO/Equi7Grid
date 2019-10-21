@@ -233,7 +233,8 @@ class GdalImage:
         return x >= 0 and x < self.XSize() and y >= 0 and y < self.YSize()
 
 
-def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
+def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
+                    subgrid_ids=None,
                     accurate_boundary=True, e7_folder=True, ftiles=None,
                     roi=None,  outshortname=None,
                     withtilenameprefix=False, withtilenamesuffix=True,
@@ -257,6 +258,8 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
         if set (default), the output data will be stored in equi7folder structure
     gdal_path : string
         Gdal utilities location.
+    inband : string
+        name of the band for multiband inputs, e.g. NETCDF
     subgrid_ids : list
         Only resample to the specified continents,
         default is to resample to all continents.
@@ -353,7 +356,9 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
         tile_project = '"{}"'.format(e7grid.subgrids[ftile[0:2]].core.projection.proj4)
 
         # prepare options for gdalwarp
-        options = {'-t_srs': tile_project, '-of': 'GTiff',
+        options = {'-t_srs': tile_project,
+                   '-of': 'GTiff',
+                   '-ot': 'Float64',
                    '-r': resampling_type,
                    '-te': " ".join(map(str, bbox)),
                    '-tr': "{} -{}".format(e7grid.core.sampling,
@@ -374,7 +379,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
             options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
 
         # call gdalwarp for resampling
-        succeed, _ = call_gdal_util('gdalwarp', src_files=image,
+        succeed, _ = call_gdal_util('gdalwarp', src_file=image, src_band=inband,
                                     dst_file=filename, gdal_path=gdal_path,
                                     options=options)
 
@@ -411,8 +416,9 @@ def open_image(filename):
     return GdalImage(dataset, filename)
 
 
-def call_gdal_util(util_name, gdal_path=None, src_files=None, dst_file=None,
-                   options={}):
+def call_gdal_util(util_name, gdal_path=None, src_file=None, src_band=None,
+                   dst_file=None, options={}):
+
     """call gdal utility to run the operation.
         http://www.gdal.org/gdal_utilities.html
 
@@ -467,13 +473,19 @@ def call_gdal_util(util_name, gdal_path=None, src_files=None, dst_file=None,
             #    cmd.append(str(v))
                 cmd.append(str(v))
 
+    # NETCDF input case
+    if src_file.endswith('.nc'):
+        src_file = 'NETCDF:{}:{}'.format(src_file, src_band)
+
+
     # add source files and destination file (in double quotation)
     # if hasattr(src_files, "__iter__"):
     #     src_files_str = " ".join(src_files)
     # else:
     #     src_files_str = '"%s"' % src_files
-    src_files_str = '"%s"' % src_files
-    cmd.append(src_files_str)
+
+    src_file_str = '"%s"' % src_file
+    cmd.append(src_file_str)
     cmd.append('"%s"' % dst_file)
 
     # create the directory if not exists
@@ -560,9 +572,9 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
                '-dstnodata': nodata
                }
 
-    succeed, _ = call_gdal_util('gdalwarp', src_files=infile,
-                                         dst_file=qlook, gdal_path=gdal_path,
-                                         options=options)
+    succeed, _ = call_gdal_util('gdalwarp', src_file=infile,
+                                dst_file=qlook, gdal_path=gdal_path,
+                                options=options)
     if not succeed:
         return None
 
@@ -682,7 +694,7 @@ def equi72lonlat(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
         options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
 
     # call gdalwarp for resampling
-    succeed, _ = call_gdal_util('gdalwarp', src_files=image,
+    succeed, _ = call_gdal_util('gdalwarp', src_file=image,
                                 dst_file=filename, gdal_path=gdal_path,
                                 options=options)
 
