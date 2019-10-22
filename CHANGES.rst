@@ -2,8 +2,14 @@
 Changelog
 =========
 
+Version v0.0.9
+==============
+
+- bugfix in antimeridian handling
+- image2equi7 ingests now .nc with "bands"
+
 Version v0.0.8
-===============
+==============
 
 - extended search_tiles_in_roi()
 - fixes issues with projection strings when using GDAL>=3.0.0
