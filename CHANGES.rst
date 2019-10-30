@@ -2,6 +2,14 @@
 Changelog
 =========
 
+Version v0.0.10
+===============
+
+- in image2equi7()...
+- float64 removed
+- same outputfile as input possible
+- scale/offset is now accepted
+
 Version v0.0.9
 ==============
 

@@ -240,8 +240,9 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
                     withtilenameprefix=False, withtilenamesuffix=True,
                     compress=True, compresstype="LZW",
                     resampling_type="bilinear",
-                    subfolder=None,
-                    overwrite=False, image_nodata=None, tile_nodata=None,
+                    subfolder=None, overwrite=False,
+                    image_nodata=None, tile_nodata=None,
+                    scale=None, offset=None,
                     tiledtiff=True, blocksize=512):
 
     """
@@ -287,6 +288,10 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
         The nodata value of input images.
     tile_nodata : double
         The nodata value of tile.
+    scale : float
+        scale factor should be applied to pixel values
+    offset : float
+        offset value should be applied to pixel values
     tiledtiff : bool
         Set to yes for tiled geotiff output
     blocksize: integer
@@ -358,7 +363,6 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
         # prepare options for gdalwarp
         options = {'-t_srs': tile_project,
                    '-of': 'GTiff',
-                   '-ot': 'Float64',
                    '-r': resampling_type,
                    '-te': " ".join(map(str, bbox)),
                    '-tr': "{} -{}".format(e7grid.core.sampling,
@@ -379,13 +383,32 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
 
         # call gdalwarp for resampling
-        succeed, _ = call_gdal_util('gdalwarp', src_file=image, src_band=inband,
+        succeed, _ = call_gdal_util('gdalwarp', src_files=image, src_band=inband,
                                     dst_file=filename, gdal_path=gdal_path,
                                     options=options)
 
         # full path to the output(resampled) files
         if succeed:
             dst_file_names.extend([filename])
+
+
+        if scale is not None and offset is not None:
+            # prepare options for gdal_translate
+            options = {'-a_scale': scale,
+                       '-a_offset': offset}
+            options["-co"] = list()
+            if tile_nodata != None:
+                options["-a_nodata "] = tile_nodata
+            if compress:
+                options["-co"].append("COMPRESS={0}".format(compresstype))
+            if tiledtiff:
+                options["-co"].append("TILED=YES")
+                options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
+                options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
+
+            succeed, _ = call_gdal_util('gdal_translate', src_files=filename,
+                                        dst_file=filename, gdal_path=gdal_path,
+                                        options=options)
 
     return dst_file_names
 
@@ -416,7 +439,7 @@ def open_image(filename):
     return GdalImage(dataset, filename)
 
 
-def call_gdal_util(util_name, gdal_path=None, src_file=None, src_band=None,
+def call_gdal_util(util_name, gdal_path=None, src_files=None, src_band=None,
                    dst_file=None, options={}):
 
     """call gdal utility to run the operation.
@@ -429,8 +452,8 @@ def call_gdal_util(util_name, gdal_path=None, src_file=None, src_band=None,
         (e.g. "gdal_translate": convert raster data between different formats,
         potentially performing some operations like subsettings, resampling,
         and rescaling pixels in the process.)
-    src_files : string
-        The source dataset name. It can be either file name,
+    src_files : string or list of strings
+        The source dataset name(s). It can be either file name(s),
         URL of data source or subdataset name for multi-dataset files.
     dst_file : string
         The destination file name.
@@ -473,19 +496,26 @@ def call_gdal_util(util_name, gdal_path=None, src_file=None, src_band=None,
             #    cmd.append(str(v))
                 cmd.append(str(v))
 
-    # NETCDF input case
-    if src_file.endswith('.nc'):
-        src_file = 'NETCDF:{}:{}'.format(src_file, src_band)
-
-
     # add source files and destination file (in double quotation)
-    # if hasattr(src_files, "__iter__"):
-    #     src_files_str = " ".join(src_files)
-    # else:
-    #     src_files_str = '"%s"' % src_files
+    dst_file_ori = None
+    # switch for multiple source files (e.g. for gdal_merge.py)
+    if isinstance(src_files, list):
+        src_files_str = " ".join(src_files)
+    # switch for single source files
+    else:
+        src_files_str = '"%s"' % src_files
+        # NETCDF input case
+        if src_files.endswith('.nc'):
+            src_files = 'NETCDF:{}:{}'.format(src_files, src_band)
+        # create an interim existing file
+        if src_files == dst_file:
+            fileparts = os.path.splitext(dst_file)
+            dst_file_tmp = fileparts[0] + '_temp' + fileparts[1]
+            dst_file_ori = dst_file
+            dst_file = dst_file_tmp
 
-    src_file_str = '"%s"' % src_file
-    cmd.append(src_file_str)
+    # build the final call
+    cmd.append(src_files_str)
     cmd.append('"%s"' % dst_file)
 
     # create the directory if not exists
@@ -493,8 +523,15 @@ def call_gdal_util(util_name, gdal_path=None, src_file=None, src_band=None,
         if not os.path.exists(os.path.dirname(dst_file)):
             os.makedirs(os.path.dirname(dst_file))
 
+    # check for success
     output = subprocess.check_output(" ".join(cmd), shell=True, cwd=gdal_path)
     succeed = _analyse_gdal_output(output)
+
+    # restore old filename
+    if succeed and dst_file_ori is not None:
+        os.remove(dst_file_ori)
+        os.rename(dst_file, dst_file_ori)
+
     return succeed, output
 
 
@@ -572,7 +609,7 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
                '-dstnodata': nodata
                }
 
-    succeed, _ = call_gdal_util('gdalwarp', src_file=infile,
+    succeed, _ = call_gdal_util('gdalwarp', src_files=infile,
                                 dst_file=qlook, gdal_path=gdal_path,
                                 options=options)
     if not succeed:
@@ -694,7 +731,7 @@ def equi72lonlat(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
         options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
 
     # call gdalwarp for resampling
-    succeed, _ = call_gdal_util('gdalwarp', src_file=image,
+    succeed, _ = call_gdal_util('gdalwarp', src_files=image,
                                 dst_file=filename, gdal_path=gdal_path,
                                 options=options)
 
