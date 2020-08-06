@@ -158,6 +158,8 @@ class TestEqui7Grid(unittest.TestCase):
         """
         Tests tile indices to xy coordination in the subgrid projection
         """
+
+        # upperleft case (regular numpy array indexing)
         e7 = Equi7Grid(500)
         x_should = 3166500
         y_should = 5178000
@@ -166,11 +168,19 @@ class TestEqui7Grid(unittest.TestCase):
         nptest.assert_allclose(x_should, x)
         nptest.assert_allclose(y_should, y)
 
+        # pixel center coordinates
+        x_should = 3166750
+        y_should = 5177750
+        tile = e7.EU.tilesys.create_tile(x=3245631, y=5146545)
+        x, y = tile.ij2xy(333, 444, offset='center')
+        nptest.assert_allclose(x_should, x)
+        nptest.assert_allclose(y_should, y)
+
         # lowerleft case
-        x_should = 5399500
+        x_should = 4800000
         y_should = 1200000
         tile = e7.EU.tilesys.create_tile(x=4800123, y=1200123)
-        x, y = tile.ij2xy(1199, 0, lowerleft=True)
+        x, y = tile.ij2xy(0, 0, lowerleft=True, offset='ll')
         nptest.assert_allclose(x_should, x)
         nptest.assert_allclose(y_should, y)
     
