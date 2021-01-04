@@ -234,16 +234,12 @@ class GdalImage:
 
 
 def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
-                    subgrid_ids=None,
-                    accurate_boundary=True, e7_folder=True, ftiles=None,
-                    roi=None,  outshortname=None,
-                    withtilenameprefix=False, withtilenamesuffix=True,
-                    compress=True, compresstype="LZW",
-                    resampling_type="bilinear",
+                    subgrid_ids=None, accurate_boundary=True, e7_folder=True,
+                    ftiles=None, roi=None, naming_convention=None,
+                    compresstype="LZW", resampling_type="bilinear",
                     subfolder=None, overwrite=False,
                     image_nodata=None, tile_nodata=None,
-                    scale=None, offset=None,
-                    tiledtiff=True, blocksize=512):
+                    scale=None, offset=None, blocksize=512):
 
     """
     Resample an raster image to tiled images in the Equi7Grid.
@@ -269,14 +265,8 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
         The roi will beignored if ftiles keyword is provided
     ftiles : list of tile names
         full name of tiles to which data should be resampled
-    outshortname : string
-        The short name will be main part of the output tile name.
-    withtilenameprefix : bool
-        Prepend the tile name in the tile file name.
-    withtilenamesuffix : bool
-        Append the tile name in the tile file name.
-    compress : bool
-        The output tiles is compressed or not.
+    naming_convention :
+
     resampling_type : string
         Resampling method.
     subfolder : str
@@ -292,15 +282,10 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
         scale factor should be applied to pixel values
     offset : float
         offset value should be applied to pixel values
-    tiledtiff : bool
-        Set to yes for tiled geotiff output
     blocksize: integer
         sets tile width, in x and y direction
 
     """
-    # get the output shortname if not provided
-    if not outshortname:
-        outshortname = os.path.splitext(os.path.basename(image))[0]
 
     # find overlapping tiles
     if ftiles is None:
@@ -346,15 +331,17 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             tile_path = output_dir
 
         # make output filename
-        outbasename = outshortname
-        if withtilenameprefix:
-            outbasename = "_".join((ftile, outbasename))
-        if withtilenamesuffix:
-            outbasename = "_".join((outbasename, ftile))
-        if subfolder:
-            filename = os.path.join(tile_path, subfolder, "".join((outbasename, ".tif")))
+        if naming_convention is None:
+            out_filename = os.path.splitext(os.path.basename(image))[0]
+            out_filename = "_".join((out_filename, ftile + ".tif"))
         else:
-            filename = os.path.join(tile_path, "".join((outbasename, ".tif")))
+            naming_convention['grid_name'] = ftile.split('_')[0]
+            naming_convention['tile_name'] = ftile.split('_')[1]
+            out_filename = str(naming_convention)
+        if subfolder:
+            out_filepath = os.path.join(tile_path, subfolder, out_filename)
+        else:
+            out_filepath = os.path.join(tile_path, out_filename)
 
         # using gdalwarp to resample
         bbox = e7grid.get_tile_bbox_proj(ftile)
@@ -369,7 +356,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
                                           e7grid.core.sampling)}
 
         options["-co"] = list()
-        if compress:
+        if compresstype is not None:
             options["-co"].append("COMPRESS={0}".format(compresstype))
         if image_nodata != None:
             options["-srcnodata"] = image_nodata
@@ -377,20 +364,19 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             options["-dstnodata"] = tile_nodata
         if overwrite:
             options["-overwrite"] = " "
-        if tiledtiff:
+        if blocksize is not None:
             options["-co"].append("TILED=YES")
             options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
             options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
 
         # call gdalwarp for resampling
         succeed, _ = call_gdal_util('gdalwarp', src_files=image, src_band=inband,
-                                    dst_file=filename, gdal_path=gdal_path,
+                                    dst_file=out_filepath, gdal_path=gdal_path,
                                     options=options)
 
         # full path to the output(resampled) files
         if succeed:
-            dst_file_names.extend([filename])
-
+            dst_file_names.append(out_filepath)
 
         if scale is not None and offset is not None:
             # prepare options for gdal_translate
@@ -399,15 +385,15 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             options["-co"] = list()
             if tile_nodata != None:
                 options["-a_nodata "] = tile_nodata
-            if compress:
+            if compresstype is not None:
                 options["-co"].append("COMPRESS={0}".format(compresstype))
-            if tiledtiff:
+            if blocksize is not None:
                 options["-co"].append("TILED=YES")
                 options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
                 options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
 
-            succeed, _ = call_gdal_util('gdal_translate', src_files=filename,
-                                        dst_file=filename, gdal_path=gdal_path,
+            succeed, _ = call_gdal_util('gdal_translate', src_files=out_filepath,
+                                        dst_file=out_filepath, gdal_path=gdal_path,
                                         options=options)
 
     return dst_file_names
