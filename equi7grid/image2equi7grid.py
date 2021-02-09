@@ -236,7 +236,7 @@ class GdalImage:
 def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
                     subgrid_ids=None, accurate_boundary=True, e7_folder=True,
                     ftiles=None, roi=None, naming_convention=None,
-                    compresstype="LZW", resampling_type="bilinear",
+                    compress_type="LZW", resampling_type="bilinear",
                     subfolder=None, overwrite=False,
                     image_nodata=None, tile_nodata=None,
                     scale=None, offset=None, blocksize=512):
@@ -247,43 +247,55 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
 
     Parameters
     ----------
-    image : string
+    e7grid : Equi7Grid
+        Equi7Grid object defining output projection and sampling.
+    image : str
         Image file path.
-    ouput_dir : string
+    output_dir : str
         Output directory path.
-    e7_folder: boolean
-        if set (default), the output data will be stored in equi7folder structure
-    gdal_path : string
-        Gdal utilities location.
-    inband : string
-        name of the band for multiband inputs, e.g. NETCDF
-    subgrid_ids : list
-        Only resample to the specified continents,
-        default is to resample to all continents.
-    roi : OGRGeometry
-        Region of interest.
-        The roi will beignored if ftiles keyword is provided
-    ftiles : list of tile names
-        full name of tiles to which data should be resampled
-    naming_convention :
-
-    resampling_type : string
-        Resampling method.
-    subfolder : str
-        If it's not None, it creates the subfolder within tile folder where the
+    gdal_path : str
+        Path to GDAL utilities location.
+    inband : str, optional
+        Name of the band for multi-band inputs, e.g. NETCDF.
+    subgrid_ids : list, optional
+        Only resample to the specified continents.
+        Default is to resample to all continents.
+    accurate_boundary : bool, optional
+        If true (default), the accurate raster boundary of the input image is retrieved.
+        If false, only the extent is used.
+    e7_folder : bool, optional
+        If true (default), the output data will be stored in the Equi7Grid folder structure, i.e. "subgrid/tilename".
+    ftiles : list, optional
+        List of full name of tiles to which data should be resampled. If it is not set, all tiles are used.
+    roi : ogr.Geometry, optional
+        Region of interest defined by a ogr.Geometry.
+        `roi` will be ignored if `ftiles` is provided.
+    naming_convention : SmartFilename, optional
+        If provided, the keys "grid_name" and "tile_name" of the file naming convention are filled with the
+        corresponding values of the resampled tile. The file naming convention is then used to specify the file name
+        of the resampled files.
+    compress_type : str, optional
+        GeoTIFF compression type. Defaults to "LZW".
+    resampling_type : str, optional
+        GDAL resampling method. Defaults to "bilinear".
+    blocksize : integer, optional
+        Sets the GeoTIFF block dimensions in X and Y direction (defaults to 512).
+        If it is None, no GeoTIFF tiling is applied.
+    subfolder : str, optional
+        If it's set, it creates the sub-folder within the tile folder where the
         image will be resampled to.
-    overwrite : bool
-        Overwrite the old tile or not.
-    image_nodata : double
-        The nodata value of input images.
-    tile_nodata : double
-        The nodata value of tile.
-    scale : float
-        scale factor should be applied to pixel values
-    offset : float
-        offset value should be applied to pixel values
-    blocksize: integer
-        sets tile width, in x and y direction
+    overwrite : bool, optional
+        Overwrite the old tile or not (defaults to false).
+    image_nodata : float, optional
+        The no data value of the input image. If it is not set, the no data value is automatically taken
+        from the input image (default).
+    tile_nodata : float, optional
+        The no data value of the tile. If it is not set, the no data value is automatically taken
+        from the input image (default).
+    scale : float, optional
+        Scale factor that should be applied to the pixel values.
+    offset : float, optional
+        Offset value that should be applied to the pixel values.
 
     """
 
@@ -335,8 +347,12 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             out_filename = os.path.splitext(os.path.basename(image))[0]
             out_filename = "_".join((out_filename, ftile + ".tif"))
         else:
-            naming_convention['grid_name'] = ftile.split('_')[0]
-            naming_convention['tile_name'] = ftile.split('_')[1]
+            try:
+                naming_convention['grid_name'] = ftile.split('_')[0]
+                naming_convention['tile_name'] = ftile.split('_')[1]
+            except KeyError:
+                err_msg = "File naming convention does not contain 'grid_name' or 'tile_name'."
+                raise KeyError(err_msg)
             out_filename = str(naming_convention)
         if subfolder:
             out_filepath = os.path.join(tile_path, subfolder, out_filename)
@@ -356,8 +372,8 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
                                           e7grid.core.sampling)}
 
         options["-co"] = list()
-        if compresstype is not None:
-            options["-co"].append("COMPRESS={0}".format(compresstype))
+        if compress_type is not None:
+            options["-co"].append("COMPRESS={0}".format(compress_type))
         if image_nodata != None:
             options["-srcnodata"] = image_nodata
         if tile_nodata != None:
@@ -385,8 +401,8 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             options["-co"] = list()
             if tile_nodata != None:
                 options["-a_nodata "] = tile_nodata
-            if compresstype is not None:
-                options["-co"].append("COMPRESS={0}".format(compresstype))
+            if compress_type is not None:
+                options["-co"].append("COMPRESS={0}".format(compress_type))
             if blocksize is not None:
                 options["-co"].append("TILED=YES")
                 options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
