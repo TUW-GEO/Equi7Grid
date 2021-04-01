@@ -32,12 +32,13 @@ from pytileproj.geometry import setup_test_geom_siberia_antimeridian_180plus
 from pytileproj.geometry import setup_test_geom_siberia_alaska
 
 ### for testing at BBM machine
-# import os
 # # gdal 2
+# import os
 # os.environ["GDAL_DATA"] = r"C:\ProgramData\OSGeoW\share\gdal"
 # os.environ["GDAL_DRIVER_PAT"] = r"C:\ProgramData\OSGeoW\bin\gdalplugins"
-#
+
 # # gdal 3
+# import os
 # os.environ["GDAL_DATA"] = r"C:\Program Files\GDAL\gdal-data"
 # os.environ["GDAL_DRIVER_PAT"] = r"C:\Program Files\GDAL\gdalplugins"
 
@@ -341,7 +342,7 @@ class TestEqui7Grid(unittest.TestCase):
                          'AF500M_E036N090T6', 'AF500M_E042N084T6',
                          'AF500M_E042N090T6']
     
-        assert len(tiles_all) == 832
+        assert len(tiles_all) == 1093
         assert sorted(tiles) == sorted(desired_tiles)
 
 
@@ -419,8 +420,8 @@ class TestEqui7Grid(unittest.TestCase):
 
         assert sorted(tiles) == sorted(geom_siberia_tiles)
 
-        geom_siberia_alaska_tiles = sorted(['AS500M_E066N090T6', 'AS500M_E072N090T6',
-                                            'AS500M_E072N096T6',
+        geom_siberia_alaska_tiles = sorted(['AS500M_E066N090T6', 'AS500M_E066N096T6',
+                                            'AS500M_E072N090T6', 'AS500M_E072N096T6',
                                             'NA500M_E054N072T6', 'NA500M_E054N078T6',
                                             'NA500M_E060N078T6'])
         poly_siberia_alaska = setup_test_geom_siberia_alaska()
