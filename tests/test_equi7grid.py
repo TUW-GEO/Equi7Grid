@@ -342,7 +342,7 @@ class TestEqui7Grid(unittest.TestCase):
                          'AF500M_E036N090T6', 'AF500M_E042N084T6',
                          'AF500M_E042N090T6']
     
-        assert len(tiles_all) == 1093
+        assert len(tiles_all) == 854
         assert sorted(tiles) == sorted(desired_tiles)
 
 
@@ -420,8 +420,8 @@ class TestEqui7Grid(unittest.TestCase):
 
         assert sorted(tiles) == sorted(geom_siberia_tiles)
 
-        geom_siberia_alaska_tiles = sorted(['AS500M_E066N090T6', 'AS500M_E066N096T6',
-                                            'AS500M_E072N090T6', 'AS500M_E072N096T6',
+        geom_siberia_alaska_tiles = sorted(['AS500M_E066N090T6', 'AS500M_E072N090T6',
+                                            'AS500M_E072N096T6',
                                             'NA500M_E054N072T6', 'NA500M_E054N078T6',
                                             'NA500M_E060N078T6'])
         poly_siberia_alaska = setup_test_geom_siberia_alaska()
