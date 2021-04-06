@@ -235,7 +235,7 @@ class GdalImage:
 
 def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
                     subgrid_ids=None, accurate_boundary=True, e7_folder=True,
-                    ftiles=None, roi=None, naming_convention=None,
+                    ftiles=None, covers_land=True, roi=None, naming_convention=None,
                     compress_type="LZW", resampling_type="bilinear",
                     subfolder=None, overwrite=False,
                     image_nodata=None, tile_nodata=None,
@@ -267,6 +267,8 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
         If true (default), the output data will be stored in the Equi7Grid folder structure, i.e. "subgrid/tilename".
     ftiles : list, optional
         List of full name of tiles to which data should be resampled. If it is not set, all tiles are used.
+    covers_land : bool, optional
+        If true (default), only tiles oovering land should be resampled.
     roi : ogr.Geometry, optional
         Region of interest defined by a ogr.Geometry.
         `roi` will be ignored if `ftiles` is provided.
@@ -333,6 +335,10 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
 
     # resample for each tile sequentially
     for ftile in ftiles:
+        e7tile = e7grid.create_tile(ftile)
+        if covers_land:  # skip tiles not covering land
+            if not e7tile.covers_land:
+                continue
         # create grid folder
         if e7_folder:
             grid_folder = "EQUI7_{}".format(ftile[0:6])
