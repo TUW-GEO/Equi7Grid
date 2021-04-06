@@ -32,12 +32,13 @@ from pytileproj.geometry import setup_test_geom_siberia_antimeridian_180plus
 from pytileproj.geometry import setup_test_geom_siberia_alaska
 
 ### for testing at BBM machine
-# import os
 # # gdal 2
+# import os
 # os.environ["GDAL_DATA"] = r"C:\ProgramData\OSGeoW\share\gdal"
 # os.environ["GDAL_DRIVER_PAT"] = r"C:\ProgramData\OSGeoW\bin\gdalplugins"
-#
+
 # # gdal 3
+# import os
 # os.environ["GDAL_DATA"] = r"C:\Program Files\GDAL\gdal-data"
 # os.environ["GDAL_DRIVER_PAT"] = r"C:\Program Files\GDAL\gdalplugins"
 
@@ -341,7 +342,7 @@ class TestEqui7Grid(unittest.TestCase):
                          'AF500M_E036N090T6', 'AF500M_E042N084T6',
                          'AF500M_E042N090T6']
     
-        assert len(tiles_all) == 832
+        assert len(tiles_all) == 854
         assert sorted(tiles) == sorted(desired_tiles)
 
 

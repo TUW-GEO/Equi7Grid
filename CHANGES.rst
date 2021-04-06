@@ -2,6 +2,14 @@
 Changelog
 =========
 
+Version v0.0.13
+===============
+
+- full update of all files _LAND.shp
+- revision of all .prj files
+- newly generated equi7grid.dat
+- full update of coverland lists within equi7grid.dat
+
 Version v0.0.10
 ===============
 
