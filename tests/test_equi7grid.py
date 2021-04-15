@@ -155,6 +155,34 @@ class TestEqui7Grid(unittest.TestCase):
         nptest.assert_allclose(y_should, y)
 
 
+    def test_calc_length_distortion_on_ellipsoid(self):
+        """
+        Tests calculation of length distortion with spherical solution
+
+        """
+        lon = -29.1
+        lat = 24
+
+        e7 = Equi7Grid(500)
+        k = e7.calc_length_distortion_on_ellipsoid(lon, lat)
+
+        k_should = 1.1432971727108836
+        nptest.assert_almost_equal(k, k_should, decimal=6)
+
+    def test_calc_length_distortion(self):
+        """
+        Tests calculation of length distortion with planar solution
+
+        """
+        x = 470916.85506916
+        y = 8289708.44085851
+
+        e7 = Equi7Grid(500)
+        k = e7.AF.calc_length_distortion(x, y)
+
+        k_should = 1.1432971727108836
+        nptest.assert_almost_equal(k, k_should, decimal=6)
+
     def test_ij2xy(self):
         """
         Tests tile indices to xy coordination in the subgrid projection

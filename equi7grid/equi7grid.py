@@ -50,6 +50,7 @@ from pytileproj.base import TPSProjection
 from pytileproj.base import TilingSystem
 from pytileproj.base import Tile
 from pytileproj.geometry import create_geometry_from_wkt
+from geographiclib.geodesic import Geodesic
 
 
 def _load_static_data(module_path):
@@ -314,6 +315,43 @@ class Equi7Grid(TiledProjectionSystem):
 
         return tilename, i, j
 
+    def calc_length_distortion_on_ellipsoid(self, lon, lat):
+        """
+        function returing the local maximum length distortion k,
+        which equals the local areal distortion (as always h=1 for the Azimuthal Equidistant projection)
+
+        Parameters
+        ----------
+        lon : number
+            longitude coordinate
+        lat : number
+            latitude coordinate)
+
+        Returns
+        -------
+        k : float
+            value of local max lenght distortion = local areal distortion
+
+        """
+
+        # get the subgrid
+        sg, _, _ = self.lonlat2xy(lon, lat)
+
+        lon0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm('central_meridian')
+        lat0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm('latitude_of_origin')
+
+        # get spherical distance and azimuth between projection centre and point of interest
+        geod = Geodesic.WGS84
+        gi = geod.Inverse(lat0, lon0, lat, lon)
+        c1 = gi['s12']
+        az1 = gi['azi1']
+
+        # apply equation for distortion in direction perpendicular to the radius, k:
+        # k = c/geod.a / np.sin(c/geod.a)
+        k = c1 / geod.a / np.sin(c1 / geod.a)
+
+        return k
+
 
 class Equi7Subgrid(TiledProjection):
     """
@@ -353,6 +391,48 @@ class Equi7Subgrid(TiledProjection):
         self.tilesys = Equi7TilingSystem(self.core, self.polygon_geog)
 
         super(Equi7Subgrid, self).__init__(self.core, self.polygon_geog, self.tilesys)
+
+
+    def calc_length_distortion(self, x, y):
+        """
+        function returing the local maximum length distortion k,
+        which equals the local areal distortion (as always h=1 for the Azimuthal Equidistant projection)
+
+        uses the planar coordinates and is much faster, and allows multiple input values
+
+        Parameters
+        ----------
+        x : number or list of numbers
+            projected x coordinate(s) in metres
+        y : number or list of numbers
+            projected y coordinate(s) in metres
+
+
+        Returns
+        -------
+        k : number or np.array
+            value of local max lenght distortion = local areal distortion
+
+        """
+
+        # get the major axis of the used Earth ellipsoid
+        ellaxis = Geodesic.WGS84.a
+
+        # get the centre of the subgrid's projection
+        fe = self.core.projection.osr_spref.GetProjParm('false_easting')
+        fn = self.core.projection.osr_spref.GetProjParm('false_northing')
+
+        # create the distances to the projection centre
+        dists = np.sqrt((np.array(x) - fe) ** 2 + (np.array(y) - fn) ** 2)
+
+        # apply equation for distortion in direction perpendicular to the radius, k:
+        # k = c/geod.a / np.sin(c/geod.a)
+        #
+        # is it just about the distance to the centre (c), and as are equally long
+        # on the ellipsoid and on the projected plane (the core of of AEQD!)
+        k = dists / ellaxis / np.sin(dists / ellaxis)
+
+        return k
 
 
 class Equi7TilingSystem(TilingSystem):

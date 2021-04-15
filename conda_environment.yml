@@ -65,4 +65,4 @@ dependencies:
   - xz=5.2.4=h2fa13f4_4
   - zlib=1.2.11=h8395fce_2
   - pip:
-    - pytileproj==0.0.8
+    - pytileproj
