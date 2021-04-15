@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Vienna University of Technology (TU Wien), Department of
+# Copyright (c) 2021, Vienna University of Technology (TU Wien), Department of
 # Geodesy and Geoinformation (GEO).
 # All rights reserved.
 #
@@ -235,9 +235,9 @@ class GdalImage:
 
 def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
                     subgrid_ids=None, accurate_boundary=True, e7_folder=True,
-                    ftiles=None, covers_land=True, roi=None, naming_convention=None,
+                    ftiles=None, coverland=True, roi=None, naming_convention=None,
                     compress_type="LZW", resampling_type="bilinear",
-                    subfolder=None, overwrite=False,
+                    subfolder=None, overwrite=False, data_type=None,
                     image_nodata=None, tile_nodata=None,
                     scale=None, offset=None, blocksize=512):
 
@@ -267,7 +267,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
         If true (default), the output data will be stored in the Equi7Grid folder structure, i.e. "subgrid/tilename".
     ftiles : list, optional
         List of full name of tiles to which data should be resampled. If it is not set, all tiles are used.
-    covers_land : bool, optional
+    coverland : bool, optional
         If true (default), only tiles oovering land should be resampled.
     roi : ogr.Geometry, optional
         Region of interest defined by a ogr.Geometry.
@@ -288,6 +288,10 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
         image will be resampled to.
     overwrite : bool, optional
         Overwrite the old tile or not (defaults to false).
+    data_type : str, optional
+        Force the output image bands to have a specific data type supported by the driver,
+        which may be one of the following: Byte, UInt16, Int16, UInt32, Int32, Float32, Float64,
+        CInt16, CInt32, CFloat32 or CFloat64.
     image_nodata : float, optional
         The no data value of the input image. If it is not set, the no data value is automatically taken
         from the input image (default).
@@ -316,16 +320,22 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
                 geo_extent = None
             if geo_extent:
                 ftiles = e7grid.search_tiles_in_roi(roi_geometry=geo_extent,
-                                                    subgrid_ids=subgrid_ids)
+                                                    subgrid_ids=subgrid_ids,
+                                                    coverland=coverland)
             else:
                 ds = open_image(image)
                 img_extent = ds.get_extent()
                 bbox = (img_extent[0:2], img_extent[2:4])
                 img_spref = osr.SpatialReference()
                 img_spref.ImportFromWkt(ds.projection())
-                ftiles = e7grid.search_tiles_in_roi(bbox=bbox, subgrid_ids=subgrid_ids)
+                ftiles = e7grid.search_tiles_in_roi(bbox=bbox,
+                                                    subgrid_ids=subgrid_ids,
+                                                    osr_spref=img_spref,
+                                                    coverland=coverland)
         else:
-            ftiles = e7grid.search_tiles_in_roi(roi_geometry=roi, subgrid_ids=subgrid_ids)
+            ftiles = e7grid.search_tiles_in_roi(roi_geometry=roi,
+                                                subgrid_ids=subgrid_ids,
+                                                coverland=coverland)
     else:
         if type(ftiles) != list:
             ftiles = [ftiles]
@@ -336,7 +346,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
     # resample for each tile sequentially
     for ftile in ftiles:
         e7tile = e7grid.create_tile(ftile)
-        if covers_land:  # skip tiles not covering land
+        if coverland:  # skip tiles not covering land
             if not e7tile.covers_land:
                 continue
         # create grid folder
@@ -384,6 +394,9 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             options["-srcnodata"] = image_nodata
         if tile_nodata != None:
             options["-dstnodata"] = tile_nodata
+        if data_type != None:
+            options["-ot"] = data_type
+            options["-wt"] = data_type # test if this is what we want
         if overwrite:
             options["-overwrite"] = " "
         if blocksize is not None:
@@ -742,19 +755,3 @@ def equi72lonlat(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
     succeed, _ = call_gdal_util('gdalwarp', src_files=image,
                                 dst_file=filename, gdal_path=gdal_path,
                                 options=options)
-
-
-if __name__ == '__main__':
-
-    # gdal_path = r'C:\Program Files\GDAL'
-    # targetres = 500
-    # e7g = Equi7Grid(targetres)
-    # infile = r"D:\temp\e7g_to_epsg4326\epsg4326\AS010M_E021N069T1.tif"
-    # outdir = r'D:\temp\e7g_to_epsg4326\out'
-    # image2equi7grid(e7g, infile, outdir, gdal_path=gdal_path)
-
-    gdal_path = r'C:\Program Files\GDAL'
-    infile = r"D:\temp\out\S1B_EW_GRDH_1SDH_20191002T214344_20191002T214444_018302_02279D_7471_SIG0_HH_lonlat.tif"
-    outdir = r'D:\temp\out'
-    e7g = Equi7Grid(500)
-    image2equi7grid(e7g, infile, outdir, gdal_path=gdal_path)
