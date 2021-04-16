@@ -1,5 +1,6 @@
 # Add your requirements here like:
 pytileproj>=0.0.15
+geographiclib
 #
 # numpy - install via conda
 # gdal - install via conda
