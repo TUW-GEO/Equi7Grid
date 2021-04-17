@@ -1,5 +1,5 @@
 # Add your requirements here like:
-pytileproj>=0.0.15
+pytileproj>=0.0.16
 geographiclib
 #
 # numpy - install via conda
