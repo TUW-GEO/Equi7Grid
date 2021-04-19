@@ -7,6 +7,7 @@ Version v0.0.14
 
 - minor updates in image2equi7
 - adds calc_length_distortion functions
+- adds create_distortion_files.py module
 
 Version v0.0.13
 ===============
