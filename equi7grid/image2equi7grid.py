@@ -239,7 +239,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
                     compress_type="LZW", resampling_type="bilinear",
                     subfolder=None, overwrite=False, data_type=None,
                     image_nodata=None, tile_nodata=None,
-                    scale=None, offset=None, blocksize=512):
+                    scale=None, offset=None, tiled=True, blocksize=512):
 
     """
     Resample an raster image to tiled images in the Equi7Grid.
@@ -280,9 +280,6 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
         GeoTIFF compression type. Defaults to "LZW".
     resampling_type : str, optional
         GDAL resampling method. Defaults to "bilinear".
-    blocksize : integer, optional
-        Sets the GeoTIFF block dimensions in X and Y direction (defaults to 512).
-        If it is None, no GeoTIFF tiling is applied.
     subfolder : str, optional
         If it's set, it creates the sub-folder within the tile folder where the
         image will be resampled to.
@@ -302,6 +299,13 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
         Scale factor that should be applied to the pixel values.
     offset : float, optional
         Offset value that should be applied to the pixel values.
+    tiled : bool, optional
+        If true, tiled blocks are used for the GeoTIFF file (default).
+    blocksize : integer, optional
+        Sets the GeoTIFF block size (defaults to 512).
+        If `tiled=True`, the block size is used for both X and Y dimensions.
+        If `tiled=False`, then stripped GeoTIFF files are created, where `blocksize`
+        specifies the block size in Y direction.
 
     """
 
@@ -399,10 +403,16 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             options["-wt"] = data_type # test if this is what we want
         if overwrite:
             options["-overwrite"] = " "
-        if blocksize is not None:
+        if tiled:  # tiled, square blocks
             options["-co"].append("TILED=YES")
             options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
             options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
+        else:  # stripped blocks
+            blockxsize = e7grid.core.tile_xsize_m // e7grid.core.sampling
+            blockysize = blocksize
+            options["-co"].append("TILED=NO")
+            options["-co"].append("BLOCKXSIZE={0}".format(blockxsize))
+            options["-co"].append("BLOCKYSIZE={0}".format(blockysize))
 
         # call gdalwarp for resampling
         succeed, _ = call_gdal_util('gdalwarp', src_files=image, src_band=inband,
