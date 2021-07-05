@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.1.0
+=============
+
+- support for stripped and tiled GeoTIFF blocks
+
 Version v0.0.14
 ===============
 
