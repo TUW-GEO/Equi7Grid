@@ -300,7 +300,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
     offset : float, optional
         Offset value that should be applied to the pixel values.
     tiled : bool, optional
-        If true, tiled blocks are used for the GeoTIFF file (default).
+        If true, tiled blocks are used for the GeoTIFF file (default), else stripped blocks.
     blocksize : integer, optional
         Sets the GeoTIFF block size (defaults to 512).
         If `tiled=True`, the block size is used for both X and Y dimensions.
