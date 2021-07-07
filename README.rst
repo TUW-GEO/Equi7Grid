@@ -76,7 +76,7 @@ like system. Miniconda will be installed into ``$HOME/miniconda``.
    wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
    bash miniconda.sh -b -p $HOME/miniconda
    export PATH="$HOME/miniconda/bin:$PATH"
-   conda create -n equi7grid_env python=3.6 numpy scipy pip gdal pyproj shapely
+   conda create -n equi7grid_env python=3.6 numpy scipy pip gdal pyproj shapely geographiclib
    source activate equi7grid_env
    pip install pytileproj
 

@@ -31,7 +31,7 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy pip gdal pyproj shapely
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy pip gdal pyproj shapely geographiclib
   # - conda create -q -n test-environment python=3.6 numpy scipy pip gdal pyproj=1.9.6 shapely
   - source activate test-environment
   - pip install pytileproj
