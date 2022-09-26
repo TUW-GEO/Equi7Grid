@@ -1,0 +1,70 @@
+name: ubuntu
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *' # daily
+
+jobs:
+  build:
+    name: Build py${{ matrix.python-version }} @ ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8']
+        os: ["ubuntu-latest"]
+
+    steps:
+      - uses: conda-incubator/setup-miniconda@v2.0.1
+        with:
+          miniconda-version: "latest"
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
+          activate-environment: equi7grid_env
+          auto-activate-base: false
+      - name: Print environment infos
+        shell: bash -l {0}
+        run: |
+          conda info -a
+          conda list
+          pip list
+          which pip
+          which python
+      - name: Export Environment
+        shell: bash -l {0}
+        run: |
+          mkdir -p .artifacts
+          filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
+          conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: os_py_environments
+          path: .artifacts/*
+      - name: Install package and test
+        shell: bash -l {0}
+        run: |
+          pip install .
+          # pip install pytest==6.2.5 tomli==1.2.3
+          python setup.py test
+      - name: Upload Coverage
+        shell: bash -l {0}
+        run: |
+          pip install coveralls && coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
+          COVERALLS_PARALLEL: true
+  coveralls:
+    name: Submit Coveralls
+    needs: build
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+      - name: Finished
+        run: |
+          pip3 install --upgrade coveralls && coveralls --service=github --finish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

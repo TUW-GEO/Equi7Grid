@@ -1,0 +1,13 @@
+name: equi7grid_env
+channels:
+  - defaults
+dependencies:
+  - numpy
+  - scipy
+  - numba
+  - proj4
+  - gdal
+  - pyproj
+  - pip
+  - pip:
+    - pytileproj
