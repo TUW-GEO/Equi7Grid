@@ -26,13 +26,16 @@
 # those of the authors and should not be interpreted as representing official
 # policies, either expressed or implied, of the FreeBSD Project.
 
-import numpy as np
 import os
 from datetime import datetime
-from veranda.io.geotiff import GeoTiffFile
-from equi7grid.equi7grid import Equi7Grid
+
+import numpy as np
+
+from veranda.raster.native.geotiff import GeoTiffFile
 from geographiclib.geodesic import Geodesic
 from geopathfinder.naming_conventions.yeoda_naming import YeodaFilename
+
+from equi7grid.equi7grid import Equi7Grid
 
 
 def run(outpath, sampling):

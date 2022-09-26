@@ -1,18 +1,15 @@
 name: equi7grid_env
 channels:
   - defaults
-  # - conda-forge
 dependencies:
+  - python=3.8
   - numpy
   - scipy
-  # - numba
-  # - proj4
   - gdal
   - pyproj
-  # - cartopy
-  # - geographiclib
   - pip
   - pip:
     - pytileproj
     - veranda
     - geopathfinder
+    - geographiclib
