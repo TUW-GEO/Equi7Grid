@@ -2,7 +2,6 @@ name: equi7grid_env
 channels:
   - defaults
 dependencies:
-  - python=3.8
   - numpy
   - scipy
   - gdal
