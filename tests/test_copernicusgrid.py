@@ -1,7 +1,6 @@
-# Copyright (c) 2016,Vienna University of Technology,
-# Department of Geodesy and Geoinformation
+# Copyright (c) 2022, TU Wien, Department of Geodesy and Geoinformation (GEO).
 # All rights reserved.
-
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -13,16 +12,15 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
-'''
+"""
 Tests for the CopernicusGrid class.
-
-'''
+"""
 import unittest
+
+import numpy.testing as nptest
 
 from equi7grid.copernicusgrid import CopernicusGrid
 
-import numpy.testing as nptest
 
 class TestCopernicusGrid(unittest.TestCase):
 
@@ -38,7 +36,6 @@ class TestCopernicusGrid(unittest.TestCase):
         nptest.assert_allclose(lon_should, lon)
         nptest.assert_allclose(lat_should, lat)
 
-
     def test_xy2ij(self):
         """
         Test xy to lonlat projection using double numbers.
@@ -50,6 +47,7 @@ class TestCopernicusGrid(unittest.TestCase):
         column, row = globaltile.xy2ij(-150.2411, 50.3214)
         nptest.assert_allclose(column_should, column)
         nptest.assert_allclose(row_should, row)
+
 
 if __name__ == '__main__':
     unittest.main()
