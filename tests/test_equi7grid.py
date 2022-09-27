@@ -22,11 +22,12 @@ import numpy.testing as nptest
 from osgeo import osr
 import pyproj
 
-from equi7grid.equi7grid import Equi7Grid
 from pytileproj.geometry import setup_test_geom_spitzbergen
 from pytileproj.geometry import setup_geom_kamchatka
 from pytileproj.geometry import setup_test_geom_siberia_antimeridian_180plus
 from pytileproj.geometry import setup_test_geom_siberia_alaska
+
+from equi7grid.equi7_grid import Equi7Grid
 
 ### for testing at BBM machine
 # # gdal 2

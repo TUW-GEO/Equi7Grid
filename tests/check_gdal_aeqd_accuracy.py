@@ -38,7 +38,7 @@ from osgeo import gdal
 from equi7grid.image2equi7grid import call_gdal_util
 from equi7grid.image2equi7grid import open_image
 from equi7grid.image2equi7grid import _find_gdal_path
-from equi7grid.equi7grid import Equi7Grid
+from equi7grid.equi7_grid import Equi7Grid
 
 
 def check_gdal_aeqd_accuracy(quiet=False,
