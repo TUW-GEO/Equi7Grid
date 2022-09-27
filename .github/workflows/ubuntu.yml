@@ -10,10 +10,10 @@ jobs:
   build:
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8']
         os: ["ubuntu-latest"]
+        python-version: ['3.6', '3.8']
         ymlfile: ['environment.yml']
-    name: Build py${{ matrix.python-version }} @ ${{ matrix.os }}
+    name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
