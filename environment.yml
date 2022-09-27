@@ -1,6 +1,7 @@
 name: equi7grid_env
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - numpy
   - scipy
