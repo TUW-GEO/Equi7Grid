@@ -44,7 +44,6 @@ jobs:
           pip list
           which pip
           which python
-          gdalinfo --version
       - name: Install package and test
         shell: bash -l {0}
         run: |
