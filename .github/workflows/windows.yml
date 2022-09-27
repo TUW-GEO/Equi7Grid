@@ -8,15 +8,20 @@ on:
 
 jobs:
   build:
-    name: Build py${{ matrix.python-version }} @ ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8']
-        os: ['windows-latest']
+        os: ["windows-latest"]
+        python-version: ['3.6', '3.8']
+        ymlfile: ['environment.yml']
+    name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: conda-incubator/setup-miniconda@v2.0.1
+      - uses: actions/checkout@v2
+        with:
+          submodules: true # does not work with self-hosted testdata
+          fetch-depth: 0
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           miniconda-version: "latest"
           auto-update-conda: true
@@ -24,9 +29,10 @@ jobs:
           environment-file: environment.yml
           activate-environment: equi7grid_env
           auto-activate-base: false
-      - name: Print environment infos
+      - name: Print infos
         shell: bash -l {0}
         run: |
+          git status
           conda info -a
           conda list
           pip list
@@ -35,6 +41,5 @@ jobs:
       - name: Install package and test
         shell: bash -l {0}
         run: |
-          pip install .
-          # pip install pytest==6.2.5 tomli==1.2.3 pytest-cov==2.12.1
-          python setup.py test
+          pip install -e .
+          pytest --cache-clear
