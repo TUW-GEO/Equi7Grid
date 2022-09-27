@@ -1,0 +1,9 @@
+wget https://repo.anaconda.com/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh -O miniconda.sh
+bash miniconda.sh -b -p $HOME/conda/equi7grid_conda
+export PATH="$HOME/conda/equi7grid_conda/bin:$PATH"
+conda config --set always_yes yes --set changeps1 no
+conda update -n base -c defaults conda
+conda create -n equi7grid_env python=3.8
+conda env update -f environment.yml -n equi7grid_env
+source activate equi7grid_env
+python setup.py develop

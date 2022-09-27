@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.2.0
+=============
+
+- update project files using pyscaffold 4.3.1
+
 Version 0.1.0
 =============
 

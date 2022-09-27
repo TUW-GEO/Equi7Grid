@@ -1,5 +1,4 @@
-# Copyright (c) 2017, Vienna University of Technology (TU Wien), Department of
-# Geodesy and Geoinformation (GEO).
+# Copyright (c) 2022, TU Wien, Department of Geodesy and Geoinformation (GEO).
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,23 +25,11 @@
 # The views and conclusions contained in the software and documentation are
 # those of the authors and should not be interpreted as representing official
 # policies, either expressed or implied, of the FreeBSD Project.
+"""
+Copernicus grid.
+"""
 
-
-'''
-Created on March 1, 2017
-
-Code for the Equi7 Grid.
-
-@author: Bernhard Bauer-Marschallinger, bbm@geo.tuwien.ac.at
-
-'''
-
-import os
-import pickle
 import copy
-import itertools
-
-import numpy as np
 
 from pytileproj.base import TiledProjectionSystem
 from pytileproj.base import TiledProjection
@@ -51,7 +38,6 @@ from pytileproj.base import TilingSystem
 from pytileproj.base import Tile
 
 from pytileproj.geometry import bbox2polygon
-
 
 
 class CopernicusGrid(TiledProjectionSystem):
@@ -69,7 +55,7 @@ class CopernicusGrid(TiledProjectionSystem):
     # supported tile widths(resolution)
     _static_tilecodes = ["T10", "GLOBAL"]
     # supported grid spacing (resolution)
-    _static_res = [1.0/112]
+    _static_res = [1.0 / 112]
     # set True if one single global tile is needed
     _global_tile = True
 
@@ -81,7 +67,8 @@ class CopernicusGrid(TiledProjectionSystem):
 
         # check if sampling is allowed
         if sampling not in CopernicusGrid._static_res:
-            raise ValueError("Resolution {}m is not supported!".format(sampling))
+            raise ValueError(
+                "Resolution {}m is not supported!".format(sampling))
 
         # initializing
         super(CopernicusGrid, self).__init__(sampling, tag='Equi7')
@@ -126,15 +113,17 @@ class CopernicusSubgrid(TiledProjection):
         _core.projection = TPSProjection(epsg=4326)
 
         self.core = _core
-        self.polygon_geog = bbox2polygon([(-179.9999999, -90.0), (179.9999999, 90.0)],
+        self.polygon_geog = bbox2polygon([(-179.9999999, -90.0),
+                                          (179.9999999, 90.0)],
                                          self.core.projection.osr_spref)
         self.tilesys = CopernicusTilingSystem(self.core, self.polygon_geog)
 
-        super(CopernicusSubgrid, self).__init__(self.core, self.polygon_geog, self.tilesys)
-
+        super(CopernicusSubgrid, self).__init__(self.core, self.polygon_geog,
+                                                self.tilesys)
 
     def get_polygon(self):
         pass
+
 
 class CopernicusTilingSystem(TilingSystem):
     """
@@ -143,20 +132,15 @@ class CopernicusTilingSystem(TilingSystem):
     A tile in the Equi7 core system.
     """
 
-
-
     def __init__(self, core, polygon):
 
         super(CopernicusTilingSystem, self).__init__(core, polygon, 0, 0)
 
-
     def create_tile(self, name='GLOBAL', x=None, y=None):
         return CopernicusTile(self.core, name)
 
-
     def point2tilename(self, x0, y0):
         return
-
 
     def _encode_tilename(self, llx, lly):
         return
@@ -176,12 +160,12 @@ class CopernicusTilingSystem(TilingSystem):
     def identify_tiles_overlapping_xybbox(self, bbox):
         return
 
-    def get_congruent_tiles_from_tilename(self, tilename,
+    def get_congruent_tiles_from_tilename(self,
+                                          tilename,
                                           target_sampling=None,
                                           target_tiletype=None):
 
         return
-
 
 
 class CopernicusTile(Tile):
@@ -193,5 +177,3 @@ class CopernicusTile(Tile):
 
     def __init__(self, core, name):
         super(CopernicusTile, self).__init__(core, name, -180, -90)
-
-

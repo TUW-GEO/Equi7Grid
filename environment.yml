@@ -1,0 +1,23 @@
+name: equi7grid_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - numpy
+  - scipy
+  - gdal
+  - rasterio
+  - geopandas
+  - cartopy
+  - pyproj
+  - pip
+  - pip:
+    - pytileproj
+    - veranda
+    - geopathfinder
+    - geographiclib
+    - pytest
+    - pytest-cov
+    - yapf
+    - sphinx_rtd_theme
+    - nbsphinx

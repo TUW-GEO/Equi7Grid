@@ -1,0 +1,50 @@
+name: windows
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *' # daily
+
+env:
+  GDAL_DATA: C:\Miniconda3\envs\equi7grid_env\Library\share\gdal
+  PROJ_LIB: C:\Miniconda3\envs\equi7grid_env\Library\share\proj
+  GDAL_DRIVER_PATH: C:\Miniconda3\envs\equi7grid_env\Library\bin
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: ["windows-latest"]
+        python-version: ['3.6', '3.8']
+        ymlfile: ['environment.yml']
+    name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true # does not work with self-hosted testdata
+          fetch-depth: 0
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniconda-version: "latest"
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
+          activate-environment: equi7grid_env
+          auto-activate-base: false
+      - name: Print infos
+        shell: bash -l {0}
+        run: |
+          git status
+          conda info -a
+          conda list
+          pip list
+          which pip
+          which python
+      - name: Install package and test
+        shell: bash -l {0}
+        run: |
+          pip install -e .
+          pytest --cache-clear

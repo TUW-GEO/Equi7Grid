@@ -1,6 +1,4 @@
-#! /usr/bin/env python 
-# Copyright (c) 2018, Vienna University of Technology (TU Wien), Department of
-# Geodesy and Geoinformation (GEO).
+# Copyright (c) 2022, TU Wien, Department of Geodesy and Geoinformation (GEO).
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,21 +25,14 @@
 # The views and conclusions contained in the software and documentation are
 # those of the authors and should not be interpreted as representing official
 # policies, either expressed or implied, of the FreeBSD Project.
-
-
-'''
-Created on July 10, 2018
-
-make equi7grid.dat file for Equi7Grid class
-
-@author: Senmao Cao, Senmao.Cao@geo.tuwien.ac.at
-'''
-
+"""
+Make equi7grid.dat file for Equi7Grid class
+"""
 
 import os
 import argparse
 import pickle
-from osgeo import ogr, osr
+from osgeo import ogr
 
 os.environ["GDAL_DATA"] = r"C:\Program Files\GDAL\gdal-data"
 os.environ["GDAL_DRIVER_PAT"] = r"C:\Program Files\GDAL\gdalplugins"
@@ -54,7 +45,7 @@ def make_equi7data(outpath, version="V14"):
     ----------
     outpath : string
         output file directory path.
-    
+
     Returns
     -------
     int
@@ -72,11 +63,10 @@ def make_equi7data(outpath, version="V14"):
                             }
             }
         "AN" : ...
-    
     }
 
     """
-    
+
     outfile = os.path.join(outpath, "equi7grid.dat")
     if os.path.exists(outfile):
         raise IOError("Error: File Already Exist!")
@@ -85,8 +75,8 @@ def make_equi7data(outpath, version="V14"):
 
     module_path = os.path.dirname(os.path.abspath(__file__))
     grids_path = os.path.join(os.path.dirname(module_path), "grids")
-    
-    subgrids = ["AF", "AN", "AS", "EU", "NA", "OC", "SA"] 
+
+    subgrids = ["AF", "AN", "AS", "EU", "NA", "OC", "SA"]
     tilecodes = ["T1", "T3", "T6"]
 
     equi7_data = dict()
@@ -94,25 +84,30 @@ def make_equi7data(outpath, version="V14"):
     for subgrid in subgrids:
         subgrid_data = dict()
 
-        zone_fpath = os.path.join(grids_path, subgrid, "GEOG",
-                                  "EQUI7_{}_{}_GEOG_ZONE.shp".format(version, subgrid))
+        zone_fpath = os.path.join(
+            grids_path, subgrid, "GEOG",
+            "EQUI7_{}_{}_GEOG_ZONE.shp".format(version, subgrid))
         zone_extent = load_zone_extent(zone_fpath)
         subgrid_data["zone_extent"] = zone_extent.ExportToWkt()
-       
+
         subgrid_data["coverland"] = dict()
         for tilecode in tilecodes:
-            tilepath = os.path.join(grids_path, subgrid, "GEOG",
-                                    "EQUI7_{}_{}_GEOG_TILE_{}.shp".format(version, subgrid, tilecode))
+            tilepath = os.path.join(
+                grids_path, subgrid, "GEOG",
+                "EQUI7_{}_{}_GEOG_TILE_{}.shp".format(version, subgrid,
+                                                      tilecode))
             tiles_coversland = load_coverland_tiles(tilepath)
             subgrid_data["coverland"][tilecode] = sorted(set(tiles_coversland))
-        
+
         # Use spatial reference of T1 tile as the subgrid spatial reference
-        sr_path = os.path.join(grids_path, subgrid, "PROJ", "EQUI7_{}_{}_PROJ_TILE_T1.shp".format(version, subgrid))
+        sr_path = os.path.join(
+            grids_path, subgrid, "PROJ",
+            "EQUI7_{}_{}_PROJ_TILE_T1.shp".format(version, subgrid))
         sr_wkt = load_spatial_reference(sr_path)
         subgrid_data["wkt"] = sr_wkt
 
-        equi7_data[subgrid] = subgrid_data 
-    
+        equi7_data[subgrid] = subgrid_data
+
     # Serialize equi7 data by pickle with protocal=2
     with open(outfile, "wb") as f:
         pickle.dump(equi7_data, f, protocol=2)
@@ -135,7 +130,7 @@ def load_zone_extent(zone_fpath):
         for f in layer:
             geom.AddGeometry(f.GetGeometryRef().Clone())
     return geom
-    
+
 
 def load_coverland_tiles(tile_fpath):
     driver = ogr.GetDriverByName("ESRI Shapefile")
@@ -144,7 +139,7 @@ def load_coverland_tiles(tile_fpath):
     num_features = layer.GetFeatureCount()
     if num_features < 0:
         raise ValueError("No features found in {}".format(tile_fpath))
-    
+
     interval = 100000
     tiles_coversland = list()
     for f in layer:
@@ -153,11 +148,13 @@ def load_coverland_tiles(tile_fpath):
             extent = int(f.GetField("EXTENT"))
             east = int(f.GetField("EASTINGLL"))
             north = int(f.GetField("NORTHINGLL"))
-            tilename = "E{:03d}N{:03d}T{}".format(east//interval, north//interval, extent//interval)
+            tilename = "E{:03d}N{:03d}T{}".format(east // interval,
+                                                  north // interval,
+                                                  extent // interval)
             tiles_coversland.append(tilename)
 
     return tiles_coversland
-    
+
 
 def load_spatial_reference(fpath):
     driver = ogr.GetDriverByName("ESRI Shapefile")
@@ -169,9 +166,14 @@ def load_spatial_reference(fpath):
 def main():
     parser = argparse.ArgumentParser(description='Make Equi7Grid Data File')
     parser.add_argument("outpath", help="output folder")
-    parser.add_argument("-v", "--version", dest="version", nargs=1, metavar="", help="Equi7 Grids Version. Default is V14.")
+    parser.add_argument("-v",
+                        "--version",
+                        dest="version",
+                        nargs=1,
+                        metavar="",
+                        help="Equi7 Grids Version. Default is V14.")
     args = parser.parse_args()
-    
+
     outpath = os.path.abspath(args.outpath)
     version = args.version[0] if args.version else "V14"
     return make_equi7data(outpath, version)
@@ -181,4 +183,3 @@ if __name__ == "__main__":
     import sys
     sys.argv.append("C:\code\TPS\Equi7Grid\equi7grid\data")
     main()
-

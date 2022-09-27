@@ -1,0 +1,93 @@
+name: ubuntu
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *' # daily
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: ["ubuntu-latest"]
+        python-version: ['3.6', '3.8']
+        ymlfile: ['environment.yml']
+    name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true # does not work with self-hosted testdata
+          fetch-depth: 0
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniconda-version: "latest"
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          environment-file: ${{ matrix.ymlfile }}
+          activate-environment: equi7grid_env
+          auto-activate-base: false
+      - name: Print infos
+        shell: bash -l {0}
+        run: |
+          git status
+          conda info -a
+          conda list
+          pip list
+          which pip
+          which python
+      - name: Export Environment
+        shell: bash -l {0}
+        run: |
+          mkdir -p .artifacts
+          if [ ${{ matrix.ymlfile }} == "environment.yml" ]
+          then
+              filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
+              conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
+          fi
+      - name: Install package and test
+        shell: bash -l {0}
+        run: |
+          pip install -e .
+          pytest --cache-clear
+      - name: Upload Coverage
+        shell: bash -l {0}
+        run: |
+          pip install coveralls && coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
+          COVERALLS_PARALLEL: true
+      - name: Create wheel and dist package
+        shell: bash -l {0}
+        run: |
+          git status
+          pip install setuptools_scm
+          if [ ${{ matrix.os }} == "windows-latest" ]
+          then
+            # build whls on windows
+            pip install wheel
+            python setup.py bdist_wheel --dist-dir .artifacts/dist
+          else
+            # build dist on linux
+            python setup.py sdist --dist-dir .artifacts/dist
+          fi
+          ls .artifacts/dist
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Artifacts
+          path: .artifacts/*
+  coveralls:
+    name: Submit Coveralls
+    needs: build
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+      - name: Finished
+        run: |
+          pip3 install --upgrade coveralls && coveralls --service=github --finish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,4 @@
-# Copyright (c) 2021, Vienna University of Technology (TU Wien), Department of
-# Geodesy and Geoinformation (GEO).
+# Copyright (c) 2022, TU Wien, Department of Geodesy and Geoinformation (GEO).
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,11 +25,7 @@
 # The views and conclusions contained in the software and documentation are
 # those of the authors and should not be interpreted as representing official
 # policies, either expressed or implied, of the FreeBSD Project.
-
-
-'''
-Created on 2018 July 19
-
+"""
 Code for resampling image raster data to the Equi7Grid, yielding tiled raster
 images organised in folders for
 a) in the continental zones + grid sampling
@@ -38,9 +33,7 @@ b) the subgrid tiling
 
 The module should help to easily bring your raster images to the Equi7Grid
 spatial reference, using the Equi7TilingSystem() for the file tiling.
-
-@author: Bernhard Bauer-Marschallinger, bbm@geo.tuwien.ac.at
-'''
+"""
 
 import os
 import subprocess
@@ -51,36 +44,31 @@ from osgeo import gdal
 from osgeo import osr
 from osgeo import ogr
 
-try:
-    from equi7grid.equi7grid import Equi7Grid
-except:
-    from equi7grid import Equi7Grid
-
 # dict for transfer the datatype and resample type
-gdal_datatype = {"uint8": gdal.GDT_Byte,
-                 "int16": gdal.GDT_Int16,
-                 "int32": gdal.GDT_Int32,
-                 "uint16": gdal.GDT_UInt16,
-                 "uint32": gdal.GDT_UInt32,
-                 "float32": gdal.GDT_Float32,
-                 "float64": gdal.GDT_Float64,
-                 "complex64": gdal.GDT_CFloat32,
-                 "complex128": gdal.GDT_CFloat64
-                 }
+gdal_datatype = {
+    "uint8": gdal.GDT_Byte,
+    "int16": gdal.GDT_Int16,
+    "int32": gdal.GDT_Int32,
+    "uint16": gdal.GDT_UInt16,
+    "uint32": gdal.GDT_UInt32,
+    "float32": gdal.GDT_Float32,
+    "float64": gdal.GDT_Float64,
+    "complex64": gdal.GDT_CFloat32,
+    "complex128": gdal.GDT_CFloat64
+}
 
-
-gdal_resample_type = {"nearst": gdal.GRA_NearestNeighbour,
-                      "bilinear": gdal.GRA_Bilinear,
-                      "cubic": gdal.GRA_Cubic,
-                      "cubicspline": gdal.GRA_CubicSpline,
-                      "lanczos": gdal.GRA_Lanczos,
-                      "average": gdal.GRA_Average,
-                      "mode": gdal.GRA_Mode
-                      }
+gdal_resample_type = {
+    "nearst": gdal.GRA_NearestNeighbour,
+    "bilinear": gdal.GRA_Bilinear,
+    "cubic": gdal.GRA_Cubic,
+    "cubicspline": gdal.GRA_CubicSpline,
+    "lanczos": gdal.GRA_Lanczos,
+    "average": gdal.GRA_Average,
+    "mode": gdal.GRA_Mode
+}
 
 
 class GdalImage:
-
     """A sample class to access a image with GDAL library"""
 
     def __init__(self, gdaldataset, filepath):
@@ -146,7 +134,6 @@ class GdalImage:
             raise IndexError("band index is out of range")
         return self.dataset.GetRasterBand(band_idx).GetNoDataValue()
 
-
     def get_raster_nodata(self):
         """get the nodata value for all bands in a list
         this is compatible with the write_image's nodata parameter
@@ -158,16 +145,17 @@ class GdalImage:
         """
 
         nodata = list()
-        for i in xrange(0, self.dataset.RasterCount):
+        for i in range(0, self.dataset.RasterCount):
             nodata.append(self.dataset.GetRasterBand(i + 1).GetNoDataValue())
 
-        return nodata if len(nodata) >= 0 and not all(d is None for d in nodata) else None
+        return nodata if len(nodata) >= 0 and not all(
+            d is None for d in nodata) else None
 
     def read_all_band(self):
         """read the data of all the bands"""
         m = np.full((self.band_count(), self.YSize(), self.XSize()), 0.0)
 
-        for bandIdx in xrange(self.band_count()):
+        for bandIdx in range(self.band_count()):
             m[bandIdx] = self.read_band(bandIdx + 1)
 
         return m
@@ -195,7 +183,7 @@ class GdalImage:
             return None
 
         colormap = []
-        for i in xrange(ct.GetCount()):
+        for i in range(ct.GetCount()):
             colormap.append(ct.GetColorEntry(i))
 
         return colormap
@@ -216,7 +204,7 @@ class GdalImage:
 
         xp = a * x + b * y + xoff
         yp = d * x + e * y + yoff
-        return(xp, yp)
+        return (xp, yp)
 
     def coords2pixel(self, l1, l2):
         gt = self.geotransform()
@@ -233,14 +221,29 @@ class GdalImage:
         return x >= 0 and x < self.XSize() and y >= 0 and y < self.YSize()
 
 
-def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
-                    subgrid_ids=None, accurate_boundary=True, e7_folder=True,
-                    ftiles=None, coverland=True, roi=None, naming_convention=None,
-                    compress_type="LZW", resampling_type="bilinear",
-                    subfolder=None, overwrite=False, data_type=None,
-                    image_nodata=None, tile_nodata=None,
-                    scale=None, offset=None, tiled=True, blocksize=512):
-
+def image2equi7grid(e7grid,
+                    image,
+                    output_dir,
+                    gdal_path=None,
+                    inband=None,
+                    subgrid_ids=None,
+                    accurate_boundary=True,
+                    e7_folder=True,
+                    ftiles=None,
+                    coverland=True,
+                    roi=None,
+                    naming_convention=None,
+                    compress_type="LZW",
+                    resampling_type="bilinear",
+                    subfolder=None,
+                    overwrite=False,
+                    data_type=None,
+                    image_nodata=None,
+                    tile_nodata=None,
+                    scale=None,
+                    offset=None,
+                    tiled=True,
+                    blocksize=512):
     """
     Resample an raster image to tiled images in the Equi7Grid.
     Currently only GTiff is supported as output format.
@@ -315,8 +318,8 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             if accurate_boundary:
                 try:
                     geo_extent = retrieve_raster_boundary(image,
-                                                        gdal_path=gdal_path,
-                                                        nodata=image_nodata)
+                                                          gdal_path=gdal_path,
+                                                          nodata=image_nodata)
                 except Exception as e:
                     print("retrieve_raster_boundary failed:", str(e))
                     geo_extent = None
@@ -381,15 +384,17 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
 
         # using gdalwarp to resample
         bbox = e7grid.get_tile_bbox_proj(ftile)
-        tile_project = '"{}"'.format(e7grid.subgrids[ftile[0:2]].core.projection.proj4)
+        tile_project = '"{}"'.format(
+            e7grid.subgrids[ftile[0:2]].core.projection.proj4)
 
         # prepare options for gdalwarp
-        options = {'-t_srs': tile_project,
-                   '-of': 'GTiff',
-                   '-r': resampling_type,
-                   '-te': " ".join(map(str, bbox)),
-                   '-tr': "{} -{}".format(e7grid.core.sampling,
-                                          e7grid.core.sampling)}
+        options = {
+            '-t_srs': tile_project,
+            '-of': 'GTiff',
+            '-r': resampling_type,
+            '-te': " ".join(map(str, bbox)),
+            '-tr': "{} -{}".format(e7grid.core.sampling, e7grid.core.sampling)
+        }
 
         options["-co"] = list()
         if compress_type is not None:
@@ -400,7 +405,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             options["-dstnodata"] = tile_nodata
         if data_type != None:
             options["-ot"] = data_type
-            options["-wt"] = data_type # test if this is what we want
+            options["-wt"] = data_type  # test if this is what we want
         if overwrite:
             options["-overwrite"] = " "
         if tiled:  # tiled, square blocks
@@ -415,8 +420,11 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
             options["-co"].append("BLOCKYSIZE={0}".format(blockysize))
 
         # call gdalwarp for resampling
-        succeed, _ = call_gdal_util('gdalwarp', src_files=image, src_band=inband,
-                                    dst_file=out_filepath, gdal_path=gdal_path,
+        succeed, _ = call_gdal_util('gdalwarp',
+                                    src_files=image,
+                                    src_band=inband,
+                                    dst_file=out_filepath,
+                                    gdal_path=gdal_path,
                                     options=options)
 
         # full path to the output(resampled) files
@@ -425,8 +433,7 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
 
         if scale is not None and offset is not None:
             # prepare options for gdal_translate
-            options = {'-a_scale': scale,
-                       '-a_offset': offset}
+            options = {'-a_scale': scale, '-a_offset': offset}
             options["-co"] = list()
             if tile_nodata != None:
                 options["-a_nodata "] = tile_nodata
@@ -437,8 +444,10 @@ def image2equi7grid(e7grid, image, output_dir, gdal_path=None, inband=None,
                 options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
                 options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
 
-            succeed, _ = call_gdal_util('gdal_translate', src_files=out_filepath,
-                                        dst_file=out_filepath, gdal_path=gdal_path,
+            succeed, _ = call_gdal_util('gdal_translate',
+                                        src_files=out_filepath,
+                                        dst_file=out_filepath,
+                                        gdal_path=gdal_path,
                                         options=options)
 
     return dst_file_names
@@ -470,9 +479,12 @@ def open_image(filename):
     return GdalImage(dataset, filename)
 
 
-def call_gdal_util(util_name, gdal_path=None, src_files=None, src_band=None,
-                   dst_file=None, options={}):
-
+def call_gdal_util(util_name,
+                   gdal_path=None,
+                   src_files=None,
+                   src_band=None,
+                   dst_file=None,
+                   options={}):
     """call gdal utility to run the operation.
         http://www.gdal.org/gdal_utilities.html
 
@@ -521,10 +533,10 @@ def call_gdal_util(util_name, gdal_path=None, src_files=None, src_band=None,
         else:
             if v is not None:
                 cmd.append(k)
-            # if hasattr(v, "__iter__"):
-            #    cmd.append(' '.join(map(str, v)))
-            # else:
-            #    cmd.append(str(v))
+                # if hasattr(v, "__iter__"):
+                #    cmd.append(' '.join(map(str, v)))
+                # else:
+                #    cmd.append(str(v))
                 cmd.append(str(v))
 
     # add source files and destination file (in double quotation)
@@ -570,7 +582,8 @@ def _find_gdal_path():
     """find the gdal installed path from the system enviroment variables."""
     evn_name = 'GDAL_DATA'
     # print os.environ[gdal_env_var_name]
-    return os.environ[evn_name].replace('\\gdal-data', '') if evn_name in os.environ else None
+    return os.environ[evn_name].replace('\\gdal-data',
+                                        '') if evn_name in os.environ else None
 
 
 def _analyse_gdal_output(output):
@@ -587,7 +600,9 @@ def _analyse_gdal_output(output):
         return False
 
 
-def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
+def retrieve_raster_boundary(infile,
+                             gdal_path=None,
+                             nodata=None,
                              resize_factor=None):
     """
     Retrieve the boundary of raster image excluding the nodata
@@ -631,17 +646,20 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
     x_res = img_geot[1] * factor
     y_res = img_geot[5] * factor
 
-    options = {'-of': 'GTiff',
-               '-r': 'near',
-               '-te': ' '.join(map(str, img_extent)),
-               '-tr': '{} -{}'.format(x_res, np.abs(y_res)),
-               '-co': 'COMPRESS=LZW',
-               '-srcnodata': nodata,
-               '-dstnodata': nodata
-               }
+    options = {
+        '-of': 'GTiff',
+        '-r': 'near',
+        '-te': ' '.join(map(str, img_extent)),
+        '-tr': '{} -{}'.format(x_res, np.abs(y_res)),
+        '-co': 'COMPRESS=LZW',
+        '-srcnodata': nodata,
+        '-dstnodata': nodata
+    }
 
-    succeed, _ = call_gdal_util('gdalwarp', src_files=infile,
-                                dst_file=qlook, gdal_path=gdal_path,
+    succeed, _ = call_gdal_util('gdalwarp',
+                                src_files=infile,
+                                dst_file=qlook,
+                                gdal_path=gdal_path,
                                 options=options)
     if not succeed:
         return None
@@ -686,14 +704,17 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
     dst_field = 0
 
     geom = None
-    if gdal.CE_None == gdal.Polygonize(binary_band, maskband,
-                                       dst_layer, dst_field, callback=None):
+    if gdal.CE_None == gdal.Polygonize(binary_band,
+                                       maskband,
+                                       dst_layer,
+                                       dst_field,
+                                       callback=None):
         # get polygons from dataset
         multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
         for feature in dst_ds.GetLayerByIndex():
             polygon = feature.GetGeometryRef()
 
-            # When the polygon has hole inside, only the out line ring will 
+            # When the polygon has hole inside, only the out line ring will
             # be used as extent polygon
             if polygon.GetGeometryCount() > 1:
                 ring = polygon.GetGeometryRef(0)
@@ -716,17 +737,29 @@ def retrieve_raster_boundary(infile, gdal_path=None, nodata=None,
     return geom
 
 
-def equi72lonlat(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
-                 accurate_boundary=True, e7_folder=True, ftiles=None,
-                 roi=None, outshortname=None,
-                 withtilenameprefix=False, withtilenamesuffix=True,
-                 compress=True, compresstype="LZW",
+def equi72lonlat(e7grid,
+                 image,
+                 output_dir,
+                 gdal_path=None,
+                 subgrid_ids=None,
+                 accurate_boundary=True,
+                 e7_folder=True,
+                 ftiles=None,
+                 roi=None,
+                 outshortname=None,
+                 withtilenameprefix=False,
+                 withtilenamesuffix=True,
+                 compress=True,
+                 compresstype="LZW",
                  resampling_type="bilinear",
-                 overwrite=False, image_nodata=None, tile_nodata=None,
-                 tiledtiff=True, blocksize=512):
+                 overwrite=False,
+                 image_nodata=None,
+                 tile_nodata=None,
+                 tiledtiff=True,
+                 blocksize=512):
 
     ftile = 'EU010M_E073N032T1'
-    tile_path= r'D:\temp\out'
+    tile_path = r'D:\temp\out'
     outshortname = 'aaaaa'
     # make output filename
     outbasename = outshortname
@@ -742,10 +775,14 @@ def equi72lonlat(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
     extent_m = e7grid.get_tile_bbox_geog(ftile)
 
     # prepare options for gdalwarp
-    options = {'-t_srs': 'EPSG:4326', '-of': 'GTiff',
-               '-r': 'bilinear', '': '-overwrite',
-               '-te': " ".join(map(str, extent_m)),
-               '-tr': "{} -{}".format(res500, res500)}
+    options = {
+        '-t_srs': 'EPSG:4326',
+        '-of': 'GTiff',
+        '-r': 'bilinear',
+        '': '-overwrite',
+        '-te': " ".join(map(str, extent_m)),
+        '-tr': "{} -{}".format(res500, res500)
+    }
 
     options["-co"] = list()
     if compress:
@@ -762,6 +799,8 @@ def equi72lonlat(e7grid, image, output_dir, gdal_path=None, subgrid_ids=None,
         options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
 
     # call gdalwarp for resampling
-    succeed, _ = call_gdal_util('gdalwarp', src_files=image,
-                                dst_file=filename, gdal_path=gdal_path,
+    succeed, _ = call_gdal_util('gdalwarp',
+                                src_files=image,
+                                dst_file=filename,
+                                gdal_path=gdal_path,
                                 options=options)

@@ -1,0 +1,33 @@
+name: Upload pypi
+
+on:
+   # trigger only on release
+   release:
+     types: [published]
+   # to trigger workflow manually from actions-tab
+   workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Upgrade pip, install setuptools, wheel and twine
+        run: |
+          # Upgrade pip
+          python -m pip install --upgrade pip
+          # Install build dependencies
+          python -m pip install setuptools wheel twine
+
+      - name: Build and Upload to pypi
+        run: |
+          python setup.py sdist bdist_wheel
+          python -m twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}

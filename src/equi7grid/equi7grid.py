@@ -1,5 +1,4 @@
-# Copyright (c) 2017, Vienna University of Technology (TU Wien), Department of
-# Geodesy and Geoinformation (GEO).
+# Copyright (c) 2022, TU Wien, Department of Geodesy and Geoinformation (GEO).
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,16 +25,9 @@
 # The views and conclusions contained in the software and documentation are
 # those of the authors and should not be interpreted as representing official
 # policies, either expressed or implied, of the FreeBSD Project.
-
-
-'''
-Created on March 1, 2017
-
+"""
 Code for the Equi7 Grid.
-
-@author: Bernhard Bauer-Marschallinger, bbm@geo.tuwien.ac.at
-
-'''
+"""
 
 import os
 import pickle
@@ -80,7 +72,6 @@ def _load_static_data(module_path):
 
 
 class Equi7Grid(TiledProjectionSystem):
-
     """
     Equi7Grid class object, inheriting TiledProjectionSystem() from pytileproj.
 
@@ -107,9 +98,10 @@ class Equi7Grid(TiledProjectionSystem):
     # supported tile widths (linked to the grid sampling)
     _static_tilecodes = ["T6", "T3", "T1"]
     # supported grid spacing ( = the pixel sampling)
-    _static_sampling = [1000, 800, 750, 600, 500, 400, 300, 250, 200,
-                        150, 125, 100, 96, 80, 75, 64, 60, 50, 48, 40,
-                        32, 30, 25, 24, 20, 16, 10, 8, 5, 4, 2, 1]
+    _static_sampling = [
+        1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80,
+        75, 64, 60, 50, 48, 40, 32, 30, 25, 24, 20, 16, 10, 8, 5, 4, 2, 1
+    ]
 
     def __init__(self, sampling):
         """
@@ -132,12 +124,11 @@ class Equi7Grid(TiledProjectionSystem):
         super(Equi7Grid, self).__init__(sampling, tag='Equi7')
         self.core.projection = 'multiple'
 
-
     @staticmethod
     def encode_sampling(sampling):
         """
         provides a string representing the sampling (e.g. for the tilenames)
-        
+
         Parameters
         ----------
         sampling : int
@@ -146,8 +137,7 @@ class Equi7Grid(TiledProjectionSystem):
         Returns
         -------
         sampling_str : str
-            string representing the sampling 
-
+            string representing the sampling
         """
         if sampling <= 999:
             sampling_str = str(sampling).rjust(3, '0')
@@ -156,23 +146,21 @@ class Equi7Grid(TiledProjectionSystem):
                 (str(sampling / 1000.0)[0], 'K', str(sampling / 1000.0)[2]))
         return sampling_str
 
-
     @staticmethod
     def decode_sampling(sampling_str):
         """
         converts the string representing the sampling (e.g. from the tilenames)
         to an integer value in metres
-        
+
         Parameters
         ----------
         sampling_str : str
-            string representing the sampling 
+            string representing the sampling
 
         Returns
         -------
         sampling : int
             the grid sampling = size of pixels; in metres.
-            
         """
         if len(sampling_str) != 3:
             raise ValueError('Resolution is badly defined!')
@@ -181,7 +169,6 @@ class Equi7Grid(TiledProjectionSystem):
         else:
             sampling = int(sampling_str)
         return sampling
-
 
     def define_subgrids(self):
         """
@@ -196,7 +183,6 @@ class Equi7Grid(TiledProjectionSystem):
         for sg in self._static_subgrid_ids:
             subgrids[sg] = Equi7Subgrid(self.core, sg)
         return subgrids
-
 
     def get_tiletype(self, sampling=None):
         """
@@ -237,7 +223,6 @@ class Equi7Grid(TiledProjectionSystem):
 
         return tilecode
 
-
     def get_tilesize(self, sampling):
         """
         Return the tile size in metres defined for the grid's sampling
@@ -253,12 +238,17 @@ class Equi7Grid(TiledProjectionSystem):
             tile size in x and y direction defined for the grid's sampling
 
         """
-        xsize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[
-            self.get_tiletype(sampling)]
-        ysize = {'T6': 600000, 'T3': 300000, 'T1': 100000}[
-            self.get_tiletype(sampling)]
+        xsize = {
+            'T6': 600000,
+            'T3': 300000,
+            'T1': 100000
+        }[self.get_tiletype(sampling)]
+        ysize = {
+            'T6': 600000,
+            'T3': 300000,
+            'T1': 100000
+        }[self.get_tiletype(sampling)]
         return xsize, ysize
-
 
     def create_tile(self, name):
         """
@@ -276,7 +266,6 @@ class Equi7Grid(TiledProjectionSystem):
 
         """
         return self.subgrids[name[0:2]].tilesys.create_tile(name)
-
 
     def lonlat2ij_in_tile(self, lon, lat, lowerleft=False):
         """
@@ -311,7 +300,8 @@ class Equi7Grid(TiledProjectionSystem):
         # get the xy-coordinates
         subgrid, x, y = self._lonlat2xy(lon, lat)
 
-        tilename, i, j = self.subgrids[str(subgrid)].tilesys.xy2ij_in_tile(x, y, lowerleft=lowerleft)
+        tilename, i, j = self.subgrids[str(subgrid)].tilesys.xy2ij_in_tile(
+            x, y, lowerleft=lowerleft)
 
         return tilename, i, j
 
@@ -337,8 +327,10 @@ class Equi7Grid(TiledProjectionSystem):
         # get the subgrid
         sg, _, _ = self.lonlat2xy(lon, lat)
 
-        lon0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm('central_meridian')
-        lat0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm('latitude_of_origin')
+        lon0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm(
+            'central_meridian')
+        lat0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm(
+            'latitude_of_origin')
 
         # get spherical distance and azimuth between projection centre and point of interest
         geod = Geodesic.WGS84
@@ -382,16 +374,18 @@ class Equi7Subgrid(TiledProjection):
         self.core = _core
 
         # holds name of the subgrid
-        self.name = ''.join(('EQUI7_', continent, Equi7Grid.encode_sampling(core.sampling), 'M'))
+        self.name = ''.join(('EQUI7_', continent,
+                             Equi7Grid.encode_sampling(core.sampling), 'M'))
 
         # holds the extent of the subgrid in the lonlat-space
-        self.polygon_geog = create_geometry_from_wkt(data['zone_extent'], epsg=4326)
+        self.polygon_geog = create_geometry_from_wkt(data['zone_extent'],
+                                                     epsg=4326)
 
         # defines the tilingsystem of the subgrid
         self.tilesys = Equi7TilingSystem(self.core, self.polygon_geog)
 
-        super(Equi7Subgrid, self).__init__(self.core, self.polygon_geog, self.tilesys)
-
+        super(Equi7Subgrid, self).__init__(self.core, self.polygon_geog,
+                                           self.tilesys)
 
     def calc_length_distortion(self, x, y):
         """
@@ -423,7 +417,7 @@ class Equi7Subgrid(TiledProjection):
         fn = self.core.projection.osr_spref.GetProjParm('false_northing')
 
         # create the distances to the projection centre
-        dists = np.sqrt((np.array(x) - fe) ** 2 + (np.array(y) - fn) ** 2)
+        dists = np.sqrt((np.array(x) - fe)**2 + (np.array(y) - fn)**2)
 
         # apply equation for distortion in direction perpendicular to the radius, k:
         # k = c/geod.a / np.sin(c/geod.a)
@@ -436,7 +430,6 @@ class Equi7Subgrid(TiledProjection):
 
 
 class Equi7TilingSystem(TilingSystem):
-
     """
     Equi7TilingSystem class, inheriting TilingSystem() from pytileproj.
     provides methods for queries and handling.
@@ -464,7 +457,6 @@ class Equi7TilingSystem(TilingSystem):
                     'must be multiples of {}00km!'.format(
                         self.core.tile_ysize_m // 100000)
         self.msg3 = 'Tilecode must be one of T6, T3, T1!'
-
 
     def create_tile(self, name=None, x=None, y=None):
         """
@@ -508,7 +500,6 @@ class Equi7TilingSystem(TilingSystem):
 
         return Equi7Tile(self.core, name, llx, lly, covers_land=covers_land)
 
-
     def point2tilename(self, x, y, shortform=False):
         """
         Returns the name string of an Equi7Tile in which the point,
@@ -535,7 +526,6 @@ class Equi7TilingSystem(TilingSystem):
         """
         llx, lly = self.round_xy2lowerleft(x, y)
         return self._encode_tilename(llx, lly, shortform=shortform)
-
 
     def encode_tilename(self, llx, lly, sampling, tilecode, shortform=False):
         """
@@ -564,13 +554,13 @@ class Equi7TilingSystem(TilingSystem):
         # gives long-form of tilename (e.g. "EU500M_E012N018T6")
         tilename = "{}{}M_E{:03d}N{:03d}{}".format(
             self.core.tag, Equi7Grid.encode_sampling(sampling),
-            np.int(llx) // 100000, np.int(lly) // 100000, tilecode)
+            np.int(llx) // 100000,
+            np.int(lly) // 100000, tilecode)
 
         if shortform:
             tilename = self.tilename2short(tilename)
 
         return tilename
-
 
     def _encode_tilename(self, llx, lly, shortform=False):
         """
@@ -593,8 +583,11 @@ class Equi7TilingSystem(TilingSystem):
             or in shortform e.g. 'E012N018T6'.
 
         """
-        return self.encode_tilename(llx, lly, self.core.sampling, self.core.tiletype, shortform=shortform)
-
+        return self.encode_tilename(llx,
+                                    lly,
+                                    self.core.sampling,
+                                    self.core.tiletype,
+                                    shortform=shortform)
 
     def tilename2short(self, tilename):
         """
@@ -617,11 +610,10 @@ class Equi7TilingSystem(TilingSystem):
             tilename = tilename[7:]
         return tilename
 
-
     def tilename2lowerleft(self, tilename):
         """
         Return the lower-left coordinates of the tile
-        
+
         Parameters
         ----------
         tilename : str
@@ -636,11 +628,10 @@ class Equi7TilingSystem(TilingSystem):
         _, _, _, llx, lly, _ = self.decode_tilename(tilename)
         return llx, lly
 
-
     def check_tilename(self, tilename):
         """
         checks if the given tilename is valid
-        
+
         Parameters
         ----------
         tilename : str
@@ -657,7 +648,6 @@ class Equi7TilingSystem(TilingSystem):
         self.decode_tilename(tilename)
         check = True
         return check
-
 
     def decode_tilename(self, tilename):
         """
@@ -730,8 +720,8 @@ class Equi7TilingSystem(TilingSystem):
 
         return subgrid_id, sampling, tile_size_m, llx * 100000, lly * 100000, tilecode
 
-
-    def get_congruent_tiles_from_tilename(self, tilename,
+    def get_congruent_tiles_from_tilename(self,
+                                          tilename,
                                           target_sampling=None,
                                           target_tiletype=None):
         """
@@ -809,8 +799,8 @@ class Equi7TilingSystem(TilingSystem):
         else:
             n = int(src_tile_size_m // target_tilesize)
             for x, y in itertools.product(range(n), range(n)):
-                s_east = (src_llx  + x * target_tilesize)
-                s_north = (src_lly  + y * target_tilesize)
+                s_east = (src_llx + x * target_tilesize)
+                s_north = (src_lly + y * target_tilesize)
                 name = target_grid.subgrids[self.core.tag].\
                                 tilesys.encode_tilename(s_east, s_north,
                                                         sampling,
@@ -819,7 +809,6 @@ class Equi7TilingSystem(TilingSystem):
                 family_tiles.append(name)
 
         return family_tiles
-
 
     def check_tile_covers_land(self, tilename=None):
         """
@@ -839,7 +828,6 @@ class Equi7TilingSystem(TilingSystem):
             tilename = self.tilename2short(tilename)
             return tilename in land_tiles
 
-
     def list_tiles_covering_land(self):
         """
         Returns a list of all tiles in the subgrid covering land
@@ -850,13 +838,12 @@ class Equi7TilingSystem(TilingSystem):
             list containing land tiles
         """
 
-        land_tiles = Equi7Grid._static_data[
-            self.core.tag]["coverland"][self.core.tiletype]
+        land_tiles = Equi7Grid._static_data[self.core.tag]["coverland"][
+            self.core.tiletype]
         return list(land_tiles)
 
 
 class Equi7Tile(Tile):
-
     """
     The Equi7Tile class, inheriting Tile() from pytileproj.
 
