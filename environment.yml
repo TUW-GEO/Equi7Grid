@@ -5,7 +5,7 @@ dependencies:
   - numpy
   - scipy
   - gdal
-  - fiona
+  - cartopy
   - pyproj
   - pip
   - pip:
