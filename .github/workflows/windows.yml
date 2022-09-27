@@ -7,7 +7,7 @@ on:
     - cron: '0 0 * * *' # daily
 
 env:
-  USE_PATH_FOR_GDAL_PYTHON: YES
+  GDAL_DATA: "C:\Miniconda3\envs\equi7grid_env\Library\bin"
 
 jobs:
   build:
