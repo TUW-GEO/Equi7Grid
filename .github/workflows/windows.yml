@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: '0 0 * * *' # daily
 
+env:
+  USE_PATH_FOR_GDAL_PYTHON: YES
+
 jobs:
   build:
     strategy:
