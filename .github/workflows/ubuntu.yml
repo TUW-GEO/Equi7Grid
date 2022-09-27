@@ -8,25 +8,31 @@ on:
 
 jobs:
   build:
-    name: Build py${{ matrix.python-version }} @ ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: ['3.6', '3.7', '3.8']
         os: ["ubuntu-latest"]
+        ymlfile: ['environment.yml']
+    name: Build py${{ matrix.python-version }} @ ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
     steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true # does not work with self-hosted testdata
+          fetch-depth: 0
       - uses: conda-incubator/setup-miniconda@v2.0.1
         with:
           miniconda-version: "latest"
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          environment-file: environment.yml
+          environment-file: ${{ matrix.ymlfile }}
           activate-environment: equi7grid_env
           auto-activate-base: false
-      - name: Print environment infos
+      - name: Print infos
         shell: bash -l {0}
         run: |
+          git status
           conda info -a
           conda list
           pip list
@@ -36,19 +42,16 @@ jobs:
         shell: bash -l {0}
         run: |
           mkdir -p .artifacts
-          filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
-          conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: os_py_environments
-          path: .artifacts/*
+          if [ ${{ matrix.ymlfile }} == "environment.yml" ]
+          then
+              filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
+              conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
+          fi
       - name: Install package and test
         shell: bash -l {0}
         run: |
-          pip install .
-          # pip install pytest==6.2.5 tomli==1.2.3
-          python setup.py test
+          pip install -e .
+          pytest --cache-clear
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
@@ -57,6 +60,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
           COVERALLS_PARALLEL: true
+      - name: Create wheel and dist package
+        shell: bash -l {0}
+        run: |
+          git status
+          pip install setuptools_scm
+          if [ ${{ matrix.os }} == "windows-latest" ]
+          then
+            # build whls on windows
+            pip install wheel
+            python setup.py bdist_wheel --dist-dir .artifacts/dist
+          else
+            # build dist on linux
+            python setup.py sdist --dist-dir .artifacts/dist
+          fi
+          ls .artifacts/dist
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Artifacts
+          path: .artifacts/*
   coveralls:
     name: Submit Coveralls
     needs: build
