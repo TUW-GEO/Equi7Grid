@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest"]
-        python-version: ['3.6', '3.8']
+        python-version: ['3.6']
         ymlfile: ['environment.yml']
     name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
