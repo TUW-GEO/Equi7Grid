@@ -2,8 +2,11 @@
 Equi7Grid
 =========
 
-.. image:: https://travis-ci.org/TUW-GEO/Equi7Grid.svg?branch=master
-    :target: https://travis-ci.org/TUW-GEO/Equi7Grid
+.. image:: https://github.com/TUW-GEO/Equi7Grid/workflows/ubuntu/badge.svg
+   :target: https://github.com/TUW-GEO/Equi7Grid/actions/workflows/ubuntu.yml
+
+.. image:: https://github.com/TUW-GEO/Equi7Grid/workflows/windows/badge.svg
+   :target: https://github.com/TUW-GEO/Equi7Grid/actions/workflows/windows.yml
 
 .. image:: https://coveralls.io/repos/github/TUW-GEO/Equi7Grid/badge.svg?branch=master
     :target: https://coveralls.io/github/TUW-GEO/Equi7Grid?branch=master
@@ -12,7 +15,7 @@ Equi7Grid
     :target: https://badge.fury.io/py/Equi7Grid
 
 .. image:: https://readthedocs.org/projects/equi7grid/badge/?version=latest
-    :target: https://equi7grid.readthedocs.io/en/latest/?badge=latest
+    :target: https://equi7grid.readthedocs.io/
 
 A python class for working with Equi7Grid - how to convert to - how to use the tiling system - etc.
 
