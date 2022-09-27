@@ -8,6 +8,7 @@ on:
 
 env:
   GDAL_DATA: C:\Miniconda3\envs\equi7grid_env\Library\bin
+  USE_PATH_FOR_GDAL_PYTHON: YES
 
 jobs:
   build:
