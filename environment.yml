@@ -5,6 +5,7 @@ dependencies:
   - numpy
   - scipy
   - gdal
+  - fiona
   - pyproj
   - pip
   - pip:
