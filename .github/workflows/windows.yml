@@ -7,9 +7,9 @@ on:
     - cron: '0 0 * * *' # daily
 
 env:
-  GDAL_DATA: C:\Miniconda3\envs\equi7grid_env\bin
-  PROJ_LIB: C:\Miniconda3\envs\equi7grid_env\share\proj
-  GDAL_DRIVER_PATH: C:\Miniconda3\envs\share\gdal
+  GDAL_DATA: C:\Miniconda3\envs\equi7grid_env\Library\share\gdal
+  PROJ_LIB: C:\Miniconda3\envs\equi7grid_env\Library\share\proj
+  GDAL_DRIVER_PATH: C:\Miniconda3\envs\equi7grid_env\Library\bin
 
 jobs:
   build:
