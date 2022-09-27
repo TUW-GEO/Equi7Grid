@@ -12,3 +12,8 @@ dependencies:
     - veranda
     - geopathfinder
     - geographiclib
+    - pytest
+    - pytest-cov
+    - yapf
+    - sphinx_rtd_theme
+    - nbsphinx
