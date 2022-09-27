@@ -5,6 +5,7 @@ dependencies:
   - numpy
   - scipy
   - gdal
+  - geopandas
   - cartopy
   - pyproj
   - pip
