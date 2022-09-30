@@ -5,7 +5,8 @@ Changelog
 Version 0.2.0
 =============
 
-- update project files using pyscaffold 4.3.1
+- update project files using pyscaffold v3.3
+- code formatting using yapf
 
 Version 0.1.0
 =============
