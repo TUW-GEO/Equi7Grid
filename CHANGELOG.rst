@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.2.1
+=============
+
+- removes deprecated np.int()
+
 Version 0.2.0
 =============
 
