@@ -35,22 +35,50 @@
 """
 
 from equi7grid.equi7grid import Equi7Grid
+from geospade.raster import MosaicGeometry
 from geospade.raster import Tile
 from geospade.crs import SpatialRef
 
 
-eg = Equi7Grid(10)
+eg = Equi7Grid(500)
 
-t = eg.EU.tilesys.create_tile('E048N015T1')
+for sg in ['EU']:#eg.subgrids:
 
-n_rows, n_cols = t.shape_px()
-geotransform = t.geotransform()
-name = t.shortname
-sref = SpatialRef(t.core.projection.wkt)
+    # all tiles covering the full AF BB
+    x1, x2, y1, y2 = list(eg.subgrids[sg].get_bbox_proj())
+    at_bb = eg.subgrids[sg].tilesys.identify_tiles_overlapping_xybbox([x1, y1, x2, y2])
+    at_bb.sort()
+    # 1248 for AF
 
-gst = Tile(n_rows, n_cols, sref, geotrans=geotransform, name=name)
+    at_sh = eg.subgrids[sg].search_tiles_over_geometry(eg.subgrids[sg].polygon_geog, coverland=False)
+    at_sh.sort()
+    # 1004 for AF
 
-gst.to_json(r"D:\Temp\tests.json")
+    at_cl = eg.subgrids[sg].search_tiles_over_geometry(eg.subgrids[sg].polygon_geog)
+    at_cl.sort()
+    # 498 for AF
+
+    tile_objects = []
+    for tile in at_bb:
+
+        t = eg.subgrids[sg].tilesys.create_tile(tile)
+
+        n_rows, n_cols = t.shape_px()
+        geotransform = t.geotransform()
+        name = t.shortname
+        sref = SpatialRef(t.core.projection.wkt)
+        md = {'covers_land': tile in at_cl}
+
+        gst = Tile(n_rows, n_cols, sref, geotrans=geotransform, name=name, active=tile in at_sh, metadata=md)
+
+        #gst.to_json(r"D:\Arbeit\atasks\202307_equi7grid_update\geojson\tests.json")
+        tile_objects.append(gst)
+
+    mosaic_name = "{} subgrid".format(sg)
+    mosaic_geom = MosaicGeometry.from_tile_list(tile_objects, name=mosaic_name, boundary=eg.subgrids[sg].polygon_geog)
+    mosaic_geom.to_json(r"D:\Arbeit\atasks\202307_equi7grid_update\geojson\{}.json".format(sg))
+
+    pass
 
 
 
