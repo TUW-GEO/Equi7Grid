@@ -93,14 +93,15 @@ like system. In this example, Miniconda will be installed into ``$HOME/miniconda
 
 .. code::
 
-	wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-	bash miniconda.sh -b -p $HOME/miniconda
-	export PATH="$HOME/miniconda/bin:$PATH"
-	conda config --set always_yes yes --set changeps1 no
-	conda update -n base -c defaults conda
-	conda install mamba -c conda-forge
-	mamba create --name equi7grid_env -c conda-forge python numpy scipy gdal rasterio geopandas cartopy pyproj pip --yes
-	conda activate equi7grid_env
+    wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+    bash miniconda.sh -b -p $HOME/miniconda
+    export PATH="$HOME/miniconda/bin:$PATH"
+    conda config --set always_yes yes --set changeps1 no
+    conda update -n base -c defaults conda
+    conda install mamba -c conda-forge
+    mamba create --name equi7grid_env -c conda-forge python numpy scipy gdal rasterio geopandas cartopy pyproj pip --yes
+    conda activate equi7grid_env
+
 This script adds ``$HOME/miniconda/bin`` temporarily to the ``PATH`` to do this
 permanently add ``export PATH="$HOME/miniconda/bin:$PATH"`` to your ``.bashrc``
 or ``.zshrc``
@@ -119,7 +120,7 @@ or alternatively, for convenience, install from pip
 
 .. code::
 
-	pip install Equi7Grid
+    pip install Equi7Grid
 
 Guidelines
 ----------
