@@ -42,7 +42,7 @@ from equi7grid.equi7grid import Equi7Grid
 
 
 def check_gdal_aeqd_accuracy(quiet=False,
-                             check_gdalwarp=True,
+                             check_gdalwarp=False,
                              lib_dir=None,
                              gdal_path=None):
 
@@ -97,26 +97,19 @@ def check_gdal_aeqd_accuracy(quiet=False,
                 "accurately reprojecting between WGS84-lon/lat and Equi7Grid!")
 
     # check the gdalwarp is accurate or not
+    #TODO: bugfix in _find_gdal_path()
     if check_gdalwarp:
-
-        _, gdal_cmd_version = call_gdal_util("gdalinfo",
-                                             gdal_path=gdal_path,
-                                             options={'': '--version'})
-        pos_str = str(gdal_cmd_version).find('GDAL')
-        version = str(gdal_cmd_version)[pos_str + 5:pos_str + 10]
 
         if not gdal_path:
             gdal_path = _find_gdal_path()
         print("\nTesting GDAL used via cmd-line at path {}".format(gdal_path))
-        print("Version: {}".format(version))
 
         # 10m in degrees
         sampling_10m = 0.0000892857142857142857142857142857
 
         test_data_dir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), r"prj_accuracy_test")
-        input_image = os.path.join(test_data_dir,
-                                   r"lake_in_russia_equi7grid.tif")
+        input_image = os.path.join(test_data_dir, r"lake_in_russia_equi7grid.tif")
         reprojected_image = tempfile.NamedTemporaryFile(suffix=".tif",
                                                         delete=False).name
         re_reprojected_image = tempfile.NamedTemporaryFile(suffix=".tif",

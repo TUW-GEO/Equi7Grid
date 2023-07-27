@@ -30,7 +30,11 @@ Overlays for visualisation in Google Earth can be found here:
 
 ~/docs/doc_files/google_earth_overlays/
 
-The 7 projections are completely defined by WKT-strings in the .prj-files, or simply by following **proj4-strings**:
+The 7 projections are completely defined by WKT-strings in the .prj-files at
+
+~/wkt/
+
+or simply by following **proj4-strings**:
 
 .. code::
 
@@ -61,13 +65,13 @@ You can find additional information regarding DOI versioning at http://help.zeno
 Installation
 ============
 
-This package should be installable through pip:
+This package can be installed through pip:
 
 .. code::
 
     pip install Equi7Grid
 
-Installs for scripy and gdal are required from conda or conda-forge.
+Installs for ``scipy`` and ``gdal`` are required from conda or conda-forge (see below how to set up a fresh environment).
 
 Contribute
 ==========
@@ -84,32 +88,38 @@ For Development we recommend a ``conda`` environment.
 Example installation script
 ---------------------------
 
-The following script will install miniconda and setup the environment on a UNIX
-like system. Miniconda will be installed into ``$HOME/miniconda``.
+The following script will install a fresh miniconda and setup the environment on a UNIX
+like system. In this example, Miniconda will be installed into ``$HOME/miniconda``.
 
 .. code::
 
-   wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-   bash miniconda.sh -b -p $HOME/miniconda
-   export PATH="$HOME/miniconda/bin:$PATH"
-   conda create -n equi7grid_env python=3.6 numpy scipy pip gdal pyproj shapely geographiclib
-   source activate equi7grid_env
-   pip install pytileproj
-
-
+	wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+	bash miniconda.sh -b -p $HOME/miniconda
+	export PATH="$HOME/miniconda/bin:$PATH"
+	conda config --set always_yes yes --set changeps1 no
+	conda update -n base -c defaults conda
+	conda install mamba -c conda-forge
+	mamba create --name equi7grid_env -c conda-forge python numpy scipy gdal rasterio geopandas cartopy pyproj pip --yes
+	conda activate equi7grid_env
 This script adds ``$HOME/miniconda/bin`` temporarily to the ``PATH`` to do this
 permanently add ``export PATH="$HOME/miniconda/bin:$PATH"`` to your ``.bashrc``
 or ``.zshrc``
 
 The last line in the example activates the ``equi7grid_env`` environment.
 
-After that you should be able to run:
+After you have cloned the package from this repository, you should be able to run:
 
 .. code::
 
     python setup.py test
 
-to run the test suite.
+to run the test suite,
+
+or alternatively, for convenience, install from pip
+
+.. code::
+
+	pip install Equi7Grid
 
 Guidelines
 ----------

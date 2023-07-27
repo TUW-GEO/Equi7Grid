@@ -2,6 +2,13 @@
 Changelog
 =========
 
+Version 0.2.2
+=============
+
+- update pyproj -> 3.6 (x/y axis order)
+- update numpy -> 1.2 (int)
+- added /wkt/ files
+
 Version 0.2.0
 =============
 

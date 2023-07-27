@@ -481,7 +481,7 @@ def open_image(filename):
 
 def call_gdal_util(util_name,
                    gdal_path=None,
-                   src_files=None,
+                   src_files='',
                    src_band=None,
                    dst_file=None,
                    options={}):
@@ -582,8 +582,7 @@ def _find_gdal_path():
     """find the gdal installed path from the system enviroment variables."""
     evn_name = 'GDAL_DATA'
     # print os.environ[gdal_env_var_name]
-    return os.environ[evn_name].replace('\\gdal-data',
-                                        '') if evn_name in os.environ else None
+    return os.environ[evn_name].replace('\\gdal-data','') if evn_name in os.environ else None
 
 
 def _analyse_gdal_output(output):
