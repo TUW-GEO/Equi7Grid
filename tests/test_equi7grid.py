@@ -19,8 +19,8 @@ Tests for the Equi7Grid.
 import unittest
 import numpy as np
 import numpy.testing as nptest
-from osgeo import osr
-import pyproj
+from pyproj import Transformer
+from pyproj import CRS
 
 from pytileproj.geometry import setup_test_geom_spitzbergen
 from pytileproj.geometry import setup_geom_kamchatka
@@ -225,10 +225,8 @@ class TestEqui7Grid(unittest.TestCase):
         """
         Tests the proj4 reproject accuracy by forward and backward reprojection.
         """
-        geo_sr = osr.SpatialReference()
-        geo_sr.SetWellKnownGeogCS("EPSG:4326")
-        # Africa
-        aeqd_proj = ('PROJCS["Azimuthal_Equidistant",'
+        # for subgrid Africa
+        aeqd_wkt = ('PROJCS["Azimuthal_Equidistant",'
                      'GEOGCS["GCS_WGS_1984",'
                      'DATUM["D_WGS_1984",'
                      'SPHEROID["WGS_1984",6378137.0,298.257223563]],'
@@ -239,27 +237,21 @@ class TestEqui7Grid(unittest.TestCase):
                      'PARAMETER["false_northing",5990638.42298],'
                      'PARAMETER["longitude_of_center",21.5],'
                      'PARAMETER["latitude_of_center",8.5],UNIT["Meter",1.0]]')
-        aeqd_sr = osr.SpatialReference()
-        aeqd_sr.ImportFromWkt(aeqd_proj)
-        p_grid = pyproj.Proj(aeqd_sr.ExportToProj4())
-        p_geo = pyproj.Proj(geo_sr.ExportToProj4())
+        aeqd_crs = CRS.from_wkt(aeqd_wkt)
 
         # test locations in Africa
-        points = [(-31.627336, 30.306273), (-14.589038, -43.880131),
-                  (79.423313, -35.261658), (23.456413, 10.457987)]
+        points = [(30.306273, -31.627336), (-43.880131, -14.589038),
+                  (-35.261658, 79.423313), (10.457987, 23.456413)]
 
         for i, pt in enumerate(points):
             # from lat/lon to aeqd
-            aeqd_x, aeqd_y = pyproj.transform(p_geo, p_grid, pt[0], pt[1])
-            # from aeqd to lat/lon
-            lon, lat = pyproj.transform(p_grid, p_geo, aeqd_x, aeqd_y)
-            # print info
+            tf = Transformer.from_crs(('epsg', '4326'), aeqd_crs)
+            aeqd_x, aeqd_y = tf.transform(pt[0], pt[1])
 
-            print("testing location {}:".format(i))
-            _info = "   ({:f},{:f}) -> ({:f},{:f}) -> ({:f},{:f})"
-            print(_info.format(pt[0], pt[1], aeqd_x, aeqd_y, lon, lat))
-            print("    difference: ({:f},{:f})".format(lon - pt[0],
-                                                       lat - pt[1]))
+            # from aeqd to lat/lon
+            tf = Transformer.from_crs(aeqd_crs, ('epsg', '4326'))
+            lon, lat = tf.transform(aeqd_x, aeqd_y)
+
             nptest.assert_allclose(pt[0], lon)
             nptest.assert_allclose(pt[1], lat)
 
@@ -272,6 +264,7 @@ class TestEqui7Grid(unittest.TestCase):
 
         assert e7_500.EU.tilesys.decode_tilename('EU500M_E042N006T6') == \
                ('EU', 500, 600000, 4200000, 600000, 'T6')
+
         assert e7_10.OC.tilesys.decode_tilename('OC010M_E085N091T1') == \
                ('OC', 10, 100000, 8500000, 9100000, 'T1')
 
@@ -291,10 +284,8 @@ class TestEqui7Grid(unittest.TestCase):
         e7_500 = Equi7Grid(500)
         e7_10 = Equi7Grid(10)
 
-        tiles1_should = [
-            'EU025M_E042N006T3', 'EU025M_E042N009T3', 'EU025M_E045N006T3',
-            'EU025M_E045N009T3'
-        ]
+        tiles1_should = ['EU025M_E042N006T3', 'EU025M_E042N009T3',
+                         'EU025M_E045N006T3', 'EU025M_E045N009T3']
         tiles1 = e7_500.EU.tilesys.get_congruent_tiles_from_tilename(
             'EU500M_E042N006T6', target_sampling=25)
         assert sorted(tiles1) == sorted(tiles1_should)
@@ -326,10 +317,8 @@ class TestEqui7Grid(unittest.TestCase):
                                                (-90.9, -1.2), (-175.2, 66)],
                                        coverland=True)
 
-        desired_tiles = [
-            'EU500M_E042N006T6', 'EU500M_E042N018T6', 'AS500M_E072N090T6',
-            'SA500M_E036N066T6'
-        ]
+        desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N018T6',
+                         'AS500M_E072N090T6', 'SA500M_E036N066T6']
 
         assert sorted(tiles) == sorted(desired_tiles)
 
@@ -347,8 +336,7 @@ class TestEqui7Grid(unittest.TestCase):
         desired_tiles = [
             'EU500M_E036N006T6', 'EU500M_E042N000T6', 'EU500M_E042N006T6',
             'AF500M_E030N084T6', 'AF500M_E030N090T6', 'AF500M_E036N084T6',
-            'AF500M_E036N090T6', 'AF500M_E042N084T6', 'AF500M_E042N090T6'
-        ]
+            'AF500M_E036N090T6', 'AF500M_E042N084T6', 'AF500M_E042N090T6']
 
         assert len(tiles_all) == 854
         assert sorted(tiles) == sorted(desired_tiles)
@@ -358,10 +346,8 @@ class TestEqui7Grid(unittest.TestCase):
         e7 = Equi7Grid(500)
 
         tiles = e7.search_tiles_in_roi(bbox=[(-170, 88), (150.0, 90)])
-        desired_tiles = [
-            'NA500M_E078N084T6', 'NA500M_E078N090T6', 'NA500M_E084N084T6',
-            'NA500M_E084N090T6'
-        ]
+        desired_tiles = ['NA500M_E078N084T6', 'NA500M_E078N090T6',
+                         'NA500M_E084N084T6', 'NA500M_E084N090T6']
         assert sorted(tiles) == sorted(desired_tiles)
 
         tiles = e7.search_tiles_in_roi(bbox=[(-170, -90), (150.0, -89)])
@@ -381,11 +367,9 @@ class TestEqui7Grid(unittest.TestCase):
         # test longitude values larger than 180 degrees
         tiles1 = e7.search_tiles_in_roi(bbox=[(179, 66), (210, 67.85)])
 
-        desired_tiles = [
-            'AS500M_E066N090T6', 'AS500M_E066N096T6', 'AS500M_E072N090T6',
-            'AS500M_E072N096T6', 'NA500M_E054N072T6', 'NA500M_E054N078T6',
-            'NA500M_E060N072T6'
-        ]
+        desired_tiles = ['AS500M_E066N090T6', 'AS500M_E066N096T6', 'AS500M_E072N090T6',
+                         'AS500M_E072N096T6', 'NA500M_E054N072T6', 'NA500M_E054N078T6',
+                         'NA500M_E060N072T6']
 
         assert sorted(tiles1) == sorted(desired_tiles)
 
@@ -402,10 +386,8 @@ class TestEqui7Grid(unittest.TestCase):
         grid = Equi7Grid(500)
 
         spitzbergen_geom = setup_test_geom_spitzbergen()
-        spitzbergen_geom_tiles = sorted([
-            'EU500M_E054N042T6', 'EU500M_E054N048T6', 'EU500M_E060N042T6',
-            'EU500M_E060N048T6'
-        ])
+        spitzbergen_geom_tiles = sorted(['EU500M_E054N042T6', 'EU500M_E054N048T6',
+                                         'EU500M_E060N042T6', 'EU500M_E060N048T6'])
         tiles = sorted(
             grid.search_tiles_in_roi(spitzbergen_geom, coverland=False))
 
@@ -424,18 +406,15 @@ class TestEqui7Grid(unittest.TestCase):
         grid = Equi7Grid(500)
 
         geom_siberia_tiles = sorted(['AS500M_E066N090T6', 'AS500M_E072N090T6'])
-        poly_siberia_antim_180plus = setup_test_geom_siberia_antimeridian_180plus(
-        )
-        tiles = sorted(
-            grid.search_tiles_in_roi(poly_siberia_antim_180plus,
-                                     coverland=False))
+        poly_siberia_antim_180plus = setup_test_geom_siberia_antimeridian_180plus()
+        tiles = sorted(grid.search_tiles_in_roi(poly_siberia_antim_180plus, coverland=False))
 
         assert sorted(tiles) == sorted(geom_siberia_tiles)
 
         geom_siberia_alaska_tiles = sorted([
             'AS500M_E066N090T6', 'AS500M_E072N090T6', 'AS500M_E072N096T6',
-            'NA500M_E054N072T6', 'NA500M_E054N078T6', 'NA500M_E060N078T6'
-        ])
+            'NA500M_E054N072T6', 'NA500M_E054N078T6', 'NA500M_E060N078T6'])
+
         poly_siberia_alaska = setup_test_geom_siberia_alaska()
         tiles = sorted(
             grid.search_tiles_in_roi(poly_siberia_alaska, coverland=True))

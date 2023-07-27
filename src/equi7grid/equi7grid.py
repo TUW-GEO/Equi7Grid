@@ -142,8 +142,7 @@ class Equi7Grid(TiledProjectionSystem):
         if sampling <= 999:
             sampling_str = str(sampling).rjust(3, '0')
         if sampling >= 1000:
-            sampling_str = "".join(
-                (str(sampling / 1000.0)[0], 'K', str(sampling / 1000.0)[2]))
+            sampling_str = "".join((str(sampling / 1000.0)[0], 'K', str(sampling / 1000.0)[2]))
         return sampling_str
 
     @staticmethod
@@ -217,8 +216,7 @@ class Equi7Grid(TiledProjectionSystem):
             tilecode = "T1"
         else:
             msg = "Error: Given resolution %d is not supported!" % sampling
-            msg += " Supported resolutions: {}".format(
-                str(Equi7Grid._static_sampling))
+            msg += " Supported resolutions: {}".format(str(Equi7Grid._static_sampling))
             raise ValueError(msg)
 
         return tilecode
@@ -327,10 +325,8 @@ class Equi7Grid(TiledProjectionSystem):
         # get the subgrid
         sg, _, _ = self.lonlat2xy(lon, lat)
 
-        lon0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm(
-            'central_meridian')
-        lat0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm(
-            'latitude_of_origin')
+        lon0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm('central_meridian')
+        lat0 = self.subgrids[str(sg)].core.projection.osr_spref.GetProjParm('latitude_of_origin')
 
         # get spherical distance and azimuth between projection centre and point of interest
         geod = Geodesic.WGS84
@@ -374,18 +370,15 @@ class Equi7Subgrid(TiledProjection):
         self.core = _core
 
         # holds name of the subgrid
-        self.name = ''.join(('EQUI7_', continent,
-                             Equi7Grid.encode_sampling(core.sampling), 'M'))
+        self.name = ''.join(('EQUI7_', continent, Equi7Grid.encode_sampling(core.sampling), 'M'))
 
         # holds the extent of the subgrid in the lonlat-space
-        self.polygon_geog = create_geometry_from_wkt(data['zone_extent'],
-                                                     epsg=4326)
+        self.polygon_geog = create_geometry_from_wkt(data['zone_extent'], epsg=4326)
 
         # defines the tilingsystem of the subgrid
         self.tilesys = Equi7TilingSystem(self.core, self.polygon_geog)
 
-        super(Equi7Subgrid, self).__init__(self.core, self.polygon_geog,
-                                           self.tilesys)
+        super(Equi7Subgrid, self).__init__(self.core, self.polygon_geog, self.tilesys)
 
     def calc_length_distortion(self, x, y):
         """
@@ -450,8 +443,7 @@ class Equi7TilingSystem(TilingSystem):
         super(Equi7TilingSystem, self).__init__(core, polygon_geog, 0, 0)
 
         self.msg1 = '"tilename" is not properly defined! Examples: ' \
-                    '"{0}{1:03d}M_E012N036{2}" ' \
-                    'or "E012N036{2}"'.format(
+                    '"{0}{1:03d}M_E012N036{2}" or "E012N036{2}"'.format(
                         self.core.tag, self.core.sampling, self.core.tiletype)
         self.msg2 = 'East and North coordinates of lower-left-pixel ' \
                     'must be multiples of {}00km!'.format(
@@ -553,9 +545,11 @@ class Equi7TilingSystem(TilingSystem):
 
         # gives long-form of tilename (e.g. "EU500M_E012N018T6")
         tilename = "{}{}M_E{:03d}N{:03d}{}".format(
-            self.core.tag, Equi7Grid.encode_sampling(sampling),
-            int(llx) // 100000,
-            int(lly) // 100000, tilecode)
+                        self.core.tag,
+                        Equi7Grid.encode_sampling(sampling),
+                        int(llx) // 100000,
+                        int(lly) // 100000,
+                        tilecode)
 
         if shortform:
             tilename = self.tilename2short(tilename)
