@@ -33,7 +33,7 @@
 
 
 """
-
+import numpy as np
 from equi7grid.equi7grid import Equi7Grid
 from geospade.raster import RegularMosaicGeometry
 from geospade.raster import Tile
@@ -45,6 +45,8 @@ def run1():
     eg = Equi7Grid(500)
 
     for sg in ['EU']:#eg.subgrids:
+
+        boundary = eg.subgrids[sg].polygon_proj
 
         # all tiles covering the full AF BB
         x1, x2, y1, y2 = list(eg.subgrids[sg].get_bbox_proj())
@@ -71,25 +73,75 @@ def run1():
             sref = SpatialRef(t.core.projection.wkt)
             md = {'covers_land': tile in at_cl}
 
-            gst = Tile(n_rows, n_cols, sref, geotrans=geotransform, name=name, active=tile in at_sh, metadata=md)
+            mosaic_topo = 'OUTER'
+            within = t.get_extent_geometry_proj().Within(boundary)
+            intersects = t.get_extent_geometry_proj().Intersects(boundary)
+            if within:
+                mosaic_topo = 'INNER'
+            elif intersects:
+                mosaic_topo = 'BOUNDARY'
+
+            gst = Tile(n_rows, n_cols, sref, geotrans=geotransform, name=name, mosaic_topology=mosaic_topo,
+                       active=tile in at_sh, px_origin='ll',
+                       metadata=md)
 
             #gst.to_json(r"D:\Arbeit\atasks\202307_equi7grid_update\geojson\tests.json")
             tile_objects.append(gst)
 
         mosaic_name = "{} subgrid".format(sg)
-        mosaic_geom = RegularMosaicGeometry.from_tile_list(tile_objects, name=mosaic_name, boundary=eg.subgrids[sg].polygon_geog)
-        mosaic_geom.to_json(r"D:\Arbeit\atasks\202307_equi7grid_update\geojson\{}.json".format(sg))
 
+
+        mosaic_geom = RegularMosaicGeometry.from_tile_list(tile_objects, name=mosaic_name, boundary=boundary)
+        mosaic_geom.to_json(r"D:\Arbeit\atasks\202307_equi7grid_update\geojson\{}_5.json".format(sg))
         pass
 
+def run3():
+
+    sampling = 500
+
+    eg = Equi7Grid(sampling)
+
+    tilesize = eg.core.tile_xsize_m
+    tilecode = eg.get_tiletype()
+    sample_size = int(tilesize / sampling)
+
+
+    for sg in ['EU']:  # eg.subgrids:
+
+        sref = SpatialRef(eg.subgrids[sg].core.projection.wkt)
+
+        bd = eg.subgrids[sg].polygon_proj
+        bbox = tuple([np.round(x, decimals=5) for x in bd.GetEnvelope()])
+        n_rows = int(bbox[3] // tilesize + 1)
+        n_cols = int(bbox[1] // tilesize + 1)
+
+        gt = (0, sampling, 0, 0, 0, sampling * -1)
+
+        mosaic_name = "{} subgrid".format(sg)
+
+
+
+        mg = RegularMosaicGeometry.from_rectangular_definition(n_rows, n_cols, tilesize, tilesize, sref,
+                                    geotrans=gt, tile_class=Tile, tile_kwargs=None,
+                                    name_frmt="E{:03d}N{:03d}" + tilecode, boundary=bd, name=mosaic_name, description="")
+
+        mg.to_json(r"D:\Arbeit\atasks\202307_equi7grid_update\geojson\{}_6.json".format(sg))
+        mg.plot(label_tiles=True, show=True)
+        pass
 
 def run2():
-
-    jsonfile = r"D:\Arbeit\atasks\202307_equi7grid_update\geojson\EU.json"
+    import matplotlib.pyplot as plt
+    jsonfile = r"D:\Arbeit\atasks\202307_equi7grid_update\geojson\EU_5.json"
 
     mosaicgeom = RegularMosaicGeometry.from_json(jsonfile)
 
-    mosaicgeom.plot(label_tiles=True, show=True, plot_boundary=False)
+
+    #mosaicgeom.poi2tile()
+    tiles = mosaicgeom.get_neighbouring_tiles('E066N030T6', active_only=True)
+    #plt.imshow(tiles['E066N036T6'].mask)
+    #plt.show()
+    mosaicgeom.plot(label_tiles=True, show=True)
+    RegularMosaicGeometry.from_rectangular_definition()
     pass
 
 if __name__ == '__main__':
