@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ['3.8', '3.9']
+        python-version: ['3.8', '3.9', '3.10']
         ymlfile: ['environment.yml']
     name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -27,7 +27,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           environment-file: ${{ matrix.ymlfile }}
-          activate-environment: equi7grid_env
+          activate-environment: equi7grid
           auto-activate-base: false
       - name: Print infos
         shell: bash -l {0}
@@ -50,7 +50,7 @@ jobs:
       - name: Install package and test
         shell: bash -l {0}
         run: |
-          pip install -e .
+          pip install -e .[testing]
           pytest --cache-clear
       - name: Upload Coverage
         shell: bash -l {0}
@@ -64,16 +64,9 @@ jobs:
         shell: bash -l {0}
         run: |
           git status
-          pip install setuptools_scm
-          if [ ${{ matrix.os }} == "windows-latest" ]
-          then
-            # build whls on windows
-            pip install wheel
-            python setup.py bdist_wheel --dist-dir .artifacts/dist
-          else
-            # build dist on linux
-            python setup.py sdist --dist-dir .artifacts/dist
-          fi
+          make dist
+          # build dist on linux
+          python setup.py sdist --dist-dir .artifacts/dist
           ls .artifacts/dist
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2

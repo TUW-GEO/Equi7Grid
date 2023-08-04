@@ -7,16 +7,16 @@ on:
     - cron: '0 0 * * *' # daily
 
 env:
-  GDAL_DATA: C:\Miniconda3\envs\equi7grid_env\Library\share\gdal
-  PROJ_LIB: C:\Miniconda3\envs\equi7grid_env\Library\share\proj
-  GDAL_DRIVER_PATH: C:\Miniconda3\envs\equi7grid_env\Library\bin
+  GDAL_DATA: C:\Miniconda3\envs\equi7grid\Library\share\gdal
+  PROJ_LIB: C:\Miniconda3\envs\equi7grid\Library\share\proj
+  GDAL_DRIVER_PATH: C:\Miniconda3\envs\equi7grid\Library\bin
 
 jobs:
   build:
     strategy:
       matrix:
         os: ["windows-latest"]
-        python-version: ['3.8', '3.9']
+        python-version: ['3.8', '3.9', '3.10']
         ymlfile: ['environment.yml']
     name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -32,7 +32,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           environment-file: environment.yml
-          activate-environment: equi7grid_env
+          activate-environment: equi7grid
           auto-activate-base: false
       - name: Print infos
         shell: bash -l {0}
