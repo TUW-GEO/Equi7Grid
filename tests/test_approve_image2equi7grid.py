@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from approvaltests.approvals import verify_file
 from approvaltests.namer import NamerFactory
@@ -11,6 +13,7 @@ def out_dir(tmp_path):
     return tmp_path
 
 
+@pytest.mark.skipif(os.name == 'nt', reason="CI Windows has troubles creating directories")
 def test_approve_imag2equi7grid(input_dir, out_dir):
     # begin-snippet: image2equi7grid-example
     input_file = input_dir / "lake_in_russia_lonlat.tif"
