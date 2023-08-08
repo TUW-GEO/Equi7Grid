@@ -1,0 +1,11 @@
+name: equi7grid
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - gdal=3.0.2
+  - numpy
+  - scipy
+  - cartopy
+  - pyproj
+  - pip

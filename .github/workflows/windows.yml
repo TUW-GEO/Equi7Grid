@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: ["windows-latest"]
         python-version: ['3.8', '3.9', '3.10']
-        ymlfile: ['environment.yml']
+        ymlfile: ['environment_win.yml']
     name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -30,7 +30,7 @@ jobs:
           miniconda-version: "latest"
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          environment-file: environment.yml
+          environment-file: environment_win.yml
           activate-environment: equi7grid
           auto-activate-base: false
       - name: Print infos

@@ -145,7 +145,7 @@ the [installation instructions](https://conda.io/projects/conda/en/stable/user-g
 Create the `equi7grid` conda environment from the `environment.yml` provided at the root of the repository.
 
 ```
-conda env create -f environment.yml
+conda env create -f environment_win.yml
 ```
 
 See also the official anaconda documentation
