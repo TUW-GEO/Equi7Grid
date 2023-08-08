@@ -325,9 +325,7 @@ class TestEqui7Grid(unittest.TestCase):
 
     def test_search_tiles_lon_lat_extent(self):
         # begin-snippet: search-tiles-in-lon-lat-roi
-        tiles = Equi7Grid(500).search_tiles_in_roi(bbox=[(0, 30), (10, 40)],
-                                                   coverland=True)
-
+        tiles = Equi7Grid(500).search_tiles_in_roi(bbox=[(0, 30), (10, 40)], coverland=True)
         assert sorted(tiles) == sorted([
             'EU500M_E036N006T6', 'EU500M_E042N000T6', 'EU500M_E042N006T6',
             'AF500M_E030N084T6', 'AF500M_E030N090T6', 'AF500M_E036N084T6',
