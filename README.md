@@ -159,8 +159,7 @@ pytest tests/
 
 You can also have a look at the source of the Makefile for more detailed installation and testing options.
 
-Guidelines
-----------
+## Guidelines
 
 If you want to contribute please follow these steps:
 
@@ -172,8 +171,3 @@ If you want to contribute please follow these steps:
   We use py.test so a simple function called test_my_feature is enough
 - submit a pull request to our master branch
 
-Note
-====
-
-This project has been set up using PyScaffold 3.3 For details and usage
-information on PyScaffold see http://pyscaffold.readthedocs.org/.
