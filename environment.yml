@@ -6,5 +6,6 @@ dependencies:
   - gdal
   - numpy
   - scipy
+  - cartopy
   - pyproj
   - pip
