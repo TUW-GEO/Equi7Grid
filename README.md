@@ -36,19 +36,6 @@ OC: '+proj=aeqd +lat_0=-19.5 +lon_0=131.5 +x_0=6988408.5356 +y_0=7654884.53733 +
 SA: '+proj=aeqd +lat_0=-14 +lon_0=-60.5 +x_0=7257179.23559 +y_0=5592024.44605 +datum=WGS84 +units=m +no_defs'
 ```
 
-## Citation
-
-[![citation](https://zenodo.org/badge/DOI/10.5281/zenodo.1048530.svg)](https://doi.org/10.5281/zenodo.1048530)
-
-If you use the software in a publication then please cite it using the Zenodo DOI.
-Be aware that this badge links to the latest package version.
-
-Please select your specific version at https://doi.org/10.5281/zenodo.1048530 to get the DOI of that version.
-You should normally always use the DOI for the specific version of your record in citations.
-This is to ensure that other researchers can access the exact research artefact you used for reproducibility.
-
-You can find additional information regarding DOI versioning at http://help.zenodo.org/#versioning
-
 ## Installation
 
 This package can be installed through pip:
@@ -77,12 +64,6 @@ assert sorted(tiles) == sorted([
 <sup><a href='/tests/test_equi7grid.py#L327-L333' title='Snippet source file'>snippet source</a> | <a href='#snippet-search-tiles-in-lon-lat-roi' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
-## Contribute
-
-We are happy if you want to contribute. Please raise an issue explaining what
-is missing or if you find a bug. We will also gladly accept pull requests
-against our master branch for new features or bug fixes.
-
 ## Development setup
 
 For development, we recommend using the `make` tool to automatically create python environments and install more complex
@@ -96,7 +77,7 @@ subsequent section.
 #### Conda
 
 Make sure miniconda3 is installed by following
-the [official installation instructions](https://conda.io/projects/conda/en/stable/user-guide/install/index.html>).
+the [official installation instructions](https://conda.io/projects/conda/en/stable/user-guide/install/index.html).
 To create a new development environment using `conda` make the `conda` rule:
 
 ```bash
@@ -137,7 +118,7 @@ make test
 ### Creating python environments on Windows
 
 First make sure miniconda3 is installed on your system by following
-the [installation instructions](https://conda.io/projects/conda/en/stable/user-guide/install/index.html>).
+the [installation instructions](https://conda.io/projects/conda/en/stable/user-guide/install/index.html).
 
 Create the `equi7grid` conda environment from the `environment.yml` provided at the root of the repository.
 
@@ -146,7 +127,7 @@ conda env create -f environment.yml
 ```
 
 See also the official anaconda documentation
-for [detailed instructions on environments and environment files](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>).
+for [detailed instructions on environments and environment files](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
 
 Now you should be able to activate the environment:
 
@@ -177,7 +158,13 @@ pytest tests/
 
 You can also have a look at the source of the Makefile for more detailed installation and testing options.
 
-## Guidelines
+## Contribute
+
+We are happy if you want to contribute. Please raise an issue explaining what
+is missing or if you find a bug. We will also gladly accept pull requests
+against our master branch for new features or bug fixes.
+
+### Guidelines
 
 If you want to contribute please follow these steps:
 
@@ -189,3 +176,15 @@ If you want to contribute please follow these steps:
   We use py.test so a simple function called test_my_feature is enough
 - submit a pull request to our master branch
 
+## Citation
+
+[![citation](https://zenodo.org/badge/DOI/10.5281/zenodo.1048530.svg)](https://doi.org/10.5281/zenodo.1048530)
+
+If you use the software in a publication then please cite it using the Zenodo DOI.
+Be aware that this badge links to the latest package version.
+
+Please select your specific version at https://doi.org/10.5281/zenodo.1048530 to get the DOI of that version.
+You should normally always use the DOI for the specific version of your record in citations.
+This is to ensure that other researchers can access the exact research artefact you used for reproducibility.
+
+You can find additional information regarding DOI versioning at http://help.zenodo.org/#versioning
