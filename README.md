@@ -69,7 +69,17 @@ assert sorted(tiles) == sorted([
 ### Convert GeoTIFF raster data to Equi7 tiles
 The package also provides the `image2equi7grid` convenience method to quickly convert existing raster data stored as GeoTIFFs to tiles in Equi7Grid projection:
 
-snippet: image2equi7grid-example
+<!-- snippet: image2equi7grid-example -->
+<a id='snippet-image2equi7grid-example'></a>
+```py
+input_file = input_dir / "lake_in_russia_lonlat.tif"
+image2equi7grid(Equi7Grid(100), input_file.as_posix(), out_dir.as_posix())
+
+assert (out_dir / "EQUI7_AS100M/E018N066T6/lake_in_russia_lonlat_AS100M_E018N066T6.tif").exists()
+assert (out_dir / "EQUI7_EU100M/E072N030T6/lake_in_russia_lonlat_EU100M_E072N030T6.tif").exists()
+```
+<sup><a href='/tests/test_approve_image2equi7grid.py#L15-L21' title='Snippet source file'>snippet source</a> | <a href='#snippet-image2equi7grid-example' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 The tool will generate a folder structure containing the Equi7 tiles representing the input raster.
 It uses gdal to efficiently warp the raster data to the Equi7 projection.
