@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: '0 0 * * *' # daily
 
+env:
+  PROJ_LIB: C:\Miniconda3\envs\equi7grid\Library\share\proj
+  USE_PATH_FOR_GDAL_PYTHON: YES
+
 jobs:
   build:
     strategy:
