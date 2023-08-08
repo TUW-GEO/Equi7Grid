@@ -514,8 +514,6 @@ def call_gdal_util(util_name,
     # get the gdal installed path if it is set in system environmental variable
     if not gdal_path:
         gdal_path = _find_gdal_path()
-    if not gdal_path:
-        raise OSError("gdal utility not found in system environment!")
 
     # prepare the command string
     cmd = []
@@ -580,6 +578,9 @@ def call_gdal_util(util_name,
 
 def _find_gdal_path():
     """find the gdal installed path from the system enviroment variables."""
+    if "CONDA_PREFIX" in os.environ:
+        return os.path.join(os.environ['CONDA_PREFIX'], 'bin')
+
     evn_name = 'GDAL_DATA'
     # print os.environ[gdal_env_var_name]
     return os.environ[evn_name].replace('\\gdal-data','') if evn_name in os.environ else None

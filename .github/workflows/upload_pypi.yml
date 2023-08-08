@@ -26,7 +26,7 @@ jobs:
 
       - name: Build and Upload to pypi
         run: |
-          python setup.py sdist bdist_wheel
+          make dist
           python -m twine upload dist/*
         env:
           TWINE_USERNAME: __token__

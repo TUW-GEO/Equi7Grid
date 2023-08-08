@@ -7,17 +7,16 @@ on:
     - cron: '0 0 * * *' # daily
 
 env:
-  GDAL_DATA: C:\Miniconda3\envs\equi7grid_env\Library\share\gdal
-  PROJ_LIB: C:\Miniconda3\envs\equi7grid_env\Library\share\proj
-  GDAL_DRIVER_PATH: C:\Miniconda3\envs\equi7grid_env\Library\bin
+  PROJ_LIB: C:\Miniconda3\envs\equi7grid\Library\share\proj
+  USE_PATH_FOR_GDAL_PYTHON: YES
 
 jobs:
   build:
     strategy:
       matrix:
         os: ["windows-latest"]
-        python-version: ['3.8', '3.9']
-        ymlfile: ['environment.yml']
+        python-version: ['3.8', '3.9', '3.10']
+        ymlfile: ['environment_win.yml']
     name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -31,8 +30,8 @@ jobs:
           miniconda-version: "latest"
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          environment-file: environment.yml
-          activate-environment: equi7grid_env
+          environment-file: environment_win.yml
+          activate-environment: equi7grid
           auto-activate-base: false
       - name: Print infos
         shell: bash -l {0}
@@ -43,8 +42,9 @@ jobs:
           pip list
           which pip
           which python
+          which gdalwarp
       - name: Install package and test
         shell: bash -l {0}
         run: |
-          pip install -e .
+          pip install -e .[testing]
           pytest --cache-clear

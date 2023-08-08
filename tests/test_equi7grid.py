@@ -29,6 +29,7 @@ from pytileproj.geometry import setup_test_geom_siberia_alaska
 
 from equi7grid.equi7grid import Equi7Grid
 
+
 ### for testing at BBM machine
 # # gdal 2
 # import os
@@ -227,16 +228,16 @@ class TestEqui7Grid(unittest.TestCase):
         """
         # for subgrid Africa
         aeqd_wkt = ('PROJCS["Azimuthal_Equidistant",'
-                     'GEOGCS["GCS_WGS_1984",'
-                     'DATUM["D_WGS_1984",'
-                     'SPHEROID["WGS_1984",6378137.0,298.257223563]],'
-                     'PRIMEM["Greenwich",0.0],'
-                     'UNIT["Degree",0.0174532925199433]],'
-                     'PROJECTION["Azimuthal_Equidistant"],'
-                     'PARAMETER["false_easting",5621452.01998],'
-                     'PARAMETER["false_northing",5990638.42298],'
-                     'PARAMETER["longitude_of_center",21.5],'
-                     'PARAMETER["latitude_of_center",8.5],UNIT["Meter",1.0]]')
+                    'GEOGCS["GCS_WGS_1984",'
+                    'DATUM["D_WGS_1984",'
+                    'SPHEROID["WGS_1984",6378137.0,298.257223563]],'
+                    'PRIMEM["Greenwich",0.0],'
+                    'UNIT["Degree",0.0174532925199433]],'
+                    'PROJECTION["Azimuthal_Equidistant"],'
+                    'PARAMETER["false_easting",5621452.01998],'
+                    'PARAMETER["false_northing",5990638.42298],'
+                    'PARAMETER["longitude_of_center",21.5],'
+                    'PARAMETER["latitude_of_center",8.5],UNIT["Meter",1.0]]')
         aeqd_crs = CRS.from_wkt(aeqd_wkt)
 
         # test locations in Africa
@@ -323,26 +324,20 @@ class TestEqui7Grid(unittest.TestCase):
         assert sorted(tiles) == sorted(desired_tiles)
 
     def test_search_tiles_lon_lat_extent(self):
-        """
-        Tests searching for tiles with input of lon lat extent
-        """
-        e7 = Equi7Grid(500)
-        tiles = e7.search_tiles_in_roi(bbox=[(0, 30), (10, 40)],
-                                       coverland=True)
-
-        tiles_all = e7.search_tiles_in_roi(bbox=[(-179.9, -89.9),
-                                                 (179.9, 89.9)],
-                                           coverland=True)
-        desired_tiles = [
+        # begin-snippet: search-tiles-in-lon-lat-roi
+        tiles = Equi7Grid(500).search_tiles_in_roi(bbox=[(0, 30), (10, 40)], coverland=True)
+        assert sorted(tiles) == sorted([
             'EU500M_E036N006T6', 'EU500M_E042N000T6', 'EU500M_E042N006T6',
             'AF500M_E030N084T6', 'AF500M_E030N090T6', 'AF500M_E036N084T6',
-            'AF500M_E036N090T6', 'AF500M_E042N084T6', 'AF500M_E042N090T6']
+            'AF500M_E036N090T6', 'AF500M_E042N084T6', 'AF500M_E042N090T6'])
+        # end-snippet
 
-        assert len(tiles_all) == 854
-        assert sorted(tiles) == sorted(desired_tiles)
+    def test_find_all_tiles_in_global_lon_lat_extent(self):
+        tiles_all = Equi7Grid(500).search_tiles_in_roi(bbox=[(-179.9, -89.9),
+                                                             (179.9, 89.9)], coverland=True)
+        assert (len(tiles_all)) == 854
 
     def test_search_tiles_lon_lat_extent_poles(self):
-
         e7 = Equi7Grid(500)
 
         tiles = e7.search_tiles_in_roi(bbox=[(-170, 88), (150.0, 90)])
@@ -475,7 +470,6 @@ class TestEqui7Grid(unittest.TestCase):
         assert sorted(tiles2) == sorted(tiles2_should)
 
     def test_create_tiles_overlapping_xybbox(self):
-
         e7_500 = Equi7Grid(500)
 
         tiles = e7_500.EU.tilesys.create_tiles_overlapping_xybbox(

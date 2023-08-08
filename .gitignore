@@ -42,3 +42,5 @@ cover/*
 MANIFEST
 /Equi7Grid.egg-info/
 /equi7grid/Equi7Grid_old.py
+
+venv/
