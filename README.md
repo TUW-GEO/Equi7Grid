@@ -88,7 +88,7 @@ image2equi7grid(Equi7Grid(100), input_file.as_posix(), out_dir.as_posix())
 assert (out_dir / "EQUI7_AS100M/E018N066T6/lake_in_russia_lonlat_AS100M_E018N066T6.tif").exists()
 assert (out_dir / "EQUI7_EU100M/E072N030T6/lake_in_russia_lonlat_EU100M_E072N030T6.tif").exists()
 ```
-<sup><a href='/tests/test_approve_image2equi7grid.py#L15-L21' title='Snippet source file'>snippet source</a> | <a href='#snippet-image2equi7grid-example' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/tests/test_approve_image2equi7grid.py#L18-L24' title='Snippet source file'>snippet source</a> | <a href='#snippet-image2equi7grid-example' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 The tool uses `gdal` to efficiently warp the raster data to the Equi7 projection, and generate a folder structure for each Equi7 tile that covers the input raster.
