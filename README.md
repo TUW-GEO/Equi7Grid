@@ -59,6 +59,14 @@ pip install Equi7Grid
 
 Installs for `scipy` and `gdal` are required from conda or conda-forge (see below how to set up a fresh environment).
 
+## Examples
+
+The `Equi7Grid` packages allows you to interact with different projections, and query information from the Equi7 raster.
+
+You can retrieve all tiles covering a region of interest defined using lan/lot coordinates using `search_tiles_in_roi`:
+
+snippet: search-tiles-in-lon-lat-roi
+
 ## Contribute
 
 We are happy if you want to contribute. Please raise an issue explaining what
