@@ -83,44 +83,93 @@ against our master branch for new features or bug fixes.
 Development setup
 -----------------
 
-For Development we recommend a ``conda`` environment.
+For development we recommend using the ``make`` tool to automatically create python environments and install more complex dependencies i.e. ``gdal``.
 
-Example installation script
----------------------------
+Instruction on how to setup an environment on systems without proper ``make`` support, such as Windows, can be found in a subsequent section.
 
-The following script will install a fresh miniconda and setup the environment on a UNIX
-like system. In this example, Miniconda will be installed into ``$HOME/miniconda``.
+Creating python environments with make
+--------------------------------------
 
-.. code::
+Conda environment
+`````````````````
 
-    wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-    bash miniconda.sh -b -p $HOME/miniconda
-    export PATH="$HOME/miniconda/bin:$PATH"
-    conda config --set always_yes yes --set changeps1 no
-    conda update -n base -c defaults conda
-    conda install mamba -c conda-forge
-    mamba create --name equi7grid_env -c conda-forge python numpy scipy gdal rasterio geopandas cartopy pyproj pip --yes
-    conda activate equi7grid_env
-
-This script adds ``$HOME/miniconda/bin`` temporarily to the ``PATH`` to do this
-permanently add ``export PATH="$HOME/miniconda/bin:$PATH"`` to your ``.bashrc``
-or ``.zshrc``
-
-The last line in the example activates the ``equi7grid_env`` environment.
-
-After you have cloned the package from this repository, you should be able to run:
+Make sure miniconda3 is installed by following the `official installation instructions <https://conda.io/projects/conda/en/stable/user-guide/install/index.html>`__.
+To create a new development environment using ``conda`` make the ``conda`` rule:
 
 .. code::
 
-    python setup.py test
+    make conda
 
-to run the test suite,
+This will create a new conda environment called equi7grid and install all necessary dependencies.
 
-or alternatively, for convenience, install from pip
+Virtualenv environment
+``````````````````````
+
+Make sure you have installed ``virtualenv`` and ``gdal`` on your system.
+For instance under Ubuntu you can install gdal using ``apt install libgdal-dev``, and ``virtualenv`` using ``apt install libgdal-dev``.
+To setup a virtualenv environment simply make the ``venv`` rule:
 
 .. code::
 
-    pip install Equi7Grid
+    make venv
+
+This will create a ``virtualenv`` environment within a ``venv`` folder at the root of the project.
+It will install the ``gdal`` dependency using `pygdal <https://pypi.org/project/pygdal/>__` which requires ``gdal`` to be installed on the system.
+
+Environment with test dependencies
+``````````````````````````````````
+
+To create a testing environment you can set the ``TEST_ENV=1`` parameter:
+.. code::
+
+    make venv TEST_ENV=1
+
+After activating the environment you can make the ``test`` rule to run all unit tests:
+.. code::
+
+    make test
+
+Creating python environments on Windows
+---------------------------------------
+First make sure miniconda3 is installed on your system by following the `installation instructions <https://conda.io/projects/conda/en/stable/user-guide/install/index.html>`__.
+
+Create the ``equi7grid`` conda environment from the ``environment.yml`` provided at the root of the repository.
+
+.. code::
+
+    conda env create -f environment.yml
+
+See also the official anaconda documentation for `detailed instructions on environments and environment files <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__.
+
+Now you should be able to activate the environment:
+
+.. code::
+
+    conda activate equi7grid
+
+Once activate you can install the Equi7Grid package in development mode using pip, by running the following command in the root directory of the repository:
+
+.. code::
+
+    pip install -e .
+
+Environment with test dependencies
+``````````````````````````````````
+
+To install the test dependencies as well use:
+
+.. code::
+
+    pip install -e .[testing]
+
+Now you should be able to run all unit tests:
+
+.. code::
+
+    pytest tests/
+
+
+You can also have a look at the source of the Makefile for more detailed installation and testing options.
 
 Guidelines
 ----------
