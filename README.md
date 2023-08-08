@@ -58,7 +58,7 @@ Installs for `scipy` and `gdal` are required from conda or conda-forge (see [bel
 
 ## Usage examples
 
-The `Equi7Grid` package allows you to interact with different projections, query information from the Equi7Grid geometries, and access the tiling system.
+The `Equi7Grid` package provides python tools to interact with different projections, query information from the Equi7Grid geometries, and access the tiling system.
 
 ### Example 1: Retrieving Equi7 tiles covering a region of interest
 
