@@ -6,17 +6,25 @@
 [![pypi package](https://badge.fury.io/py/Equi7Grid.svg)](https://badge.fury.io/py/Equi7Grid)
 [![documentation](https://readthedocs.org/projects/equi7grid/badge/?version=latest)](https://equi7grid.readthedocs.io/)
 
-A python class for working with Equi7Grid - how to convert to - how to use the tiling system - etc.
+The **Equi7Grid** is a spatial reference system designed to handle efficiently the archiving, processing, and displaying of **high resolution raster image data**. It supports datacubes holding large volumes of satellite imagery, as it preserves geometric accuracy and **minimises data oversampling over global land surfaces** to a very low value of 2%.
 
-It's a python package that handles the geometric and geographic operations of a gridded and tiled projection system.
-It was designed for data cubes ingesting satellite imagery and builds the basis for the Equi7Grid (
-see https://github.com/TUW-GEO/Equi7Grid).
+This package contains:
+- Geometries and projection-files defining the contentinal zones, projection parameters, base tilings, etc.
+- A python class for working with Equi7Grid: how to convert to, how to use the tiling system, how to identify coordinates, etc.
 
-A detailed documentation on the Equi7Grid definition is at:
+A detailed documentation on the Equi7Grid definition is here at:
 
 `~/docs/doc_files/`
 
-Overlays for visualisation in Google Earth can be found here:
+and its scientific background is published in this [article](https://www.sciencedirect.com/science/article/pii/S0098300414001629).
+
+## Geometries
+
+Shapefiles for the continental zone boundaries, tilings, are here, with files in `PROJ` projected to the Equi7Grid space (meters), and in `GEOG` corresponding files in common geographic Lon-Lat space (degrees):
+
+`~/src/equi7grid/grids/`
+
+Overlays for visualisation in Google Earth are here:
 
 `~/docs/doc_files/google_earth_overlays/`
 
@@ -36,7 +44,7 @@ OC: '+proj=aeqd +lat_0=-19.5 +lon_0=131.5 +x_0=6988408.5356 +y_0=7654884.53733 +
 SA: '+proj=aeqd +lat_0=-14 +lon_0=-60.5 +x_0=7257179.23559 +y_0=5592024.44605 +datum=WGS84 +units=m +no_defs'
 ```
 
-## Installation
+## User installation
 
 This package can be installed through pip:
 
@@ -46,13 +54,13 @@ pip install Equi7Grid
 
 Installs for `scipy` and `gdal` are required from conda or conda-forge (see below how to set up a fresh environment).
 
-## Examples
+## Usage examples
 
-The `Equi7Grid` packages allows you to interact with different projections, and query information from the Equi7 raster.
+The `Equi7Grid` package allows you to interact with different projections, query information from the Equi7Grid geometries, and access the tiling system.
 
 ### Retrieving tiles covering a region of interest
 
-You can retrieve all tiles covering a region of interest defined using lan/lot coordinates using `search_tiles_in_roi`:
+You can retrieve all tiles covering a region of interest defined using Lon-Lat coordinates using `search_tiles_in_roi`:
 
 <!-- snippet: search-tiles-in-lon-lat-roi -->
 <a id='snippet-search-tiles-in-lon-lat-roi'></a>
@@ -78,7 +86,7 @@ image2equi7grid(Equi7Grid(100), input_file.as_posix(), out_dir.as_posix())
 assert (out_dir / "EQUI7_AS100M/E018N066T6/lake_in_russia_lonlat_AS100M_E018N066T6.tif").exists()
 assert (out_dir / "EQUI7_EU100M/E072N030T6/lake_in_russia_lonlat_EU100M_E072N030T6.tif").exists()
 ```
-<sup><a href='/tests/test_approve_image2equi7grid.py#L18-L24' title='Snippet source file'>snippet source</a> | <a href='#snippet-image2equi7grid-example' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/tests/test_approve_image2equi7grid.py#L15-L21' title='Snippet source file'>snippet source</a> | <a href='#snippet-image2equi7grid-example' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 The tool will generate a folder structure containing the Equi7 tiles derived from the input raster.
