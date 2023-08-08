@@ -514,8 +514,6 @@ def call_gdal_util(util_name,
     # get the gdal installed path if it is set in system environmental variable
     if not gdal_path:
         gdal_path = _find_gdal_path()
-    if not gdal_path:
-        raise OSError("gdal utility not found in system environment!")
 
     # prepare the command string
     cmd = []

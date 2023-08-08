@@ -50,6 +50,8 @@ Installs for `scipy` and `gdal` are required from conda or conda-forge (see belo
 
 The `Equi7Grid` packages allows you to interact with different projections, and query information from the Equi7 raster.
 
+### Retrieving tiles covering a region of interest
+
 You can retrieve all tiles covering a region of interest defined using lan/lot coordinates using `search_tiles_in_roi`:
 
 <!-- snippet: search-tiles-in-lon-lat-roi -->
@@ -63,6 +65,16 @@ assert sorted(tiles) == sorted([
 ```
 <sup><a href='/tests/test_equi7grid.py#L327-L333' title='Snippet source file'>snippet source</a> | <a href='#snippet-search-tiles-in-lon-lat-roi' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
+
+### Convert GeoTIFF raster data to Equi7 tiles
+The package also provides the `image2equi7grid` convenience method to quickly convert existing raster data stored as GeoTIFFs to tiles in Equi7Grid projection:
+
+snippet: image2equi7grid-example
+
+The tool will generate a folder structure containing the Equi7 tiles representing the input raster.
+It uses gdal to efficiently warp the raster data to the Equi7 projection.
+
+**Note**: Windows users might need to manually specify the gdal path as part of the function arguments.
 
 ## Development setup
 
