@@ -65,7 +65,19 @@ The `Equi7Grid` packages allows you to interact with different projections, and 
 
 You can retrieve all tiles covering a region of interest defined using lan/lot coordinates using `search_tiles_in_roi`:
 
-snippet: search-tiles-in-lon-lat-roi
+<!-- snippet: search-tiles-in-lon-lat-roi -->
+<a id='snippet-search-tiles-in-lon-lat-roi'></a>
+```py
+tiles = Equi7Grid(500).search_tiles_in_roi(bbox=[(0, 30), (10, 40)],
+                                           coverland=True)
+
+assert sorted(tiles) == sorted([
+    'EU500M_E036N006T6', 'EU500M_E042N000T6', 'EU500M_E042N006T6',
+    'AF500M_E030N084T6', 'AF500M_E030N090T6', 'AF500M_E036N084T6',
+    'AF500M_E036N090T6', 'AF500M_E042N084T6', 'AF500M_E042N090T6'])
+```
+<sup><a href='/tests/test_equi7grid.py#L327-L335' title='Snippet source file'>snippet source</a> | <a href='#snippet-search-tiles-in-lon-lat-roi' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ## Contribute
 
