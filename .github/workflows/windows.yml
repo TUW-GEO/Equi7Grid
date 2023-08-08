@@ -10,6 +10,7 @@ env:
   GDAL_DATA: C:\Miniconda3\envs\equi7grid\Library\share\gdal
   PROJ_LIB: C:\Miniconda3\envs\equi7grid\Library\share\proj
   GDAL_DRIVER_PATH: C:\Miniconda3\envs\equi7grid\Library\bin
+  USE_PATH_FOR_GDAL_PYTHON: YES
 
 jobs:
   build:
