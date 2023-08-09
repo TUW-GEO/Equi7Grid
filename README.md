@@ -8,6 +8,8 @@
 
 The **Equi7Grid** is a spatial reference system designed to handle efficiently the archiving, processing, and displaying of **high resolution raster image data**. It supports geo-datacubes holding large volumes of satellite imagery, as it preserves geometric accuracy and **minimises data oversampling over global land surfaces** to a very low value of 3%.
 
+---
+
 ![plot](./docs/doc_files/flyer_equi7grid.png)
 
 This package contains:
