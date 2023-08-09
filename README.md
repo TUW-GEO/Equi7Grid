@@ -8,8 +8,10 @@
 
 The **Equi7Grid** is a spatial reference system designed to handle efficiently the archiving, processing, and displaying of **high resolution raster image data**. It supports geo-datacubes holding large volumes of satellite imagery, as it preserves geometric accuracy and **minimises data oversampling over global land surfaces** to a very low value of 3%.
 
+![plot](./docs/doc_files/flyer_equi7grid.png)
+
 This package contains:
-- Geometries and projection-files defining the contentinal zones, projection parameters, base tilings, etc.
+- Geometries and projection-files defining the contentinal zones, coordinate system, projection parameters, base tilings, etc.
 - A python class for working with Equi7Grid: how to convert to, how to use the tiling system, how to identify coordinates, etc.
 
 A detailed documentation on the Equi7Grid definition is at
@@ -30,7 +32,7 @@ Overlays for visualisation in Google Earth are here:
 
 `~/docs/doc_files/google_earth_overlays/`
 
-The 7 projections are completely defined by WKT-strings in the .prj-files at 
+The 7 projections (or more precisely the Projected Coordinate Reference Systems, PROJCS) are completely defined by WKT-strings in the .prj-files at 
 
 `~/wkt/`
 
@@ -97,7 +99,7 @@ The tool uses `gdal` to efficiently warp the raster data to the Equi7 projection
 
 **Note 2**: Windows users might need to manually specify the `gdal_path` as part of the function arguments, for example:
 ```py
-image2equi7grid(gdal_path=r"C:\...your_path...\envs\geospade\Library\bin")
+image2equi7grid(gdal_path=r"C:\...your_path...\envs\equi7grid\Library\bin")
 ```
 
 ### More examples ...

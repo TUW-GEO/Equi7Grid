@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version 0.2.3
+=============
+
+- update of installation resources
+- update of readme
+
 Version 0.2.2
 =============
 
