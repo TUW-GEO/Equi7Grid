@@ -20,7 +20,7 @@ A detailed documentation on the Equi7Grid definition is at
 
 `~/docs/doc_files/`
 
-and its scientific background is published in this [article](https://www.sciencedirect.com/science/article/pii/S0098300414001629).
+and its scientific background is published in this [**journal article**](https://www.sciencedirect.com/science/article/pii/S0098300414001629).
 
 ## Geometries
 
