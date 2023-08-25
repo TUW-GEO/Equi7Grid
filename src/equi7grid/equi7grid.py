@@ -569,7 +569,7 @@ class Equi7TilingSystem(TilingSystem):
         # gives long-form of tilename (e.g. "EU500M_E012N018T6")
         tilename = "{}{}M_E{:03d}N{:03d}{}".format(
                         self.core.tag,
-                        Equi7Grid.encode_sampling(sampling),
+                        Equi7Grid.encode_sampling(sampling, self.core.tile_names_in_m),
                         int(llx) // 100000,
                         int(lly) // 100000,
                         tilecode)
@@ -693,74 +693,47 @@ class Equi7TilingSystem(TilingSystem):
         """
         tf = self.core.tile_ysize_m // 100000
 
-        if self.core.tile_names_in_m:
-            # allow long-form of tilename in metres (e.g. "EU3000M_E012N018T6")
-            if len(tilename) == 17:
-                subgrid_id = tilename[0:2]
-                if subgrid_id != self.core.tag:
-                    raise ValueError(self.msg1)
-                tilename_sampling = tilename[2:].split('M')
-                sampling = Equi7Grid.decode_sampling(tilename_sampling[0])
-                tilename_remaining = tilename.split('_')[1]
-                if sampling != self.core.sampling:
-                    raise ValueError(self.msg1)
-                tile_size_m = int(tilename_remaining[-1]) * 100000
-                if tile_size_m != self.core.tile_xsize_m:
-                    raise ValueError(self.msg1)
-                llx = int(tilename_remaining[1:4])
-                if llx % tf:
-                    raise ValueError(self.msg2)
-                lly = int(tilename_remaining[5:8])
-                if lly % tf:
-                    raise ValueError(self.msg2)
-                tilecode = tilename_remaining[-2:]
-                if tilecode != self.core.tiletype:
-                    raise ValueError(self.msg1)
-            else:
+        # allow short-form of tilename (e.g. "E012N018T6")
+        if len(tilename) == 10:
+            tile_size_m = int(tilename[-1]) * 100000
+            if tile_size_m != self.core.tile_xsize_m:
                 raise ValueError(self.msg1)
+            llx = int(tilename[1:4])
+            if llx % tf:
+                raise ValueError(self.msg2)
+            lly = int(tilename[5:8])
+            if lly % tf:
+                raise ValueError(self.msg2)
+            tilecode = tilename[-2:]
+            if tilecode != self.core.tiletype:
+                raise ValueError(self.msg1)
+            subgrid_id = self.core.tag
+            sampling = self.core.sampling
+
+        # allow long-form of tilename (e.g. "EU500M_E012N018T6")
+        # tile_names_in_m True or False
         else:
-
-            # allow short-form of tilename (e.g. "E012N018T6")
-            if len(tilename) == 10:
-                tile_size_m = int(tilename[-1]) * 100000
-                if tile_size_m != self.core.tile_xsize_m:
-                    raise ValueError(self.msg1)
-                llx = int(tilename[1:4])
-                if llx % tf:
-                    raise ValueError(self.msg2)
-                lly = int(tilename[5:8])
-                if lly % tf:
-                    raise ValueError(self.msg2)
-                tilecode = tilename[-2:]
-                if tilecode != self.core.tiletype:
-                    raise ValueError(self.msg1)
-                subgrid_id = self.core.tag
-                sampling = self.core.sampling
-
-            # allow long-form of tilename (e.g. "EU500M_E012N018T6")
-            elif len(tilename) == 17:
-                subgrid_id = tilename[0:2]
-                if subgrid_id != self.core.tag:
-                    raise ValueError(self.msg1)
-                sampling = Equi7Grid.decode_sampling(tilename[2:5])
-                if sampling != self.core.sampling:
-                    raise ValueError(self.msg1)
-                tile_size_m = int(tilename[-1]) * 100000
-                if tile_size_m != self.core.tile_xsize_m:
-                    raise ValueError(self.msg1)
-                llx = int(tilename[8:11])
-                if llx % tf:
-                    raise ValueError(self.msg2)
-                lly = int(tilename[12:15])
-                if lly % tf:
-                    raise ValueError(self.msg2)
-                tilecode = tilename[-2:]
-                if tilecode != self.core.tiletype:
-                    raise ValueError(self.msg1)
-
-            # wrong length
-            else:
+            subgrid_id = tilename[0:2]
+            if subgrid_id != self.core.tag:
                 raise ValueError(self.msg1)
+            tilename_sampling = tilename[2:].split('M')
+            sampling = Equi7Grid.decode_sampling(tilename_sampling[0], self.core.tile_names_in_m)
+            tilename_remaining = tilename.split('_')[1]
+            if sampling != self.core.sampling:
+                raise ValueError(self.msg1)
+            tile_size_m = int(tilename_remaining[-1]) * 100000
+            if tile_size_m != self.core.tile_xsize_m:
+                raise ValueError(self.msg1)
+            llx = int(tilename_remaining[1:4])
+            if llx % tf:
+                raise ValueError(self.msg2)
+            lly = int(tilename_remaining[5:8])
+            if lly % tf:
+                raise ValueError(self.msg2)
+            tilecode = tilename_remaining[-2:]
+            if tilecode != self.core.tiletype:
+                raise ValueError(self.msg1)
+
 
         return subgrid_id, sampling, tile_size_m, llx * 100000, lly * 100000, tilecode
 
