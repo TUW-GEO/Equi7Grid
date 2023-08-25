@@ -44,6 +44,8 @@ from pytileproj.base import Tile
 from pytileproj.geometry import create_geometry_from_wkt
 from geographiclib.geodesic import Geodesic
 
+TILE_NAMES_IN_M = True
+
 
 def _load_static_data(module_path):
     """
@@ -115,8 +117,8 @@ class Equi7Grid(TiledProjectionSystem):
             controls whether the tile names are in metres or in km when > 1000m
 
         """
-        # Store parameters
-        self.tile_names_in_m = tile_names_in_m
+
+        self._tile_names_in_m = tile_names_in_m
 
         # check if the equi7grid.data have been loaded successfully
         if Equi7Grid._static_data is None:
@@ -128,9 +130,10 @@ class Equi7Grid(TiledProjectionSystem):
         # initializing
         super(Equi7Grid, self).__init__(sampling, tag='Equi7')
         self.core.projection = 'multiple'
+        self.core.tile_names_in_m = tile_names_in_m
 
-
-    def encode_sampling(self, sampling):
+    @staticmethod
+    def encode_sampling(sampling, tile_names_in_m=False):
         """
         provides a string representing the sampling (e.g. for the tilenames)
 
@@ -143,8 +146,10 @@ class Equi7Grid(TiledProjectionSystem):
         -------
         sampling_str : str
             string representing the sampling
+        tile_names_in_m : bool, optional
+            controls whether the tile names are in metres or in km when > 1000m
         """
-        if self.tile_names_in_m:
+        if tile_names_in_m:
             sampling_str = str(sampling).rjust(3, '0')
         else:
             if sampling <= 999:
@@ -153,7 +158,8 @@ class Equi7Grid(TiledProjectionSystem):
                 sampling_str = "".join((str(sampling / 1000.0)[0], 'K', str(sampling / 1000.0)[2]))
         return sampling_str
 
-    def decode_sampling(self, sampling_str):
+    @staticmethod
+    def decode_sampling(sampling_str, tile_names_in_m=False):
         """
         converts the string representing the sampling (e.g. from the tilenames)
         to an integer value in metres
@@ -162,13 +168,15 @@ class Equi7Grid(TiledProjectionSystem):
         ----------
         sampling_str : str
             string representing the sampling
+        tile_names_in_m : bool, optional
+            controls whether the tile names are in metres or in km when > 1000m
 
         Returns
         -------
         sampling : int
             the grid sampling = size of pixels; in metres.
         """
-        if self.tile_names_in_m:
+        if tile_names_in_m:
             sampling = int(sampling_str)
         else:
             if len(sampling_str) != 3:
@@ -188,6 +196,11 @@ class Equi7Grid(TiledProjectionSystem):
         subgrids : dict of Equi7Subgrid
             dict of all subgrids of the grid
         """
+        # Set the tile names in metres or in km
+        # Reinforce copying into self.core, as it's initialized in TiledProjectionSystem not in Equi7Grid so can't
+        # take this custom property at init time. This is a bit of a hack but its needed in Equi7Subgrid()
+        self.core.tile_names_in_m = self._tile_names_in_m
+
         subgrids = dict()
         for sg in self._static_subgrid_ids:
             subgrids[sg] = Equi7Subgrid(self.core, sg)
@@ -357,7 +370,7 @@ class Equi7Subgrid(TiledProjection):
 
     """
 
-    def __init__(self, core, continent, tile_names_in_m=False):
+    def __init__(self, core, continent):
         """
         Initialises an Equi7Subgrid class for a specified continent.
 
@@ -367,8 +380,6 @@ class Equi7Subgrid(TiledProjection):
             defines core parameters of the (sub-) grid
         continent : str
             acronym of the continent, e.g. 'EU' or 'SA'.
-        tile_names_in_m : bool, optional
-            controls whether the tile names are in metres or in km when > 1000m
         """
 
         # load WKT string and extent shape
@@ -382,7 +393,7 @@ class Equi7Subgrid(TiledProjection):
         self.core = _core
 
         # holds name of the subgrid
-        self.name = ''.join(('EQUI7_', continent, Equi7Grid(core.sampling, tile_names_in_m).encode_sampling(core.sampling), 'M'))
+        self.name = ''.join(('EQUI7_', continent, Equi7Grid.encode_sampling(core.sampling, core.tile_names_in_m), 'M'))
 
         # holds the extent of the subgrid in the lonlat-space
         self.polygon_geog = create_geometry_from_wkt(data['zone_extent'], epsg=4326)
@@ -558,7 +569,7 @@ class Equi7TilingSystem(TilingSystem):
         # gives long-form of tilename (e.g. "EU500M_E012N018T6")
         tilename = "{}{}M_E{:03d}N{:03d}{}".format(
                         self.core.tag,
-                        self.encode_sampling(sampling),
+                        Equi7Grid.encode_sampling(sampling),
                         int(llx) // 100000,
                         int(lly) // 100000,
                         tilecode)
@@ -682,7 +693,7 @@ class Equi7TilingSystem(TilingSystem):
         """
         tf = self.core.tile_ysize_m // 100000
 
-        if self.tile_names_in_m:
+        if self.core.tile_names_in_m:
             # allow long-form of tilename in metres (e.g. "EU3000M_E012N018T6")
             if len(tilename) == 17:
                 subgrid_id = tilename[0:2]
