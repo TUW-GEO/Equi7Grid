@@ -99,11 +99,11 @@ class Equi7Grid(TiledProjectionSystem):
     _static_tilecodes = ["T6", "T3", "T1"]
     # supported grid spacing ( = the pixel sampling)
     _static_sampling = [
-        1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80,
+        6000, 3000, 1000, 800, 750, 600, 500, 400, 300, 250, 200, 150, 125, 100, 96, 80,
         75, 64, 60, 50, 48, 40, 32, 30, 25, 24, 20, 16, 10, 8, 5, 4, 2, 1
     ]
 
-    def __init__(self, sampling):
+    def __init__(self, sampling, tile_names_in_m=False):
         """
         Initialises an Equi7Grid class for a specified sampling.
 
@@ -111,8 +111,13 @@ class Equi7Grid(TiledProjectionSystem):
         ----------
         sampling : int
             the grid sampling = size of pixels; in metres.
+        tile_names_in_m : bool, optional
+            controls whether the tile names are in metres or in km when > 1000m
 
         """
+        # Store parameters
+        self.tile_names_in_m = tile_names_in_m
+
         # check if the equi7grid.data have been loaded successfully
         if Equi7Grid._static_data is None:
             raise ValueError("cannot load Equi7Grid ancillary data!")
@@ -124,8 +129,9 @@ class Equi7Grid(TiledProjectionSystem):
         super(Equi7Grid, self).__init__(sampling, tag='Equi7')
         self.core.projection = 'multiple'
 
-    @staticmethod
-    def encode_sampling(sampling):
+
+
+    def encode_sampling(self, sampling):
         """
         provides a string representing the sampling (e.g. for the tilenames)
 
@@ -139,14 +145,16 @@ class Equi7Grid(TiledProjectionSystem):
         sampling_str : str
             string representing the sampling
         """
-        if sampling <= 999:
+        if self.tile_names_in_m:
             sampling_str = str(sampling).rjust(3, '0')
-        if sampling >= 1000:
-            sampling_str = "".join((str(sampling / 1000.0)[0], 'K', str(sampling / 1000.0)[2]))
+        else:
+            if sampling <= 999:
+                sampling_str = str(sampling).rjust(3, '0')
+            if sampling >= 1000:
+                sampling_str = "".join((str(sampling / 1000.0)[0], 'K', str(sampling / 1000.0)[2]))
         return sampling_str
 
-    @staticmethod
-    def decode_sampling(sampling_str):
+    def decode_sampling(self, sampling_str):
         """
         converts the string representing the sampling (e.g. from the tilenames)
         to an integer value in metres
@@ -161,12 +169,15 @@ class Equi7Grid(TiledProjectionSystem):
         sampling : int
             the grid sampling = size of pixels; in metres.
         """
-        if len(sampling_str) != 3:
-            raise ValueError('Resolution is badly defined!')
-        if sampling_str[1] == 'K':
-            sampling = int(sampling_str[0]) * 1000 + int(sampling_str[2]) * 100
-        else:
+        if self.tile_names_in_m:
             sampling = int(sampling_str)
+        else:
+            if len(sampling_str) != 3:
+                raise ValueError('Resolution is badly defined!')
+            if sampling_str[1] == 'K':
+                sampling = int(sampling_str[0]) * 1000 + int(sampling_str[2]) * 100
+            else:
+                sampling = int(sampling_str)
         return sampling
 
     def define_subgrids(self):
@@ -204,9 +215,9 @@ class Equi7Grid(TiledProjectionSystem):
 
         sampling = int(sampling)
 
-        # allowing sampling of [1000, 800, 750, 600, 500, 400, 300, 250, 200,
+        # allowing sampling of [6000, 3000, 1000, 800, 750, 600, 500, 400, 300, 250, 200,
         # 150, 125, 100, 96, 80, 75, 64] metres
-        if ((sampling in range(64, 1001)) and (600000 % sampling == 0)):
+        if ((sampling in range(64, 6001)) and (600000 % sampling == 0)):
             tilecode = "T6"
         # allowing sampling of [60, 50, 48, 40, 32, 30, 25, 24, 20] metres
         elif ((sampling in range(20, 61)) and (300000 % sampling == 0)):
@@ -670,47 +681,74 @@ class Equi7TilingSystem(TilingSystem):
         """
         tf = self.core.tile_ysize_m // 100000
 
-        # allow short-form of tilename (e.g. "E012N018T6")
-        if len(tilename) == 10:
-            tile_size_m = int(tilename[-1]) * 100000
-            if tile_size_m != self.core.tile_xsize_m:
+        if self.tile_names_in_m:
+            # allow long-form of tilename in metres (e.g. "EU3000M_E012N018T6")
+            if len(tilename) == 17:
+                subgrid_id = tilename[0:2]
+                if subgrid_id != self.core.tag:
+                    raise ValueError(self.msg1)
+                tilename_sampling = tilename[2:].split('M')
+                sampling = Equi7Grid.decode_sampling(tilename_sampling[0])
+                tilename_remaining = tilename.split('_')[1]
+                if sampling != self.core.sampling:
+                    raise ValueError(self.msg1)
+                tile_size_m = int(tilename_remaining[-1]) * 100000
+                if tile_size_m != self.core.tile_xsize_m:
+                    raise ValueError(self.msg1)
+                llx = int(tilename_remaining[1:4])
+                if llx % tf:
+                    raise ValueError(self.msg2)
+                lly = int(tilename_remaining[5:8])
+                if lly % tf:
+                    raise ValueError(self.msg2)
+                tilecode = tilename_remaining[-2:]
+                if tilecode != self.core.tiletype:
+                    raise ValueError(self.msg1)
+            else:
                 raise ValueError(self.msg1)
-            llx = int(tilename[1:4])
-            if llx % tf:
-                raise ValueError(self.msg2)
-            lly = int(tilename[5:8])
-            if lly % tf:
-                raise ValueError(self.msg2)
-            tilecode = tilename[-2:]
-            if tilecode != self.core.tiletype:
-                raise ValueError(self.msg1)
-            subgrid_id = self.core.tag
-            sampling = self.core.sampling
-
-        # allow long-form of tilename (e.g. "EU500M_E012N018T6")
-        elif len(tilename) == 17:
-            subgrid_id = tilename[0:2]
-            if subgrid_id != self.core.tag:
-                raise ValueError(self.msg1)
-            sampling = Equi7Grid.decode_sampling(tilename[2:5])
-            if sampling != self.core.sampling:
-                raise ValueError(self.msg1)
-            tile_size_m = int(tilename[-1]) * 100000
-            if tile_size_m != self.core.tile_xsize_m:
-                raise ValueError(self.msg1)
-            llx = int(tilename[8:11])
-            if llx % tf:
-                raise ValueError(self.msg2)
-            lly = int(tilename[12:15])
-            if lly % tf:
-                raise ValueError(self.msg2)
-            tilecode = tilename[-2:]
-            if tilecode != self.core.tiletype:
-                raise ValueError(self.msg1)
-
-        # wrong length
         else:
-            raise ValueError(self.msg1)
+
+            # allow short-form of tilename (e.g. "E012N018T6")
+            if len(tilename) == 10:
+                tile_size_m = int(tilename[-1]) * 100000
+                if tile_size_m != self.core.tile_xsize_m:
+                    raise ValueError(self.msg1)
+                llx = int(tilename[1:4])
+                if llx % tf:
+                    raise ValueError(self.msg2)
+                lly = int(tilename[5:8])
+                if lly % tf:
+                    raise ValueError(self.msg2)
+                tilecode = tilename[-2:]
+                if tilecode != self.core.tiletype:
+                    raise ValueError(self.msg1)
+                subgrid_id = self.core.tag
+                sampling = self.core.sampling
+
+            # allow long-form of tilename (e.g. "EU500M_E012N018T6")
+            elif len(tilename) == 17:
+                subgrid_id = tilename[0:2]
+                if subgrid_id != self.core.tag:
+                    raise ValueError(self.msg1)
+                sampling = Equi7Grid.decode_sampling(tilename[2:5])
+                if sampling != self.core.sampling:
+                    raise ValueError(self.msg1)
+                tile_size_m = int(tilename[-1]) * 100000
+                if tile_size_m != self.core.tile_xsize_m:
+                    raise ValueError(self.msg1)
+                llx = int(tilename[8:11])
+                if llx % tf:
+                    raise ValueError(self.msg2)
+                lly = int(tilename[12:15])
+                if lly % tf:
+                    raise ValueError(self.msg2)
+                tilecode = tilename[-2:]
+                if tilecode != self.core.tiletype:
+                    raise ValueError(self.msg1)
+
+            # wrong length
+            else:
+                raise ValueError(self.msg1)
 
         return subgrid_id, sampling, tile_size_m, llx * 100000, lly * 100000, tilecode
 
