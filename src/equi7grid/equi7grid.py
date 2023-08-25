@@ -44,8 +44,6 @@ from pytileproj.base import Tile
 from pytileproj.geometry import create_geometry_from_wkt
 from geographiclib.geodesic import Geodesic
 
-TILE_NAMES_IN_M = True
-
 
 def _load_static_data(module_path):
     """
