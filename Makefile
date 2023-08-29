@@ -55,7 +55,8 @@ test:
 	pytest -rsx --verbose --color=yes --cov=equi7grid --cov-report term-missing
 
 version:
-	echo -e "__version__ = \"$(shell git describe --always --tags --abbrev=0)\"\n__commit__ = \"$(shell git rev-parse --short HEAD)\"" > src/equi7grid/_version.py
+	@version=$(shell git describe --always --tags | awk -F'[-]' '{if (NF == 1) print $$1; else printf "%s.dev%s+g%s\n", $$1, $$2, substr($$3, 2)}')
+	echo -e "__version__ = \"$$version\"\n__commit__ = \"$(shell git rev-parse --short HEAD)\"" > src/equi7grid/_version.py
 
 dist: version
 	pip3 install build twine
