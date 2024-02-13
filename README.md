@@ -22,6 +22,13 @@ A detailed documentation on the Equi7Grid definition is at
 
 and its scientific background is published in this [**journal article**](https://www.sciencedirect.com/science/article/pii/S0098300414001629).
 
+## News
+
+**2024 February:** Several updates are in the pipeline of this python package:
++ interface to the newly available **EPSG codes** for the seven Equi7 projections: `EPSG:17771` - `EPSG:17777`
++ updates on the **continental zone bordes** - streamlining along political delimiters
++ **flexible tile extents** and grid samplings, allowing also user-defined tile extents
+
 ## Geometries
 
 Shapefiles for the continental zone boundaries and tilings are here
