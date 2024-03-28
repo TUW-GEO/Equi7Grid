@@ -25,7 +25,7 @@ and its scientific background is published in this [**journal article**](https:/
 ## News
 
 **2024 February:** Several updates are in the pipeline of this python package:
-+ interface to the newly available **EPSG codes** for the seven Equi7 projections: `EPSG:17771` - `EPSG:17777`
++ interface to the newly available **EPSG codes** for the seven continental Equi7 coordinate systems: `EPSG:27701` - `EPSG:27707`
 + updates on the **continental zone bordes** - streamlining along political delimiters
 + **flexible tile extents** and grid samplings, allowing also user-defined tile extents
 
