@@ -27,7 +27,7 @@ and its scientific background is published in this [**journal article**](https:/
 **2024 May:** 
 
 For the seven continental Equi7 coordinate systems, the newly available **EPSG codes**  `EPSG:27701` - `EPSG:27707` are available via
-+ with `proj>=9.4.0` from the generic coordinate transformation software [**proj**](https://proj.org/en/9.4/).
++ with `proj>=9.4.0` from the generic coordinate transformation software [**proj**](https://proj.org/en/9.4/) (e.g. used within [**GDAL**](https://gdal.org/index.html)).
 + with `EPSG>=v11.002` from the Geodetic Parameter Dataset of [**EPSG**](https://epsg.org/home.html). 
 
 Several updates are in the pipeline of this python package:
@@ -133,6 +133,8 @@ image2equi7grid(gdal_path=r"C:\...your_path...\envs\equi7grid\Library\bin")
 ### Example 3: Reproject a Equi7 tiles to the Longitude-Latitude projection
 With `equi7_to_lonlat()`, a simple but convenient method is available to quickly convert files that are already tiled in an Equi7 projection. Please see the following usage example:
 
+<!-- snippet: equi7_to_lonlat-example -->
+<a id='equi7_to_lonla-example t'></a>
 ```py
 equi7_to_lonlat(roi=(9, 46, 18, 50),
                 pixelsize=20,
@@ -143,6 +145,8 @@ equi7_to_lonlat(roi=(9, 46, 18, 50),
                 ...
                 )
 ```
+<sup><a href='/src/equi7grid/equi7_to_lonlat.py#L284-L300' title='Snippet source file'>snippet source</a> | <a href='#equi7_to_lonlat-example' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ### More examples ...
 checkout the tests at
