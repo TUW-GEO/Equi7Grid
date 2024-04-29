@@ -24,12 +24,31 @@ and its scientific background is published in this [**journal article**](https:/
 
 ## News
 
-**2024 February:** Several updates are in the pipeline of this python package:
-+ interface to the newly available **EPSG codes** for the seven continental Equi7 coordinate systems: `EPSG:27701` - `EPSG:27707`
+**2024 May:** 
+
+For the seven continental Equi7 coordinate systems, the newly available **EPSG codes**  `EPSG:27701` - `EPSG:27707` are available via
++ with `proj>=9.4.0` from the generic coordinate transformation software [**proj**](https://proj.org/en/9.4/).
++ with `EPSG>=v11.002` from the Geodetic Parameter Dataset of [**EPSG**](https://epsg.org/home.html). 
+
+Several updates are in the pipeline of this python package:
++ interface to the **EPSG codes** 
 + updates on the **continental zone bordes** - streamlining along political delimiters
 + **flexible tile extents** and grid samplings, allowing also user-defined tile extents
++ updated interfaces to **reprojection methods** (e.g. to and from UTM, or LonLat)
 
 ## Geometries
+
+Easiest access to Equi7's seven continental coordinate reference systems (CRSs) is via the EPSG codes:
+
+```
+Africa         EPSG:27701
+Antarctica     EPSG:27702
+Asia           EPSG:27703
+Europe         EPSG:27704
+North America  EPSG:27705
+Oceania        EPSG:27706
+South America  EPSG:27707
+```
 
 Shapefiles for the continental zone boundaries and tilings are here
 
@@ -109,6 +128,20 @@ The tool uses `gdal` to efficiently warp the raster data to the Equi7 projection
 **Note 2**: Windows users might need to manually specify the `gdal_path` as part of the function arguments, for example:
 ```py
 image2equi7grid(gdal_path=r"C:\...your_path...\envs\equi7grid\Library\bin")
+```
+
+### Example 3: Reproject a Equi7 tiles to the Longitude-Latitude projection
+With `equi7_to_lonlat()`, a simple but convenient method is available to quickly convert files that are already tiled in an Equi7 projection. Please see the following usage example:
+
+```py
+equi7_to_lonlat(roi=(9, 46, 18, 50),
+                pixelsize=20,
+                input_folder_path = r'C:\...your_main_path...\EQUI7_SUBGRID\TILE',
+                input_file_path = 'your_dataset_SUBGRID_TILE.tif',
+                full_output_path = r'C:\...your_main_path...\your_dataset_46-50LON_9-18LAT.tif',
+                gdal_path = r'C:\...your_GDAL_path...\Library\bin',
+                ...
+                )
 ```
 
 ### More examples ...
