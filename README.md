@@ -131,7 +131,7 @@ image2equi7grid(gdal_path=r"C:\...your_path...\envs\equi7grid\Library\bin")
 ```
 
 ### Example 3: Reproject Equi7 tiles to the Longitude-Latitude projection
-With `equi7_to_lonlat()`, a simple but convenient method is available to quickly convert files that are already tiled in an Equi7 projection. Please see the following usage example:
+With `equi7_to_lonlat()`, a simple but convenient method is available to quickly convert files that are already gridded and tiled in the Equi7Grid. Please see the following usage example:
 
 <!-- snippet: equi7_to_lonlat-example -->
 <a id='equi7_to_lonla-example t'></a>
