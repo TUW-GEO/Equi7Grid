@@ -27,8 +27,9 @@ and its scientific background is published in this [**journal article**](https:/
 **2024 May:** 
 
 For the seven continental Equi7 coordinate systems, the newly available **EPSG codes**  `EPSG:27701` - `EPSG:27707` are available via
-+ with `proj>=9.4.0` from the generic coordinate transformation software [**proj**](https://proj.org/en/9.4/) (e.g. used within [**GDAL**](https://gdal.org/index.html)).
-+ with `EPSG>=v11.002` from the Geodetic Parameter Dataset of [**EPSG**](https://epsg.org/home.html). 
++ with `proj>=9.4.0` from the generic coordinate transformation software [**proj**](https://proj.org/en/9.4/) (e.g. used within [**GDAL/OGR**](https://gdal.org/index.html)>=3.9.0).
++ with `EPSG>=v11.002` from the Geodetic Parameter Dataset of [**EPSG**](https://epsg.org/home.html)
++ with `QGIS>=3.36` and its versatile and open geographic information system ([link](https://qgis.org/en/site/)) 
 
 Several updates are in the pipeline of this python package:
 + interface to the **EPSG codes** 
