@@ -49,6 +49,12 @@ North America  EPSG:27705
 Oceania        EPSG:27706
 South America  EPSG:27707
 ```
+For example, when using `pyproj>=3.6.1` in python, you can transform coordinates like this:
+
+```py
+from pyproj import Transformer
+lon, lat = Transformer.from_crs("EPSG:27704", "EPSG:4326", always_xy=True).transform(x, y)
+```
 
 Shapefiles for the continental zone boundaries and tilings are here
 
