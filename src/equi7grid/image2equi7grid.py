@@ -35,6 +35,7 @@ The module should help to easily bring your raster images to the Equi7Grid
 spatial reference, using the Equi7TilingSystem() for the file tiling.
 """
 
+from functools import partial
 import os
 import subprocess
 from datetime import datetime
@@ -43,6 +44,8 @@ from scipy import ndimage
 from osgeo import gdal
 from osgeo import osr
 from osgeo import ogr
+import multiprocessing as mp
+from equi7grid.equi7grid import Equi7Grid
 
 # dict for transfer the datatype and resample type
 gdal_datatype = {
@@ -451,6 +454,286 @@ def image2equi7grid(e7grid,
                                         options=options)
 
     return dst_file_names
+
+
+class TileResampler(object):
+
+    def __init__(self, 
+                e7grid,
+                image,
+                output_dir,
+                gdal_path=None,
+                inband=None,
+                subgrid_ids=None,
+                accurate_boundary=True,
+                e7_folder=True,
+                ftiles=None,
+                coverland=True,
+                roi=None,
+                naming_convention=None,
+                compress_type="LZW",
+                resampling_type="bilinear",
+                subfolder=None,
+                overwrite=False,
+                data_type=None,
+                image_nodata=None,
+                tile_nodata=None,
+                scale=None,
+                offset=None,
+                tiled=True,
+                blocksize=512,
+                parallelism=1):
+
+        self.e7grid = e7grid
+        self.outdir = output_dir
+        self.subgrid_ids = subgrid_ids
+        self.image = image
+        self.roi = roi
+        self.coverland = coverland
+        self.inband = inband
+        self.scale = scale
+        self.offset = offset
+        self.ftiles = ftiles
+        self.image_nodata = image_nodata
+        self.tile_nodata = tile_nodata if tile_nodata else image_nodata
+        self.naming_convention = naming_convention
+        self.resampling_type=resampling_type
+        self.compress_type=compress_type
+        self.data_type = data_type
+        self.overwrite = overwrite
+        self.tiled = tiled
+        self.blocksize=blocksize
+        self.e7_folder = e7_folder
+        self.subfolder = subfolder
+        self.accurate_boundary = accurate_boundary
+        self.parallelism = parallelism
+    
+        # get gdal_dir for compatibility
+        self.gdal_path = gdal_path
+
+        if self.ftiles is None:
+            self.ftiles = self.find_overlapping_tiles()
+        else:
+            if type(ftiles) != list:
+                self.ftiles = [ftiles]
+
+
+    def set_image(self, image, image_nodata=None):
+        self.image = image
+        self.image_nodata = image_nodata
+
+    def find_overlapping_tiles(self):
+        if self.roi is None:
+            if self.accurate_boundary:
+                try:
+                    geo_extent = retrieve_raster_boundary(
+                        self.image, 
+                        gdal_path=self.gdal_path, 
+                        nodata=self.image_nodata)
+                except Exception as e:
+                    print("retrieve_raster_boundary failed:", str(e))
+                    geo_extent = None
+            else:
+                geo_extent = None
+            if geo_extent:
+                ftiles = self.e7grid.search_tiles_in_roi(
+                    roi_geometry=geo_extent,
+                    subgrid_ids=self.subgrid_ids,
+                    coverland=self.coverland)
+            else:
+                ds = open_image(self.image)
+                img_extent = ds.get_extent()
+                bbox = (img_extent[0:2], img_extent[2:4])
+                img_spref = osr.SpatialReference()
+                img_spref.ImportFromWkt(ds.projection())
+                ftiles = self.e7grid.search_tiles_in_roi(
+                    bbox=bbox,
+                    subgrid_ids=self.subgrid_ids,
+                    osr_spref=img_spref,
+                    coverland=self.coverland)
+        else:
+            ftiles = self.e7grid.search_tiles_in_roi(
+                roi_geometry=self.roi,
+                subgrid_ids=self.subgrid_ids,
+                coverland=self.coverland)
+    
+        return ftiles
+    
+
+    def prepare_resampling_args(self):
+        if self.naming_convention is not None:
+            self.naming_convention["grid_name"] = "{grid_name}"
+            self.naming_convention["tile_name"] = "{tile_name}"
+            file_naming = str(self.naming_convention)
+        else:
+            file_naming = None
+
+
+        args = {"image": self.image,
+                "output_dir": self.outdir,
+                "inband": self.inband,
+                "gdal_path": self.gdal_path,
+                "image_nodata": self.image_nodata,
+                "tile_nodata": self.tile_nodata,
+                "resampling_type": self.resampling_type,
+                "compress_type" : self.compress_type,
+                "naming_convention": file_naming,
+                "data_type": self.data_type,
+                "e7_folder": self.e7_folder,
+                "subfolder": self.subfolder,
+                "overwrite": self.overwrite,
+                "tiled": self.tiled,
+                "blocksize": self.blocksize,
+                "scale": self.scale,
+                "offset": self.offset,
+                }
+
+        return args
+
+    
+    def resample_tiles(self):
+        args = self.prepare_resampling_args()
+
+        dst_file_names = []
+
+        if self.parallelism == 1:
+            for ftile in self.ftiles:
+                result = resample_tile(ftile, **args)
+                if result:
+                    dst_file_names.append(result)
+        else:
+            n_tiles = len(self.ftiles)
+
+            num_cpu = self.parallelism if n_tiles > self.parallelism else n_tiles
+            
+            with mp.Pool(processes=num_cpu) as pool:
+                func = partial(resample_tile, **args)
+                results = pool.map(func, self.ftiles)
+                pool.close()
+                pool.join()
+            
+            dst_file_names = [x for x in results if x]
+
+        return dst_file_names
+
+
+def resample_tile(ftile,
+                  image=None,
+                  output_dir=None,
+                  inband=None,
+                  gdal_path=None,
+                  image_nodata=None,
+                  tile_nodata=None,
+                  resampling_type="biliear",
+                  compress_type="LZW",
+                  naming_convention=None,
+                  data_type=None,
+                  e7_folder=None,
+                  subfolder=None,
+                  overwrite=False,
+                  tiled=False,
+                  blocksize=None,
+                  scale=None,
+                  offset=None):
+
+    sampling = int(ftile[2:5])
+    e7grid = Equi7Grid(sampling)
+
+    # create grid folder
+    if e7_folder:
+        grid_folder = "EQUI7_{}".format(ftile[0:6])
+        tile_path = os.path.join(output_dir, grid_folder, ftile[7:])
+        if not os.path.exists(tile_path):
+            os.makedirs(tile_path)
+    else:
+        tile_path = output_dir
+
+    # make output filename
+    if naming_convention is None:
+        out_filename = os.path.splitext(os.path.basename(image))[0]
+        out_filename = "_".join((out_filename, ftile + ".tif"))
+    else:
+        try:
+            naming_convention['grid_name'] = ftile.split('_')[0]
+            naming_convention['tile_name'] = ftile.split('_')[1]
+        except KeyError:
+            err_msg = "File naming convention does not contain 'grid_name' or 'tile_name'."
+            raise KeyError(err_msg)
+        out_filename = str(naming_convention)
+    if subfolder:
+        out_filepath = os.path.join(tile_path, subfolder, out_filename)
+    else:
+        out_filepath = os.path.join(tile_path, out_filename)
+
+    # using gdalwarp to resample
+    bbox = e7grid.get_tile_bbox_proj(ftile)
+    tile_project = '"{}"'.format(
+        e7grid.subgrids[ftile[0:2]].core.projection.proj4)
+
+    # prepare options for gdalwarp
+    options = {
+        '-t_srs': tile_project,
+        '-of': 'GTiff',
+        '-r': resampling_type,
+        '-te': " ".join(map(str, bbox)),
+        '-tr': "{} -{}".format(e7grid.core.sampling, e7grid.core.sampling)
+    }
+
+    options["-co"] = list()
+    if compress_type is not None:
+        options["-co"].append("COMPRESS={0}".format(compress_type))
+    if image_nodata != None:
+        options["-srcnodata"] = image_nodata
+    if tile_nodata != None:
+        options["-dstnodata"] = tile_nodata
+    if data_type != None:
+        options["-ot"] = data_type
+        options["-wt"] = data_type  # test if this is what we want
+    if overwrite:
+        options["-overwrite"] = " "
+    if tiled:  # tiled, square blocks
+        options["-co"].append("TILED=YES")
+        options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
+        options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
+    else:  # stripped blocks
+        blockxsize = e7grid.core.tile_xsize_m // e7grid.core.sampling
+        blockysize = blocksize
+        options["-co"].append("TILED=NO")
+        options["-co"].append("BLOCKXSIZE={0}".format(blockxsize))
+        options["-co"].append("BLOCKYSIZE={0}".format(blockysize))
+
+    # call gdalwarp for resampling
+    succeed, _ = call_gdal_util('gdalwarp',
+                                src_files=image,
+                                src_band=inband,
+                                dst_file=out_filepath,
+                                gdal_path=gdal_path,
+                                options=options)
+
+
+    if scale is not None and offset is not None:
+        # prepare options for gdal_translate
+        options = {'-a_scale': scale, '-a_offset': offset}
+        options["-co"] = list()
+        if tile_nodata != None:
+            options["-a_nodata "] = tile_nodata
+        if compress_type is not None:
+            options["-co"].append("COMPRESS={0}".format(compress_type))
+        if blocksize is not None:
+            options["-co"].append("TILED=YES")
+            options["-co"].append("BLOCKXSIZE={0}".format(blocksize))
+            options["-co"].append("BLOCKYSIZE={0}".format(blocksize))
+
+        succeed, _ = call_gdal_util('gdal_translate',
+                                    src_files=out_filepath,
+                                    dst_file=out_filepath,
+                                    gdal_path=gdal_path,
+                                    options=options)
+    
+    if succeed:
+        return out_filepath
+    else:
+        return None
 
 
 def open_image(filename):
