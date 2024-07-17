@@ -956,7 +956,7 @@ def retrieve_raster_boundary(infile,
     # morphologic dilation
     pixels = 3
     struct = ndimage.generate_binary_structure(2, 2)
-    struct = ndimage.morphology.iterate_structure(struct, pixels)
+    struct = ndimage.iterate_structure(struct, pixels)
     new_mask = ndimage.binary_dilation(mask, structure=struct)
     src_arr = np.zeros_like(mask, dtype=np.uint8)
     src_arr[new_mask] = 1
