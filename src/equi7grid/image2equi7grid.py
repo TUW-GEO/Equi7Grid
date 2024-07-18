@@ -654,12 +654,11 @@ def resample_tile(ftile,
         out_filename = "_".join((out_filename, ftile + ".tif"))
     else:
         try:
-            naming_convention['grid_name'] = ftile.split('_')[0]
-            naming_convention['tile_name'] = ftile.split('_')[1]
+            out_filename = naming_convention.format(
+                grid_name=ftile.split('_')[0], tile_name=ftile.split('_')[1])
         except KeyError:
             err_msg = "File naming convention does not contain 'grid_name' or 'tile_name'."
             raise KeyError(err_msg)
-        out_filename = str(naming_convention)
     if subfolder:
         out_filepath = os.path.join(tile_path, subfolder, out_filename)
     else:
