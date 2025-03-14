@@ -2,6 +2,17 @@
 Changelog
 =========
 
+Version 0.2.5
+=============
+
+- parallel processing for equi7grid tiling
+- fixes dirty tag version handling
+
+Version 0.2.4
+=============
+
+- adds manifest to package data
+
 Version 0.2.3
 =============
 
