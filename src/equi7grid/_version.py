@@ -1,2 +1,2 @@
-__version__ = "0.2.4.dev9+gdd4771b"
+__version__ = "0.2.5"
 __commit__ = "dd4771b"
