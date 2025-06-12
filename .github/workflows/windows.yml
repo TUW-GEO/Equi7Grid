@@ -10,7 +10,8 @@ env:
   PROJ_LIB: C:\Miniconda3\envs\equi7grid\Library\share\proj
   USE_PATH_FOR_GDAL_PYTHON: YES
 
-jobs: build:
+jobs:
+  build:
     name: Build py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
