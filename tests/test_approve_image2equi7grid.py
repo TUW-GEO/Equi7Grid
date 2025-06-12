@@ -21,7 +21,7 @@ def test_approve_imag2equi7grid(input_dir, out_dir):
 
     assert (out_dir / "EQUI7_AS100M/E018N066T6/lake_in_russia_lonlat_AS100M_E018N066T6.tif").exists()
     assert (out_dir / "EQUI7_EU100M/E072N030T6/lake_in_russia_lonlat_EU100M_E072N030T6.tif").exists()
-    # end-snippet: image2equi7grid-example
+    # end-snippet
 
     verify_file((out_dir / "EQUI7_AS100M/E018N066T6/lake_in_russia_lonlat_AS100M_E018N066T6.tif").as_posix(),
                 options=NamerFactory.with_parameters("E018N066T6"))
@@ -41,7 +41,7 @@ def test_multiprocessing_10m(input_dir, out_dir):
 
     assert (out_dir / "EQUI7_AS010M/E021N069T1/lake_in_russia_lonlat_AS010M_E021N069T1.tif").exists()
     assert (out_dir / "EQUI7_EU010M/E073N032T1/lake_in_russia_lonlat_EU010M_E073N032T1.tif").exists()
-    # end-snippet: image2equi7grid-example
+    # end-snippet
 
 
 @pytest.mark.skipif(os.name == 'nt', reason="CI Windows has troubles creating directories")
@@ -56,4 +56,4 @@ def test_multiprocessing_20m(input_dir, out_dir):
 
     assert (out_dir / "EQUI7_EU020M/E072N030T3/lake_in_russia_lonlat_EU020M_E072N030T3.tif").exists()
     assert (out_dir / "EQUI7_AS020M/E021N069T3/lake_in_russia_lonlat_AS020M_E021N069T3.tif").exists()
-    # end-snippet: image2equi7grid-example
+    # end-snippet
