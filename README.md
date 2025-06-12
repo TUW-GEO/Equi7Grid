@@ -24,15 +24,15 @@ and its scientific background is published in this [**journal article**](https:/
 
 ## News
 
-**2024 May:** 
+**2024 May:**
 
 For the seven continental Equi7 coordinate systems, the newly available **EPSG codes**  `EPSG:27701` - `EPSG:27707` are available via
 + with `proj>=9.4.0` from the generic coordinate transformation software [**proj**](https://proj.org/en/9.4/) (e.g. used within [**GDAL/OGR**](https://gdal.org/index.html)>=3.9.0).
 + with `EPSG>=v11.002` from the Geodetic Parameter Dataset of [**EPSG**](https://epsg.org/home.html)
-+ with `QGIS>=3.36` and its versatile and open geographic information system ([link](https://qgis.org/en/site/)) 
++ with `QGIS>=3.36` and its versatile and open geographic information system ([link](https://qgis.org/en/site/))
 
 Several updates are in the pipeline of this python package:
-+ interface to the **EPSG codes** 
++ interface to the **EPSG codes**
 + updates on the **continental zone bordes** - streamlining along political delimiters
 + **flexible tile extents** and grid samplings, allowing also user-defined tile extents
 + updated interfaces to **reprojection methods** (e.g. to and from UTM, or LonLat)
@@ -67,7 +67,7 @@ Overlays for visualisation in Google Earth are here:
 
 `~/docs/doc_files/google_earth_overlays/`
 
-The 7 projections (or more precisely the Projected Coordinate Reference Systems, PROJCS) are completely defined by WKT-strings in the .prj-files at 
+The 7 projections (or more precisely the Projected Coordinate Reference Systems, PROJCS) are completely defined by WKT-strings in the .prj-files at
 
 `~/wkt/`
 
@@ -141,7 +141,7 @@ image2equi7grid(gdal_path=r"C:\...your_path...\envs\equi7grid\Library\bin")
 With `equi7_to_lonlat()`, a simple but convenient method is available to quickly convert files that are already gridded and tiled in the Equi7Grid. Please see the following usage example:
 
 <!-- snippet: equi7_to_lonlat-example -->
-<a id='equi7_to_lonla-example t'></a>
+<a id='equi7_to_lonlat-example'></a>
 ```py
 equi7_to_lonlat(roi=(9, 46, 18, 50),
                 pixelsize=20,
