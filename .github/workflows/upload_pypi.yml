@@ -1,33 +1,23 @@
-name: Upload pypi
+name: Publish on pypi.org
 
 on:
-   # trigger only on release
-   release:
-     types: [published]
-   # to trigger workflow manually from actions-tab
-   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
-          python-version: 3.8
-
-      - name: Upgrade pip, install setuptools, wheel and twine
-        run: |
-          # Upgrade pip
-          python -m pip install --upgrade pip
-          # Install build dependencies
-          python -m pip install setuptools wheel twine
-
-      - name: Build and Upload to pypi
-        run: |
-          make dist
-          python -m twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          fetch-depth: 0
+      - run: python3 -m pip install --upgrade build && python3 -m build
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.4.1
+        with:
+          skip_existing: true
+          verbose: true
+          verify_metadata: true
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets

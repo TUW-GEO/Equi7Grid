@@ -3,26 +3,39 @@ name: ubuntu
 on:
   push:
   pull_request:
+  schedule:
+    - cron: "0 0 * * *" # daily
 
 jobs:
   build:
+    name: Build py${{ matrix.python-version }} @ ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        python-version: ["3.8", "3.12"]
         os: ["ubuntu-latest"]
-        python-version: ['3.8', '3.9']
-        ymlfile: ['environment.yml']
-    name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+        ymlfile: ["environment.yml"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
-          submodules: true # does not work with self-hosted testdata
-          fetch-depth: 0
-      - uses: conda-incubator/setup-miniconda@v2
+          submodules: false # does not work with self-hosted testdata
+      - name: install libtiff dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libtiff-dev
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libtiff.so.6 /usr/lib/x86_64-linux-gnu/libtiff.so.5
+      - name: Checkout test data
+        shell: bash -l {0}
+        run : |
+          git submodule init
+          git submodule sync
+          git submodule update
+      - uses: conda-incubator/setup-miniconda@v2.0.1
         with:
-          miniconda-version: "latest"
-          auto-update-conda: true
+          miniforge-variant: Mambaforge
+          miniforge-version: "latest"
+          channel-priority: flexible
           python-version: ${{ matrix.python-version }}
           environment-file: ${{ matrix.ymlfile }}
           activate-environment: equi7grid
@@ -40,11 +53,8 @@ jobs:
         shell: bash -l {0}
         run: |
           mkdir -p .artifacts
-          if [ ${{ matrix.ymlfile }} == "environment.yml" ]
-          then
-              filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
-              conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
-          fi
+          filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
+          conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
       - name: Install package and test
         shell: bash -l {0}
         run: |
@@ -53,7 +63,7 @@ jobs:
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
-          pip install coveralls && coveralls --service=github
+          pip install coveralls && coveralls --service=github-actions
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
@@ -62,12 +72,11 @@ jobs:
         shell: bash -l {0}
         run: |
           git status
-          make dist
-          # build dist on linux
+          pip install setuptools_scm
           python setup.py sdist --dist-dir .artifacts/dist
           ls .artifacts/dist
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Artifacts
           path: .artifacts/*

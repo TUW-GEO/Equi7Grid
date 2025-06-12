@@ -10,27 +10,32 @@ env:
   PROJ_LIB: C:\Miniconda3\envs\equi7grid\Library\share\proj
   USE_PATH_FOR_GDAL_PYTHON: YES
 
-jobs:
-  build:
+jobs: build:
+    name: Build py${{ matrix.python-version }} @ ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["windows-latest"]
-        python-version: ['3.8', '3.9']
-        ymlfile: ['environment_win.yml']
-    name: Py${{ matrix.python-version }} @ ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+        python-version: ["3.8", "3.12"]
+        os: ['windows-latest']
+        ymlfile: ["environment_win.yml"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
-          submodules: true # does not work with self-hosted testdata
-          fetch-depth: 0
-      - uses: conda-incubator/setup-miniconda@v2
+          submodules: false # does not work with self-hosted testdata
+      - name: Checkout test data
+        shell: bash -l {0}
+        run : |
+          git submodule init
+          git submodule sync
+          git submodule update
+      - uses: conda-incubator/setup-miniconda@v2.0.1
         with:
-          miniconda-version: "latest"
-          auto-update-conda: true
+          miniforge-variant: Mambaforge
+          miniforge-version: "latest"
+          channel-priority: flexible
           python-version: ${{ matrix.python-version }}
-          environment-file: environment_win.yml
+          environment-file: ${{ matrix.ymlfile }}
           activate-environment: equi7grid
           auto-activate-base: false
       - name: Print infos
@@ -42,7 +47,6 @@ jobs:
           pip list
           which pip
           which python
-          which gdalwarp
       - name: Install package and test
         shell: bash -l {0}
         run: |
