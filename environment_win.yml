@@ -3,7 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - gdal=3.0.2
+  - gdal
   - numpy
   - scipy
   - cartopy
