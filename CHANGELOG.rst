@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.2.6
+=============
+
+- update project metadata
+
 Version 0.2.5
 =============
 
