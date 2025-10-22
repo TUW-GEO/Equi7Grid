@@ -24,6 +24,12 @@ and its scientific background is published in this [**journal article**](https:/
 
 ## News
 
+**2025 October:**
+
+We’re currently preparing a version 2 of the Equi7Grid and its software. For this, we collect user needs and requests, and develop an modular approch for more flexible options for pixel samplings and grid tilings. 
+
+Contributions—whether comments, recommendations, or code—are welcome, and are collected here in the [**Discussion Section**](https://github.com/TUW-GEO/Equi7Grid/discussions) section
+
 **2024 May:**
 
 For the seven continental Equi7 coordinate systems, the newly available **EPSG codes**  `EPSG:27701` - `EPSG:27707` are available via
