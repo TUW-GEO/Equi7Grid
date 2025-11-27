@@ -222,6 +222,29 @@ class TestEqui7Grid(unittest.TestCase):
         nptest.assert_equal(j, row_should)
         nptest.assert_equal(tilename, tile_should)
 
+    def test_lonlat2ij_in_tile(self):
+        """
+        Tests the tile name with option tile_names_in_m as True or False
+
+        """
+        e7 = Equi7Grid(3000, tile_names_in_m=True)
+        column_should = 199
+        row_should = 0
+        tile_should = 'EU3000M_E048N012T6'
+        tilename, i, j = e7.lonlat2ij_in_tile(18.507, 44.571, lowerleft=True)
+        nptest.assert_equal(i, column_should)
+        nptest.assert_equal(j, row_should)
+        nptest.assert_equal(tilename, tile_should)
+
+        e7 = Equi7Grid(3000, tile_names_in_m=False)
+        column_should = 199
+        row_should = 0
+        tile_should = 'EU3K0M_E048N012T6'
+        tilename, i, j = e7.lonlat2ij_in_tile(18.507, 44.571, lowerleft=True)
+        nptest.assert_equal(i, column_should)
+        nptest.assert_equal(j, row_should)
+        nptest.assert_equal(tilename, tile_should)
+
     def test_proj4_reprojection_accuracy(self):
         """
         Tests the proj4 reproject accuracy by forward and backward reprojection.
