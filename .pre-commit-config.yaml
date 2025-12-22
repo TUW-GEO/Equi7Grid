@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.14.3
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [--fix]
+      # Run the formatter.
+      - id: ruff-format
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.9.7
+    hooks:
+      # Update the uv lockfile
+      - id: uv-lock
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0 # the release, git tag, or commit you want to use
+    hooks:
+      - id: trailing-whitespace
+      - id: check-added-large-files
+        exclude: '^(src/equi7grid/data/land\.parquet|src/equi7grid/data/grids/equi7standard\.json)$'
+      - id: detect-private-key
+      - id: end-of-file-fixer
