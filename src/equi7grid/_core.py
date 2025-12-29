@@ -28,43 +28,47 @@
 
 """Core module defining the Equi7Grid classes."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from pathlib import Path
+from typing import Generic
 
+import numpy as np
 import shapely
+from geographiclib.geodesic import Geodesic
 from morecantile.models import Tile as RegularTile
+from pytileproj._const import DEF_SEG_LEN_DEG
 from pytileproj._errors import TileOutOfZoneError
 from pytileproj.grid import RegularGrid
 from pytileproj.projgeom import (
+    GeogGeom,
     ProjGeom,
     convert_any_to_geog_geom,
-    transform_geom_to_geog,
+    transform_geometry,
 )
 from pytileproj.tile import RasterTile
 from pytileproj.tiling_system import (
     ProjSystemDefinition,
     RegularProjTilingSystem,
     RegularTilingDefinition,
-    _tiling_access,
 )
 
 from equi7grid._const import KM, MAX_SAMPLING
+from equi7grid._types import Extent, T_co
 from equi7grid.create_grids import get_system_definitions
 
-Extent = tuple[int | float, int | float, int | float, int | float]
 Equi7TileGenerator = Generator["Equi7Tile", "Equi7Tile", "Equi7Tile"]
 
 
-class Equi7Tile(RasterTile):
+class Equi7Tile(RasterTile, Generic[T_co]):
     """Defines a tile in the Equi7Grid."""
 
     covers_land: bool
 
 
-class Equi7TilingSystem(RegularProjTilingSystem):
+class Equi7TilingSystem(RegularProjTilingSystem, Generic[T_co]):
     """Defines a tiling system for each Equi7Grid continent."""
 
-    land_zone_geog: ProjGeom
+    land_zone: ProjGeom
 
     def _get_sampling_label(self, tiling_level: int) -> str:
         """Get the sampling label for a tiling.
@@ -83,9 +87,9 @@ class Equi7TilingSystem(RegularProjTilingSystem):
         sampling = self[tiling_level].sampling
 
         if sampling < KM:
-            sampling_str = f"{sampling}:03"
+            sampling_str = f"{int(sampling):03d}"
         elif (sampling >= KM) and (sampling < MAX_SAMPLING):
-            sampling_str = f"{sampling}:.1f".replace(".", "K")
+            sampling_str = f"{sampling:.1f}".replace(".", "K")
         else:
             err_msg = "Sampling labelling is not supported."
             raise ValueError(err_msg)
@@ -108,14 +112,12 @@ class Equi7TilingSystem(RegularProjTilingSystem):
         """
         ll_x, ll_y, ur_x, ur_y = extent
         poly = shapely.Polygon(((ll_x, ll_y), (ll_x, ur_y), (ur_x, ur_y), (ur_x, ll_y)))
-        e7_poly = ProjGeom(geom=poly, crs=self.pyproj_crs)
-        geog_poly = transform_geom_to_geog(e7_poly)
 
-        return shapely.intersects(geog_poly.geom, self.land_zone_geog.geom)
+        return shapely.intersects(poly, self.land_zone.geom)
 
     def _tile_to_raster_tile(
         self, tile: RegularTile, name: str | None = None
-    ) -> Equi7Tile:
+    ) -> Equi7Tile[T_co]:
         """Create an Equi7 tile object from a given regular tile.
 
         Parameters
@@ -143,8 +145,55 @@ class Equi7TilingSystem(RegularProjTilingSystem):
             covers_land=covers_land,
         )
 
-    def _tile_to_name(self, tile: RegularTile) -> str:
+    def _tile_to_partial_name(self, tile: RegularTile) -> str:
         """Create a tilename from a given regular tile object.
+
+        The generated tilename is unique within a tiling system.
+
+        Parameters
+        ----------
+        tile: RegularTile
+            Regular tile object from TMS.
+
+        Returns
+        -------
+        str
+            Partial Equi7 tilename (unique at tiling system level).
+
+        """
+        e7_tile = self._tile_to_raster_tile(tile)
+        ll_x, ll_y, _, _ = e7_tile.outer_boundary_extent
+        tile_x, tile_y = int(ll_x / 1e5), int(ll_y / 1e5)
+        y_label = "S" if tile_y < 0 else "N"
+        if tile_y < 0:
+            pass
+
+        return f"E{tile_x:03}{y_label}{abs(tile_y):03}T{self.tilings[tile.z].name[1:]}"
+
+    def _tile_to_full_name(self, tile: RegularTile) -> str:
+        """Create a tilename from a given regular tile object.
+
+        The generated tilename is unique within the grid.
+
+        Parameters
+        ----------
+        tile: RegularTile
+            Regular tile object from TMS.
+
+        Returns
+        -------
+        str
+            Full Equi7 tilename (unique at grid level).
+
+        """
+        tilename = self._tile_to_partial_name(tile)
+        return f"{self.name}{self._get_sampling_label(tile.z)}M_{tilename}"
+
+    def _tile_to_name(self, tile: RegularTile) -> str:
+        """Create a full Equi7 tilename.
+
+        The generated tilename is unique within
+        the whole grid.
 
         Parameters
         ----------
@@ -157,33 +206,9 @@ class Equi7TilingSystem(RegularProjTilingSystem):
             Equi7 tilename.
 
         """
-        e7_tile = self._tile_to_raster_tile(tile)
-        ll_x, ll_y, _, _ = e7_tile.outer_boundary_extent
-        tile_x, tile_y = int(ll_x / 1e5), int(ll_y / 1e5)
-        y_label = "S" if tile_y < 0 else "N"
-        if tile_y < 0:
-            pass
+        return self._tile_to_full_name(tile)
 
-        return f"E{tile_x:03}{y_label}{abs(tile_y):03}T{self.tilings[tile.z].name[1:]}"
-
-    def _get_ftilename(self, tile: RegularTile) -> str:
-        """Create full Equi7 tile name.
-
-        Parameters
-        ----------
-        tile: RegularTile
-            Regular tile object from TMS.
-
-        Returns
-        -------
-        str
-            Full Equi7 tile name.
-
-        """
-        tilename = self._tile_to_name(tile)
-        return f"{self.name}{self._get_sampling_label(tile.z)}M_{tilename}"
-
-    def _get_tile(self, tilename: str) -> RegularTile:
+    def _name_to_tile(self, tilename: str) -> RegularTile:
         """Get regular tile from a tilename.
 
         Parameters
@@ -198,12 +223,22 @@ class Equi7TilingSystem(RegularProjTilingSystem):
             to the given tile name.
 
         """
-        tiling_level = int(tilename.split("T")[-1])
+        tiling_id = tilename[-2:]
+        tiling_level = self.tiling_id_to_level(tiling_id)
+
         y_label = tilename[4]
         y_mirror_fac = 1 if y_label == "N" else -1
         x, y = float(tilename[1:4]) * 1e5, float(tilename[5:8]) * 1e5 * y_mirror_fac
 
-        return self._tms._tile(x, y, tiling_level)  # noqa: SLF001
+        tilesize = self[tiling_level].tile_shape[0]
+        sampling = self[tiling_level].sampling
+        tile = RasterTile.from_extent(
+            (x, y, x + tilesize, y + tilesize), self.pyproj_crs, sampling, sampling
+        )
+        if not self._tile_in_zone(tile):
+            raise TileOutOfZoneError(tile)
+
+        return self._tms._tile(x + tilesize / 2.0, y + tilesize / 2.0, tiling_level)  # noqa: SLF001
 
     def get_tile_from_name(self, ftilename: str) -> Equi7Tile:
         """Get Equi7 tile from a full tilename.
@@ -219,16 +254,26 @@ class Equi7TilingSystem(RegularProjTilingSystem):
             Equi7 tile corresponding to the given tile name.
 
         """
-        tile = self._get_tile(ftilename.split("_")[1])
+        tile = self._name_to_tile(ftilename.split("_")[1])
+        sampling = int(ftilename.split("_")[0][2:-1])
+        if self[tile.z].sampling != sampling:
+            err_msg = (
+                f"Sampling of tilename ({self[tile.z].sampling}) "
+                f" and tiling do not match ({sampling})."
+            )
+            raise ValueError(err_msg)
         e7_tile = self._tile_to_raster_tile(tile, name=ftilename)
         if not self._tile_in_zone(e7_tile):
             raise TileOutOfZoneError(e7_tile)
 
         return e7_tile
 
-    @_tiling_access
-    def get_tiles_in_lonlat_bbox(
-        self, bbox: tuple[float, float, float, float], tiling_id: int | str
+    def get_tiles_in_geog_bbox(
+        self,
+        bbox: tuple[float, float, float, float],
+        tiling_id: int | str,
+        *,
+        cover_land: bool = False,
     ) -> Equi7TileGenerator:
         """Get all Equi7 tiles intersecting with the geographic bounding box.
 
@@ -239,6 +284,9 @@ class Equi7TilingSystem(RegularProjTilingSystem):
         tiling_id: int | str
             Tiling level or name.
             Defaults to the first tiling level.
+        cover_land: bool, optional
+            True if only tiles which cover land should be returned.
+            Defaults to false.
 
         Returns
         -------
@@ -247,16 +295,106 @@ class Equi7TilingSystem(RegularProjTilingSystem):
             bounding box.
 
         """
-        for tile in self._get_tiles_in_geog_bbox(bbox, tiling_id):
-            ftilename = self._get_ftilename(tile)
-            e7_tile = self._tile_to_raster_tile(tile, name=ftilename)
-            if not self._tile_in_zone(e7_tile):
+        for tile in super().get_tiles_in_geog_bbox(bbox, tiling_id=tiling_id):
+            if cover_land and not tile.covers_land:
                 continue
 
-            yield e7_tile
+            yield tile
+
+    def get_tiles_in_geom(
+        self, proj_geom: ProjGeom, tiling_id: int | str, *, cover_land: bool = False
+    ) -> Equi7TileGenerator:
+        """Get all Equi7 tiles intersecting with the geographic bounding box.
+
+        Parameters
+        ----------
+        proj_geom : ProjGeom
+            Projected geometry representing the region of interest.
+        tiling_id: int | str
+            Tiling level or name.
+            Defaults to the first tiling level.
+        cover_land: bool, optional
+            True if only tiles which cover land should be returned.
+            Defaults to false.
+
+        Returns
+        -------
+        Equi7TileGenerator
+            Yields Equi7 tile after tile, which intersects with the given
+            bounding box.
+
+        """
+        for tile in super().get_tiles_in_geom(proj_geom, tiling_id=tiling_id):
+            if cover_land and not tile.covers_land:
+                continue
+
+            yield tile
+
+    def calc_length_distortion(
+        self, x: float | np.ndarray, y: float | np.ndarray
+    ) -> float | np.ndarray:
+        """Compute local maximum length distortion k.
+
+        k equals the local areal distortion (as always h=1 for the Azimuthal
+        Equidistant projection). Uses planar coordinates thus being much faster,
+        than 'calc_length_distortion_on_ellipsoid'.
+
+        Parameters
+        ----------
+        x: float | np.ndarray
+            World system coordinates in X direction.
+        y: float | np.ndarray
+            World system coordinates in Y direction.
+
+        Returns
+        -------
+        k: float | np.ndarray
+            Local max length distortion = local areal distortion.
+
+        """
+        ellaxis = Geodesic.WGS84.a
+
+        proj4_dict = self.pyproj_crs.to_dict()
+        fe, fn = proj4_dict["x_0"], proj4_dict["y_0"]
+
+        dists = np.sqrt((np.array(x) - fe) ** 2 + (np.array(y) - fn) ** 2)
+
+        return dists / ellaxis / np.sin(dists / ellaxis)
+
+    def get_children_from_name(self, tilename: str) -> Equi7TileGenerator:
+        """Get all child tiles (next higher tiling level).
+
+        Parameters
+        ----------
+        tilename: str
+            Tilename.
+
+        Returns
+        -------
+        Equi7TileGenerator
+            Yields all tile children as Equi7 tiles.
+
+        """
+        yield from super().get_children_from_name(tilename.split("_")[1])
+
+    def get_parent_from_name(self, tilename: str) -> Equi7Tile[T_co]:
+        """Get parent tile (next lower tiling level).
+
+        Parameters
+        ----------
+        tilename: str
+            Tilename.
+
+        Returns
+        -------
+        Equi7Tile
+            Parent Equi7 tile.
+
+        """
+        return super().get_parent_from_name(tilename.split("_")[1])
 
 
-class Equi7Grid(RegularGrid):
+class Equi7Grid(RegularGrid, Generic[T_co]):
     """Defines Equi7Grid with all sub-grid."""
 
     _rpts_cls = Equi7TilingSystem
@@ -266,7 +404,7 @@ class Equi7Grid(RegularGrid):
         proj_def: ProjSystemDefinition,
         sampling: float | dict[int, float | int],
         tiling_defs: dict[int, RegularTilingDefinition],
-    ) -> Equi7TilingSystem:
+    ) -> Equi7TilingSystem[T_co]:
         """Create regular projected tiling system from Equi7 grid definitions.
 
         Create a regular, projected tiling system instance from given Equi7
@@ -292,9 +430,122 @@ class Equi7Grid(RegularGrid):
         land_zone_geog = convert_any_to_geog_geom(
             Path(__file__).parent / "data" / "land.parquet"
         )
-        return Equi7TilingSystem.from_sampling(
-            sampling, proj_def, tiling_defs, land_zone_geog=land_zone_geog
+        land_proj_zone_geog = shapely.intersection(
+            proj_def.proj_zone_geog.geom, land_zone_geog.geom
         )
+        land_zone = transform_geometry(
+            GeogGeom(geom=land_proj_zone_geog), proj_def.crs, segment=DEF_SEG_LEN_DEG
+        )
+        land_zone.geom = shapely.buffer(land_zone.geom, 0)
+        return Equi7TilingSystem.from_sampling(
+            sampling, proj_def, tiling_defs, land_zone=land_zone
+        )
+
+    def calc_length_distortion_on_ellipsoid(self, lon: float, lat: float) -> float:
+        """Compute local maximum length distortion k on the ellipsoid.
+
+        k equals the local areal distortion (as always h=1 for the Azimuthal
+        Equidistant projection)
+
+        Parameters
+        ----------
+        lon: float
+            Longitude.
+        lat: float
+            Latitude.
+
+        Returns
+        -------
+        k: float
+            Local max length distortion = local areal distortion.
+
+        """
+        rpts = self.get_system_from_lonlat(lon, lat)
+        proj4_dict = rpts.pyproj_crs.to_dict()
+        lon_0, lat_0 = proj4_dict["lon_0"], proj4_dict["lat_0"]
+
+        # get spherical distance and azimuth between projection
+        # centre and point of interest
+        geod = Geodesic.WGS84
+        gi = geod.Inverse(lon_0, lat_0, lat, lon)
+        c1 = gi["s12"]
+
+        # apply equation for distortion in direction
+        # perpendicular to the radius, k:
+        return c1 / geod.a / np.sin(c1 / geod.a)
+
+    def get_tiles_in_geog_bbox(
+        self,
+        bbox: tuple[float, float, float, float],
+        tiling_id: int | str,
+        *,
+        cover_land: bool = False,
+    ) -> Equi7TileGenerator:
+        """Get all Equi7 tiles intersecting with the geographic bounding box.
+
+        Parameters
+        ----------
+        bbox: tuple[float, float, float, float]
+            Bounding box (x_min, y_min, x_max, y_max) for selecting tiles.
+        tiling_id: int | str
+            Tiling level or name.
+            Defaults to the first tiling level.
+        cover_land: bool, optional
+            True if only tiles which cover land should be returned.
+            Defaults to false.
+
+        Returns
+        -------
+        Equi7TileGenerator
+            Yields Equi7 tile after tile, which intersects with the given
+            bounding box.
+
+        """
+        for e7_tiling_sys in dict(self).values():
+            yield from e7_tiling_sys.get_tiles_in_geog_bbox(bbox, tiling_id, cover_land)
+
+    def get_tiles_in_geom(
+        self, proj_geom: ProjGeom, tiling_id: int | str, *, cover_land: bool = False
+    ) -> Equi7TileGenerator:
+        """Get all Equi7 tiles intersecting with the geographic bounding box.
+
+        Parameters
+        ----------
+        proj_geom : ProjGeom
+            Projected geometry representing the region of interest.
+        tiling_id: int | str
+            Tiling level or name.
+            Defaults to the first tiling level.
+        cover_land: bool, optional
+            True if only tiles which cover land should be returned.
+            Defaults to false.
+
+        Returns
+        -------
+        Equi7TileGenerator
+            Yields Equi7 tile after tile, which intersects with the given
+            bounding box.
+
+        """
+        for e7_tiling_sys in dict(self).values():
+            yield from e7_tiling_sys.get_tiles_in_geom(proj_geom, tiling_id, cover_land)
+
+    def get_tile_from_name(self, ftilename: str) -> Equi7Tile:
+        """Get Equi7 tile from a full tilename.
+
+        Parameters
+        ----------
+        ftilename: str
+            Full Equi7 tile name.
+
+        Returns
+        -------
+        Equi7Tile
+            Equi7 tile corresponding to the given tile name.
+
+        """
+        continent = ftilename[:2]
+        return self[continent].get_tile_from_name(ftilename)
 
 
 def get_standard_equi7grid(sampling: float | dict[int | str, float | int]) -> Equi7Grid:
@@ -318,7 +569,7 @@ def get_standard_equi7grid(sampling: float | dict[int | str, float | int]) -> Eq
 
 def get_user_equi7grid(
     sampling: float | dict[int | str, float | int],
-    tiling_defs: dict[int, RegularTilingDefinition],
+    tiling_defs: Mapping[int, RegularTilingDefinition],
 ) -> Equi7Grid:
     """Get user-defined Equi7Grid definition.
 
@@ -341,4 +592,4 @@ def get_user_equi7grid(
 
 
 if __name__ == "__main__":
-    pass
+    get_standard_equi7grid(500)

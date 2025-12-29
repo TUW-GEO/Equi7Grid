@@ -6,9 +6,10 @@ description = "Definition and tools for Equi7Grid and its tiling system."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "pytileproj",
+    "pytileproj @ git+https://github.com/TUW-GEO/pytileproj.git@fixes-for-v1",
     "geopandas",
-    "pyarrow"
+    "pyarrow",
+    "geographiclib"
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -72,6 +73,8 @@ docstring-code-line-length = "dynamic"
 
 [tool.ty.rules]
 possibly-missing-attribute = "ignore"
+unresolved-attribute = "ignore"
+invalid-method-override = "ignore"
 
 [tool.pytest.ini_options]
 addopts = "--cov=pytileproj --cov-report term-missing -rsx --verbose --color=yes"

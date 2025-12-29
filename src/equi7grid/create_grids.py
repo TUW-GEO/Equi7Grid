@@ -29,20 +29,18 @@
 """Helper module to create Equi7Grid definition objects."""
 
 from pathlib import Path
-from typing import Any
+from typing import Generic, Literal
 
 from pytileproj.grid import write_grid_def
 from pytileproj.tiling_system import ProjSystemDefinition, RegularTilingDefinition
 
+from equi7grid._types import T_co
 
-class Equi7ProjSystemDefinition(ProjSystemDefinition):
+
+class Equi7ProjSystemDefinition(ProjSystemDefinition[T_co], Generic[T_co]):
     """Defines a projection system for an Equi7 continent."""
 
-    def __init__(self, **kwargs: dict[str, Any]) -> None:
-        """Initialise regular projected tiling system."""
-        _ = kwargs.pop("axis_orientation", None)
-        axis_orientation = ("E", "N")
-        super().__init__(axis_orientation=axis_orientation, **kwargs)
+    axis_orientation: tuple[Literal["E"], Literal["S"]] = ("E", "S")
 
 
 def get_system_definitions() -> dict[str, Equi7ProjSystemDefinition]:
@@ -72,17 +70,17 @@ def get_system_definitions() -> dict[str, Equi7ProjSystemDefinition]:
         min_xy=(0, -600_000),
         proj_zone_geog=zone_path / "eu_zone.parquet",
     )
-    e7oc = Equi7ProjSystemDefinition(
-        name="OC",
-        crs=27705,
-        min_xy=(0, 0),
-        proj_zone_geog=zone_path / "oc_zone.parquet",
-    )
     e7na = Equi7ProjSystemDefinition(
         name="NA",
-        crs=27706,
+        crs=27705,
         min_xy=(0, 0),
         proj_zone_geog=zone_path / "na_zone.parquet",
+    )
+    e7oc = Equi7ProjSystemDefinition(
+        name="OC",
+        crs=27706,
+        min_xy=(0, 0),
+        proj_zone_geog=zone_path / "oc_zone.parquet",
     )
     e7sa = Equi7ProjSystemDefinition(
         name="SA",
