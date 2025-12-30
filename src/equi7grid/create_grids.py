@@ -37,7 +37,7 @@ from pytileproj.tiling_system import ProjSystemDefinition, RegularTilingDefiniti
 from equi7grid._types import T_co
 
 
-class Equi7ProjSystemDefinition(ProjSystemDefinition[T_co], Generic[T_co]):
+class Equi7ProjSystemDefinition(ProjSystemDefinition, Generic[T_co]):
     """Defines a projection system for an Equi7 continent."""
 
     axis_orientation: tuple[Literal["E"], Literal["S"]] = ("E", "S")

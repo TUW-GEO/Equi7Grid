@@ -528,7 +528,9 @@ class Equi7Grid(RegularGrid, Generic[T_co]):
 
         """
         for e7_tiling_sys in dict(self).values():
-            yield from e7_tiling_sys.get_tiles_in_geom(proj_geom, tiling_id, cover_land)
+            yield from e7_tiling_sys.get_tiles_in_geom(
+                proj_geom, tiling_id, cover_land=cover_land
+            )
 
     def get_tile_from_name(self, ftilename: str) -> Equi7Tile:
         """Get Equi7 tile from a full tilename.

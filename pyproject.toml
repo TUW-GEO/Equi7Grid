@@ -28,6 +28,7 @@ Repository = "https://github.com/TUW-GEO/equi7grid"
 [project.optional-dependencies]
 vis = ["matplotlib", "cartopy"]
 docs = ["sphinx", "sphinx-book-theme", "sphinx-autodoc2", "myst-nb"]
+warp = ["rasterio", "scipy"]
 
 [build-system]
 requires = ["uv_build>=0.9.6,<0.10.0"]

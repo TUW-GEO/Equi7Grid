@@ -14,17 +14,17 @@ PROJ := `uv version --short`
 # lint python code using ruff
 [private]
 check-lint:
-    uv run ruff check . --fix
+    uv run --active ruff check . --fix
 
 # format python code using ruff
 [private]
 check-format:
-    uv run ruff format .
+    uv run --active ruff format .
 
 # run the type checker ty
 [private]
 check-types:
-    uv run ty check
+    uv run --active ty check
 
 # lint, format with ruff and type-check with ty
 check: check-format check-lint check-types
