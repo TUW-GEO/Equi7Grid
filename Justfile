@@ -33,6 +33,10 @@ check: check-format check-lint check-types
 test:
     uv run pytest tests/
 
+# run tests with coverage
+test-active:
+    uv run --active pytest tests/
+
 # run tests for all the supported Python versions
 testall:
     uv run --python=3.11 pytest

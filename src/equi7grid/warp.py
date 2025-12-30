@@ -52,8 +52,13 @@ from rasterio.warp import Affine, Resampling, reproject
 from scipy import ndimage
 from shapely.geometry import shape
 
+from equi7grid._const import WARP_INSTALLED
 from equi7grid._core import Equi7Grid, Equi7Tile
 from equi7grid._types import Extent
+
+if not WARP_INSTALLED:
+    err_msg = "It is required to install the 'warp' extension."
+    raise ImportError(err_msg)
 
 
 def pixel_to_world_coords(tf: Affine, pixel_coords: np.ndarray) -> np.ndarray:
