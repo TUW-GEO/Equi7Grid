@@ -30,7 +30,6 @@
 
 from collections.abc import Generator, Mapping
 from pathlib import Path
-from typing import Generic
 
 import numpy as np
 import shapely
@@ -59,13 +58,13 @@ from equi7grid.create_grids import get_system_definitions
 Equi7TileGenerator = Generator["Equi7Tile", "Equi7Tile", "Equi7Tile"]
 
 
-class Equi7Tile(RasterTile, Generic[T_co]):
+class Equi7Tile(RasterTile[T_co]):
     """Defines a tile in the Equi7Grid."""
 
     covers_land: bool
 
 
-class Equi7TilingSystem(RegularProjTilingSystem, Generic[T_co]):
+class Equi7TilingSystem(RegularProjTilingSystem[T_co]):
     """Defines a tiling system for each Equi7Grid continent."""
 
     land_zone: ProjGeom
@@ -117,7 +116,7 @@ class Equi7TilingSystem(RegularProjTilingSystem, Generic[T_co]):
 
     def _tile_to_raster_tile(
         self, tile: RegularTile, name: str | None = None
-    ) -> Equi7Tile[T_co]:
+    ) -> Equi7Tile:
         """Create an Equi7 tile object from a given regular tile.
 
         Parameters
@@ -377,7 +376,7 @@ class Equi7TilingSystem(RegularProjTilingSystem, Generic[T_co]):
         """
         yield from super().get_children_from_name(tilename.split("_")[1])
 
-    def get_parent_from_name(self, tilename: str) -> Equi7Tile[T_co]:
+    def get_parent_from_name(self, tilename: str) -> Equi7Tile:
         """Get parent tile (next lower tiling level).
 
         Parameters
@@ -394,7 +393,7 @@ class Equi7TilingSystem(RegularProjTilingSystem, Generic[T_co]):
         return super().get_parent_from_name(tilename.split("_")[1])
 
 
-class Equi7Grid(RegularGrid, Generic[T_co]):
+class Equi7Grid(RegularGrid[T_co]):
     """Defines Equi7Grid with all sub-grid."""
 
     _rpts_cls = Equi7TilingSystem
@@ -404,7 +403,7 @@ class Equi7Grid(RegularGrid, Generic[T_co]):
         proj_def: ProjSystemDefinition,
         sampling: float | dict[int, float | int],
         tiling_defs: dict[int, RegularTilingDefinition],
-    ) -> Equi7TilingSystem[T_co]:
+    ) -> Equi7TilingSystem:
         """Create regular projected tiling system from Equi7 grid definitions.
 
         Create a regular, projected tiling system instance from given Equi7
@@ -502,7 +501,9 @@ class Equi7Grid(RegularGrid, Generic[T_co]):
 
         """
         for e7_tiling_sys in dict(self).values():
-            yield from e7_tiling_sys.get_tiles_in_geog_bbox(bbox, tiling_id, cover_land)
+            yield from e7_tiling_sys.get_tiles_in_geog_bbox(
+                bbox, tiling_id, cover_land=cover_land
+            )
 
     def get_tiles_in_geom(
         self, proj_geom: ProjGeom, tiling_id: int | str, *, cover_land: bool = False

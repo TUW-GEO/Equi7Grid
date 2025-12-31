@@ -41,27 +41,38 @@ import tempfile
 from collections.abc import Callable, Mapping
 from functools import partial
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import numpy as np
-import rasterio
-import rasterio.features
 import shapely
 from pytileproj.projgeom import ProjGeom
-from rasterio.warp import Affine, Resampling, reproject
-from scipy import ndimage
 from shapely.geometry import shape
 
 from equi7grid._const import WARP_INSTALLED
 from equi7grid._core import Equi7Grid, Equi7Tile
 from equi7grid._types import Extent
 
-if not WARP_INSTALLED:
-    err_msg = "It is required to install the 'warp' extension."
-    raise ImportError(err_msg)
+if WARP_INSTALLED:
+    import rasterio
+    import rasterio.features
+    from rasterio.warp import Affine, Resampling, reproject
+    from scipy import ndimage
 
 
-def pixel_to_world_coords(tf: Affine, pixel_coords: np.ndarray) -> np.ndarray:
+def requires_warp(f: Callable) -> Callable:
+    """Check if the warp extension is installed."""
+
+    def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+        if not WARP_INSTALLED:
+            err_msg = "It is required to install the 'warp' extension."
+            raise ImportError(err_msg)
+        return f(*args, **kwargs)
+
+    return wrapper
+
+
+@requires_warp
+def pixel_to_world_coords(tf: "Affine", pixel_coords: np.ndarray) -> np.ndarray:
     """Convert pixel to world system coordinates."""
     sa, sb, sc, sd, se, sf, _, _, _ = tf
     world_coords = np.zeros_like(pixel_coords, dtype=np.float64)
@@ -71,6 +82,7 @@ def pixel_to_world_coords(tf: Affine, pixel_coords: np.ndarray) -> np.ndarray:
     return world_coords
 
 
+@requires_warp
 def get_raster_boundary(filepath: Path) -> ProjGeom:
     """Get accurate boundary of a raster file."""
     qlook_size = 400.0
@@ -131,6 +143,7 @@ def get_raster_boundary(filepath: Path) -> ProjGeom:
             return ProjGeom(geom=roi_poly, crs=src.crs)
 
 
+@requires_warp
 def get_raster_extent(filepath: Path) -> ProjGeom:
     """Get extent of a raster file."""
     with rasterio.open(filepath) as src:
@@ -148,6 +161,7 @@ def get_default_e7_filename(filepath: Path, ftilename: str) -> str:
     return f"{filepath.stem}_{ftilename}{filepath.suffix}"
 
 
+@requires_warp
 def resample_tile(  # noqa: PLR0913
     e7tile: Equi7Tile,
     filepath: Path,
@@ -155,7 +169,7 @@ def resample_tile(  # noqa: PLR0913
     *,
     band: int = 1,
     image_nodata: float | None = None,
-    resampling_type: Resampling = Resampling.bilinear,
+    resampling_type: "Resampling" = Resampling.bilinear,
     compress_type: str = "LZW",
     naming_traffo: Callable | None = None,
     tile_nodata: float | None = None,
@@ -268,6 +282,7 @@ def ftilenames_to_tiles(ftilenames: list[str], e7grid: Equi7Grid) -> list[Equi7T
     return [e7grid.get_tile_from_name(ftilename) for ftilename in ftilenames]
 
 
+@requires_warp
 def resample_to_equi7_tiles(  # noqa: PLR0913
     filepath: Path,
     e7grid: Equi7Grid,
@@ -282,7 +297,7 @@ def resample_to_equi7_tiles(  # noqa: PLR0913
     ftilenames: list[str] | None = None,
     band: int = 1,
     image_nodata: float | None = None,
-    resampling_type: Resampling = Resampling.bilinear,
+    resampling_type: "Resampling" = Resampling.bilinear,
     compress_type: str = "LZW",
     naming_traffo: Callable | None = None,
     tile_nodata: float | None = None,

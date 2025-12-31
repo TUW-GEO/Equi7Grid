@@ -29,7 +29,7 @@
 """Helper module to create Equi7Grid definition objects."""
 
 from pathlib import Path
-from typing import Generic, Literal
+from typing import Literal
 
 from pytileproj.grid import write_grid_def
 from pytileproj.tiling_system import ProjSystemDefinition, RegularTilingDefinition
@@ -37,7 +37,7 @@ from pytileproj.tiling_system import ProjSystemDefinition, RegularTilingDefiniti
 from equi7grid._types import T_co
 
 
-class Equi7ProjSystemDefinition(ProjSystemDefinition, Generic[T_co]):
+class Equi7ProjSystemDefinition(ProjSystemDefinition[T_co]):
     """Defines a projection system for an Equi7 continent."""
 
     axis_orientation: tuple[Literal["E"], Literal["S"]] = ("E", "S")

@@ -34,7 +34,7 @@ import pytest
 import shapely
 from pyproj import CRS, Transformer
 from pytileproj import TileOutOfZoneError
-from pytileproj.projgeom import GeogGeom, ProjGeom
+from pytileproj.projgeom import GeogGeom
 
 from equi7grid import get_standard_equi7grid
 from equi7grid._core import Equi7Grid, Equi7TileGenerator
@@ -68,7 +68,8 @@ def poly_spitzbergen() -> GeogGeom:
 
 
 def assert_tiles(tiles: Equi7TileGenerator, ref_tilenames: list[str]):
-    assert sorted([str(tile.name) for tile in tiles]) == sorted(ref_tilenames)
+    tilenames = [str(tile.name) for tile in tiles]
+    assert sorted(tilenames) == sorted(ref_tilenames)
 
 
 def test_xylonlat_doubles(e7grid: Equi7Grid):
@@ -344,37 +345,33 @@ def test_search_tiles_geog_extent_antimeridian(e7grid: Equi7Grid):
 
 
 # noqa: TODO: bbm (validate if tiles are as desired and discuss continent rule of returned tiles)
-def test_search_tiles_spitzbergen(e7grid: Equi7Grid, poly_spitzbergen: ProjGeom):
-    tiles_should = sorted(
-        [
-            "EU500M_E054N042T6",
-            "EU500M_E054N048T6",
-            "EU500M_E060N042T6",
-            "EU500M_E060N048T6",
-        ]
-    )
+def test_search_tiles_spitzbergen(e7grid: Equi7Grid, poly_spitzbergen: GeogGeom):
+    tiles_should = [
+        "EU500M_E054N042T6",
+        "EU500M_E054N048T6",
+        "EU500M_E060N042T6",
+        "EU500M_E060N048T6",
+    ]
     tiles = e7grid.get_tiles_in_geom(poly_spitzbergen, tiling_id="T6")
 
-    assert assert_tiles(tiles, tiles_should)
+    assert_tiles(tiles, tiles_should)
 
 
 def test_search_tiles_siberia_antimeridian(
-    e7grid: Equi7Grid, poly_siberia_alaska: ProjGeom
+    e7grid: Equi7Grid, poly_siberia_alaska: GeogGeom
 ):
-    tiles_should = sorted(
-        [
-            "AS500M_E066N090T6",
-            "AS500M_E072N090T6",
-            "NA500M_E054N072T6",
-            "NA500M_E054N078T6",
-            "NA500M_E060N078T6",
-        ]
-    )
+    tiles_should = [
+        "AS500M_E066N090T6",
+        "AS500M_E072N090T6",
+        "NA500M_E054N072T6",
+        "NA500M_E054N078T6",
+        "NA500M_E060N078T6",
+    ]
     tiles = e7grid.get_tiles_in_geom(
         poly_siberia_alaska, tiling_id="T6", cover_land=True
     )
 
-    assert assert_tiles(tiles, tiles_should)
+    assert_tiles(tiles, tiles_should)
 
 
 def test_identify_tiles_overlapping_xybbox(e7grid: Equi7Grid):
