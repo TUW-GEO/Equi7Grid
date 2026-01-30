@@ -3,6 +3,7 @@ authors = [{ name = "TU Wien", email = "remote.sensing@geo.tuwien.ac.at" }]
 name = "equi7grid"
 version = "1.0.0"
 description = "Definition and tools for Equi7Grid and its tiling system."
+license = { file = "LICENSE.txt" }
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

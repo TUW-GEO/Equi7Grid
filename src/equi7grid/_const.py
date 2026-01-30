@@ -1,3 +1,6 @@
+# Copyright (c) 2026, TU Wien
+# Licensed under the MIT License. See LICENSE file.
+
 from importlib.util import find_spec
 
 KM = 1e3  # kilometers in meters

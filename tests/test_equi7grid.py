@@ -1,30 +1,6 @@
 # Copyright (c) 2026, TU Wien
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice,
-#    this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer in the documentation
-#    and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-# The views and conclusions contained in the software and documentation are
-# those of the authors and should not be interpreted as representing official
-# policies, either expressed or implied, of the FreeBSD Project.
+# Licensed under the MIT License. See LICENSE file.
+
 """
 Tests for the Equi7Grid.
 """
@@ -183,7 +159,7 @@ def test_lonlat2rc_in_tile(e7grid: Equi7Grid):
     tile = e7grid.EU.get_tile_from_lonlat(lon, lat, tiling_id="T6")
     e7_coord = e7grid.EU.lonlat_to_xy(lon, lat)
     r, c = tile.xy2rc(e7_coord.x, e7_coord.y)
-    tile_should = "EU500M_E048N012T6"
+    tile_should = "EU_E048N012T6"
     c_should = 1199
     r_should = tile.n_rows - 1
     nptest.assert_equal(r, r_should)
@@ -230,19 +206,13 @@ def test_proj4_reprojection_accuracy():
 
 
 def test_decode_tilename(e7grid: Equi7Grid):
-    tile = e7grid.get_tile_from_name("EU500M_E042N006T6")
+    tile = e7grid.get_tile_from_name("EU_E042N006T6")
     sampling = 500
     assert tile.x_pixel_size == sampling
     assert tile.outer_boundary_corners[0] == (4200000, 600000)
 
     try:
-        tile = e7grid.get_tile_from_name("OC010M_E085N091T1")
-        raise AssertionError
-    except ValueError:
-        assert True
-
-    try:
-        tile = e7grid.get_tile_from_name("EU500M_E242N006T6")
+        tile = e7grid.get_tile_from_name("EU_E242N006T6")
         raise AssertionError
     except TileOutOfZoneError:
         assert True
@@ -251,20 +221,20 @@ def test_decode_tilename(e7grid: Equi7Grid):
 # noqa: TODO: bbm (validate if tiles are as desired)
 def test_find_overlapping_tilenames(e7grid: Equi7Grid):
     tiles_should = [
-        "EU500M_E042N006T3",
-        "EU500M_E042N009T3",
-        "EU500M_E045N006T3",
-        "EU500M_E045N009T3",
+        "EU_E042N006T3",
+        "EU_E042N009T3",
+        "EU_E045N006T3",
+        "EU_E045N009T3",
     ]
-    tiles = e7grid.EU.get_children_from_name("EU500M_E042N006T6")
+    tiles = e7grid.EU.get_children_from_name("EU_E042N006T6")
     assert_tiles(tiles, tiles_should)
 
-    tile_should = "EU500M_E039N009T3"
-    tile = e7grid.EU.get_parent_from_name("EU500M_E041N011T1")
+    tile_should = "EU_E039N009T3"
+    tile = e7grid.EU.get_parent_from_name("EU_E041N011T1")
     assert tile.name == tile_should
 
-    tile_should = "EU500M_E042N012T6"
-    tile = e7grid.EU.get_parent_from_name("EU500M_E044N015T1")
+    tile_should = "EU_E042N012T6"
+    tile = e7grid.EU.get_parent_from_name("EU_E044N015T1")
     tile = e7grid.EU.get_parent_from_name(tile.name)
     assert tile.name == tile_should
 
@@ -289,15 +259,15 @@ def test_search_tiles_geog_bbox(e7grid: Equi7Grid):
         bbox=(0, 30, 10, 40), tiling_id="T6", cover_land=True
     )
     tiles_should = [
-        "EU500M_E036N006T6",
-        "EU500M_E042N000T6",
-        "EU500M_E042N006T6",
-        "AF500M_E036N084T6",
-        "AF500M_E036N090T6",
-        "AF500M_E042N084T6",
-        "AF500M_E042N090T6",
-        "AF500M_E030N090T6",
-        "AF500M_E030N084T6",
+        "EU_E036N006T6",
+        "EU_E042N000T6",
+        "EU_E042N006T6",
+        "AF_E036N084T6",
+        "AF_E036N090T6",
+        "AF_E042N084T6",
+        "AF_E042N090T6",
+        "AF_E030N090T6",
+        "AF_E030N084T6",
     ]
     assert_tiles(tiles, tiles_should)
 
@@ -314,15 +284,15 @@ def test_find_all_tiles_with_global_bbox(e7grid: Equi7Grid):
 def test_search_tiles_geog_extent_poles(e7grid: Equi7Grid):
     tiles = e7grid.get_tiles_in_geog_bbox(bbox=(-170, 88, 150.0, 90), tiling_id="T6")
     tiles_should = [
-        "NA500M_E078N084T6",
-        "NA500M_E078N090T6",
-        "NA500M_E084N084T6",
-        "NA500M_E084N090T6",
+        "NA_E078N084T6",
+        "NA_E078N090T6",
+        "NA_E084N084T6",
+        "NA_E084N090T6",
     ]
     assert_tiles(tiles, tiles_should)
 
     tiles = e7grid.get_tiles_in_geog_bbox(bbox=(-170, -90, 150.0, -89), tiling_id="T6")
-    tiles_should = ["AN500M_E036N030T6"]
+    tiles_should = ["AN_E036N030T6"]
     assert_tiles(tiles, tiles_should)
 
 
@@ -331,14 +301,14 @@ def test_search_tiles_geog_extent_antimeridian(e7grid: Equi7Grid):
     tiles = e7grid.get_tiles_in_geog_bbox(bbox=(179, 66, -150, 67.85), tiling_id="T6")
 
     tiles_should = [
-        "AS500M_E066N090T6",
-        "AS500M_E066N096T6",
-        "AS500M_E072N090T6",
-        "AS500M_E072N096T6",
-        "NA500M_E054N072T6",
-        "NA500M_E054N078T6",
-        "NA500M_E060N072T6",
-        "NA500M_E060N078T6",
+        "AS_E066N090T6",
+        "AS_E066N096T6",
+        "AS_E072N090T6",
+        "AS_E072N096T6",
+        "NA_E054N072T6",
+        "NA_E054N078T6",
+        "NA_E060N072T6",
+        "NA_E060N078T6",
     ]
 
     assert_tiles(tiles, tiles_should)
@@ -347,10 +317,10 @@ def test_search_tiles_geog_extent_antimeridian(e7grid: Equi7Grid):
 # noqa: TODO: bbm (validate if tiles are as desired and discuss continent rule of returned tiles)
 def test_search_tiles_spitzbergen(e7grid: Equi7Grid, poly_spitzbergen: GeogGeom):
     tiles_should = [
-        "EU500M_E054N042T6",
-        "EU500M_E054N048T6",
-        "EU500M_E060N042T6",
-        "EU500M_E060N048T6",
+        "EU_E054N042T6",
+        "EU_E054N048T6",
+        "EU_E060N042T6",
+        "EU_E060N048T6",
     ]
     tiles = e7grid.get_tiles_in_geom(poly_spitzbergen, tiling_id="T6")
 
@@ -361,11 +331,11 @@ def test_search_tiles_siberia_antimeridian(
     e7grid: Equi7Grid, poly_siberia_alaska: GeogGeom
 ):
     tiles_should = [
-        "AS500M_E066N090T6",
-        "AS500M_E072N090T6",
-        "NA500M_E054N072T6",
-        "NA500M_E054N078T6",
-        "NA500M_E060N078T6",
+        "AS_E066N090T6",
+        "AS_E072N090T6",
+        "NA_E054N072T6",
+        "NA_E054N078T6",
+        "NA_E060N078T6",
     ]
     tiles = e7grid.get_tiles_in_geom(
         poly_siberia_alaska, tiling_id="T6", cover_land=True
@@ -376,12 +346,12 @@ def test_search_tiles_siberia_antimeridian(
 
 def test_identify_tiles_overlapping_xybbox(e7grid: Equi7Grid):
     tiles_should = [
-        "EU500M_E048N006T6",
-        "EU500M_E054N006T6",
-        "EU500M_E060N006T6",
-        "EU500M_E048N012T6",
-        "EU500M_E054N012T6",
-        "EU500M_E060N012T6",
+        "EU_E048N006T6",
+        "EU_E054N006T6",
+        "EU_E060N006T6",
+        "EU_E048N012T6",
+        "EU_E054N012T6",
+        "EU_E060N012T6",
     ]
 
     tiles = e7grid.EU.get_tiles_in_bbox(

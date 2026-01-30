@@ -1,30 +1,5 @@
 # Copyright (c) 2026, TU Wien
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice,
-#    this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer in the documentation
-#    and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-# The views and conclusions contained in the software and documentation are
-# those of the authors and should not be interpreted as representing official
-# policies, either expressed or implied, of the FreeBSD Project.
+# Licensed under the MIT License. See LICENSE file.
 
 """Core module defining the Equi7Grid classes."""
 
@@ -37,6 +12,7 @@ from geographiclib.geodesic import Geodesic
 from morecantile.models import Tile as RegularTile
 from pytileproj._const import DEF_SEG_LEN_DEG
 from pytileproj._errors import TileOutOfZoneError
+from pytileproj._types import SamplingFloatOrMap
 from pytileproj.grid import RegularGrid
 from pytileproj.projgeom import (
     GeogGeom,
@@ -51,7 +27,6 @@ from pytileproj.tiling_system import (
     RegularTilingDefinition,
 )
 
-from equi7grid._const import KM, MAX_SAMPLING
 from equi7grid._types import Extent, T_co
 from equi7grid.create_grids import get_system_definitions
 
@@ -68,32 +43,6 @@ class Equi7TilingSystem(RegularProjTilingSystem[T_co]):
     """Defines a tiling system for each Equi7Grid continent."""
 
     land_zone: ProjGeom
-
-    def _get_sampling_label(self, tiling_level: int) -> str:
-        """Get the sampling label for a tiling.
-
-        Parameters
-        ----------
-        tiling_level: int
-            Tiling level or zoom.
-
-        Returns
-        -------
-        str
-            Sampling label (string representation of the sampling).
-
-        """
-        sampling = self[tiling_level].sampling
-
-        if sampling < KM:
-            sampling_str = f"{int(sampling):03d}"
-        elif (sampling >= KM) and (sampling < MAX_SAMPLING):
-            sampling_str = f"{sampling:.1f}".replace(".", "K")
-        else:
-            err_msg = "Sampling labelling is not supported."
-            raise ValueError(err_msg)
-
-        return sampling_str
 
     def _extent_covers_land(self, extent: Extent) -> bool:
         """Evaluate if the given extent covers land masses.
@@ -186,7 +135,7 @@ class Equi7TilingSystem(RegularProjTilingSystem[T_co]):
 
         """
         tilename = self._tile_to_partial_name(tile)
-        return f"{self.name}{self._get_sampling_label(tile.z)}M_{tilename}"
+        return f"{self.name}_{tilename}"
 
     def _tile_to_name(self, tile: RegularTile) -> str:
         """Create a full Equi7 tilename.
@@ -254,13 +203,6 @@ class Equi7TilingSystem(RegularProjTilingSystem[T_co]):
 
         """
         tile = self._name_to_tile(ftilename.split("_")[1])
-        sampling = int(ftilename.split("_")[0][2:-1])
-        if self[tile.z].sampling != sampling:
-            err_msg = (
-                f"Sampling of tilename ({self[tile.z].sampling}) "
-                f" and tiling do not match ({sampling})."
-            )
-            raise ValueError(err_msg)
         e7_tile = self._tile_to_raster_tile(tile, name=ftilename)
         if not self._tile_in_zone(e7_tile):
             raise TileOutOfZoneError(e7_tile)
@@ -401,7 +343,7 @@ class Equi7Grid(RegularGrid[T_co]):
     @staticmethod
     def _create_rpts_from_def(
         proj_def: ProjSystemDefinition,
-        sampling: float | dict[int, float | int],
+        sampling: SamplingFloatOrMap,
         tiling_defs: dict[int, RegularTilingDefinition],
     ) -> Equi7TilingSystem:
         """Create regular projected tiling system from Equi7 grid definitions.
@@ -551,7 +493,9 @@ class Equi7Grid(RegularGrid[T_co]):
         return self[continent].get_tile_from_name(ftilename)
 
 
-def get_standard_equi7grid(sampling: float | dict[int | str, float | int]) -> Equi7Grid:
+def get_standard_equi7grid(
+    sampling: SamplingFloatOrMap,
+) -> Equi7Grid:
     """Get standard Equi7Grid definition.
 
     Parameters
@@ -571,7 +515,7 @@ def get_standard_equi7grid(sampling: float | dict[int | str, float | int]) -> Eq
 
 
 def get_user_equi7grid(
-    sampling: float | dict[int | str, float | int],
+    sampling: SamplingFloatOrMap,
     tiling_defs: Mapping[int, RegularTilingDefinition],
 ) -> Equi7Grid:
     """Get user-defined Equi7Grid definition.
