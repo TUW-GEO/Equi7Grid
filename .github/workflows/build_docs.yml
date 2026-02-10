@@ -40,7 +40,7 @@ jobs:
       - name: Install the project
         run: |
             uv venv --python 3.12
-            uv pip install -r pyproject.toml -e . --extra vis --extra docs --extra geo
+            uv pip install -r pyproject.toml -e . --extra vis --extra docs --extra warp
             uv pip list
 
       - name: Create docs

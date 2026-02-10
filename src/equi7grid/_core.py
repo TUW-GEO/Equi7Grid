@@ -28,7 +28,7 @@ from pytileproj.projgeom import (
 )
 
 from equi7grid._types import Extent, T_co
-from equi7grid.create_grids import get_system_definitions
+from equi7grid.create_grids import get_standard_tilings, get_system_definitions
 
 Equi7TileGenerator = Generator["Equi7Tile", "Equi7Tile", "Equi7Tile"]
 
@@ -493,30 +493,11 @@ class Equi7Grid(RegularGrid[T_co]):
         return self[continent].get_tile_from_name(ftilename)
 
 
-def get_standard_equi7grid(
-    sampling: SamplingFloatOrMap,
-) -> Equi7Grid:
-    """Get standard Equi7Grid definition.
-
-    Parameters
-    ----------
-    sampling: float | int | Dict[int | str, float | int]
-            Grid sampling/pixel size specified as a single value or a dictionary with
-            tiling IDs as keys and samplings as values.
-
-    Returns
-    -------
-    Equi7Grid
-        Equi7Grid instance.
-
-    """
-    json_path = Path(__file__).parent / "data" / "grids" / "equi7standard.json"
-    return Equi7Grid.from_grid_def(json_path, sampling)
-
-
 def get_user_equi7grid(
     sampling: SamplingFloatOrMap,
     tiling_defs: Mapping[int, RegularTilingDefinition],
+    *,
+    buffered: bool = False,
 ) -> Equi7Grid:
     """Get user-defined Equi7Grid definition.
 
@@ -527,6 +508,9 @@ def get_user_equi7grid(
             tiling IDs as keys and samplings as values.
     tiling_defs: Dict[int, RegularTilingDefinition]
             Tiling definition (stores name/tiling level and tile size).
+    buffered: bool, optional
+        If this flag is set to true, then the buffered projection zone
+        will be used (defaults to false).
 
     Returns
     -------
@@ -534,9 +518,32 @@ def get_user_equi7grid(
         Equi7Grid instance.
 
     """
-    proj_defs = get_system_definitions()
+    proj_defs = get_system_definitions(buffered=buffered)
     return Equi7Grid.from_sampling(sampling, proj_defs, tiling_defs)
 
 
+def get_standard_equi7grid(
+    sampling: SamplingFloatOrMap, *, buffered: bool = False
+) -> Equi7Grid:
+    """Get standard Equi7Grid definition.
+
+    Parameters
+    ----------
+    sampling: float | int | Dict[int | str, float | int]
+            Grid sampling/pixel size specified as a single value or a dictionary with
+            tiling IDs as keys and samplings as values.
+    buffered: bool, optional
+        If this flag is set to true, then the buffered projection zone
+        will be used (defaults to false).
+
+    Returns
+    -------
+    Equi7Grid
+        Equi7Grid instance.
+
+    """
+    return get_user_equi7grid(sampling, get_standard_tilings(), buffered=buffered)
+
+
 if __name__ == "__main__":
-    get_standard_equi7grid(500)
+    pass
