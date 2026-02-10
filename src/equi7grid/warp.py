@@ -20,7 +20,7 @@ from typing import Any, cast
 
 import numpy as np
 import shapely
-from pytileproj.projgeom import ProjGeom
+from pytileproj import ProjGeom
 from shapely.geometry import shape
 
 from equi7grid._const import WARP_INSTALLED

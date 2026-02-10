@@ -1,5 +1,5 @@
 
-name: pytileproj GitHub Pages deploy
+name: equi7grid GitHub Pages deploy
 on:
   push:
     # Runs on pushes targeting the default branch

@@ -9,8 +9,7 @@ import numpy.testing as nptest
 import pytest
 import shapely
 from pyproj import CRS, Transformer
-from pytileproj import TileOutOfZoneError
-from pytileproj.projgeom import GeogGeom
+from pytileproj import GeogGeom, TileOutOfZoneError
 
 from equi7grid import get_standard_equi7grid
 from equi7grid._core import Equi7Grid, Equi7TileGenerator

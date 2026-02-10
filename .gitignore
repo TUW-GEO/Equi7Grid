@@ -17,6 +17,7 @@ __pycache__/*
 # Project files
 .ropeproject
 .project
+.scripts
 .pydevproject
 .settings
 .idea

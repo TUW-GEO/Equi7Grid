@@ -6,8 +6,8 @@
 from pathlib import Path
 from typing import Literal
 
+from pytileproj import ProjSystemDefinition, RegularTilingDefinition
 from pytileproj.grid import write_grid_def
-from pytileproj.tiling_system import ProjSystemDefinition, RegularTilingDefinition
 
 from equi7grid._types import T_co
 
