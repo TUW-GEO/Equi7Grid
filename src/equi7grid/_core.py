@@ -3,6 +3,7 @@
 
 """Core module defining the Equi7Grid classes."""
 
+import warnings
 from collections.abc import Generator, Mapping
 from pathlib import Path
 
@@ -295,9 +296,12 @@ class Equi7TilingSystem(RegularProjTilingSystem[T_co]):
         """
         ellaxis = Geodesic.WGS84.a
 
-        proj4_dict = self.pyproj_crs.to_dict()
-        fe, fn = proj4_dict["x_0"], proj4_dict["y_0"]
+        # ignore loss of information during CRS to PROJ4 conversion
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            proj4_dict = self.pyproj_crs.to_dict()
 
+        fe, fn = proj4_dict["x_0"], proj4_dict["y_0"]
         dists = np.sqrt((np.array(x) - fe) ** 2 + (np.array(y) - fn) ** 2)
 
         return dists / ellaxis / np.sin(dists / ellaxis)
@@ -402,9 +406,13 @@ class Equi7Grid(RegularGrid[T_co]):
 
         """
         rpts = self.get_system_from_lonlat(lon, lat)
-        proj4_dict = rpts.pyproj_crs.to_dict()
-        lon_0, lat_0 = proj4_dict["lon_0"], proj4_dict["lat_0"]
 
+        # ignore loss of information during CRS to PROJ4 conversion
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            proj4_dict = rpts.pyproj_crs.to_dict()
+
+        lon_0, lat_0 = proj4_dict["lon_0"], proj4_dict["lat_0"]
         # get spherical distance and azimuth between projection
         # centre and point of interest
         geod = Geodesic.WGS84

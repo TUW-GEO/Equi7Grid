@@ -35,9 +35,9 @@ def poly_siberia_alaska() -> GeogGeom:
 def poly_spitzbergen() -> GeogGeom:
     points = [
         (8.391827331539572, 77.35762113396143),
-        (16.87007957357446, 81.59290885863483),
-        (40.50119498304080, 79.73786853853339),
         (25.43098663332705, 75.61353436967198),
+        (40.50119498304080, 79.73786853853339),
+        (16.87007957357446, 81.59290885863483),
     ]
     return GeogGeom(geom=shapely.Polygon(points))
 
@@ -152,7 +152,6 @@ def test_xy2rc(e7grid: Equi7Grid):
     nptest.assert_allclose(r_should, r)
 
 
-# noqa: TODO: bbm (separate function & full tile name for each tile?)
 def test_lonlat2rc_in_tile(e7grid: Equi7Grid):
     lon, lat = 18.507, 44.571
     tile = e7grid.EU.get_tile_from_lonlat(lon, lat, tiling_id="T6")
@@ -313,7 +312,7 @@ def test_search_tiles_geog_extent_antimeridian(e7grid: Equi7Grid):
     assert_tiles(tiles, tiles_should)
 
 
-# noqa: TODO: bbm (validate if tiles are as desired and discuss continent rule of returned tiles)
+# noqa: TODO: bbm (validate if tiles are as desired)
 def test_search_tiles_spitzbergen(e7grid: Equi7Grid, poly_spitzbergen: GeogGeom):
     tiles_should = [
         "EU_E054N042T6",
