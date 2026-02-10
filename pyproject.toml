@@ -7,7 +7,7 @@ license = { file = "LICENSE.txt" }
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "pytileproj @ git+https://github.com/TUW-GEO/pytileproj.git@c909eb9",
+    "pytileproj @ git+https://github.com/TUW-GEO/pytileproj.git@43d1f01",
     "geopandas",
     "pyarrow",
     "geographiclib"

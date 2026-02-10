@@ -405,7 +405,7 @@ class Equi7Grid(RegularGrid[T_co]):
             Local max length distortion = local areal distortion.
 
         """
-        rpts = self.get_system_from_lonlat(lon, lat)
+        rpts = self.get_systems_from_lonlat(lon, lat)[0]
 
         # ignore loss of information during CRS to PROJ4 conversion
         with warnings.catch_warnings():
@@ -450,7 +450,9 @@ class Equi7Grid(RegularGrid[T_co]):
             bounding box.
 
         """
-        for e7_tiling_sys in dict(self).values():
+        continents = self.system_order or []
+        for continent in continents:
+            e7_tiling_sys = self[continent]
             yield from e7_tiling_sys.get_tiles_in_geog_bbox(
                 bbox, tiling_id, cover_land=cover_land
             )
@@ -478,7 +480,9 @@ class Equi7Grid(RegularGrid[T_co]):
             bounding box.
 
         """
-        for e7_tiling_sys in dict(self).values():
+        continents = self.system_order or []
+        for continent in continents:
+            e7_tiling_sys = self[continent]
             yield from e7_tiling_sys.get_tiles_in_geom(
                 proj_geom, tiling_id, cover_land=cover_land
             )
@@ -506,6 +510,7 @@ def get_user_equi7grid(
     tiling_defs: Mapping[int, RegularTilingDefinition],
     *,
     buffered: bool = False,
+    continent_order: list[str] | None = None,
 ) -> Equi7Grid:
     """Get user-defined Equi7Grid definition.
 
@@ -519,6 +524,8 @@ def get_user_equi7grid(
     buffered: bool, optional
         If this flag is set to true, then the buffered projection zone
         will be used (defaults to false).
+    continent_order: list[str] | None, optional
+        Defines the usage and order of the continents.
 
     Returns
     -------
@@ -527,11 +534,16 @@ def get_user_equi7grid(
 
     """
     proj_defs = get_system_definitions(buffered=buffered)
-    return Equi7Grid.from_sampling(sampling, proj_defs, tiling_defs)
+    return Equi7Grid.from_sampling(
+        sampling, proj_defs, tiling_defs, system_order=continent_order
+    )
 
 
 def get_standard_equi7grid(
-    sampling: SamplingFloatOrMap, *, buffered: bool = False
+    sampling: SamplingFloatOrMap,
+    *,
+    buffered: bool = False,
+    continent_order: list[str] | None = None,
 ) -> Equi7Grid:
     """Get standard Equi7Grid definition.
 
@@ -543,6 +555,8 @@ def get_standard_equi7grid(
     buffered: bool, optional
         If this flag is set to true, then the buffered projection zone
         will be used (defaults to false).
+    continent_order: list[str] | None, optional
+        Defines the usage and order of the continents.
 
     Returns
     -------
@@ -550,7 +564,12 @@ def get_standard_equi7grid(
         Equi7Grid instance.
 
     """
-    return get_user_equi7grid(sampling, get_standard_tilings(), buffered=buffered)
+    return get_user_equi7grid(
+        sampling,
+        get_standard_tilings(),
+        buffered=buffered,
+        continent_order=continent_order,
+    )
 
 
 if __name__ == "__main__":

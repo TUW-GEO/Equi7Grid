@@ -9,7 +9,7 @@ import numpy.testing as nptest
 import pytest
 import shapely
 from pyproj import CRS, Transformer
-from pytileproj import GeogGeom, TileOutOfZoneError
+from pytileproj import GeogGeom, GeomOutOfZoneError, TileOutOfZoneError
 
 from equi7grid import get_standard_equi7grid
 from equi7grid._core import Equi7Grid, Equi7TileGenerator
@@ -60,7 +60,7 @@ def test_lonlatxy_doubles_get_rpts(e7grid: Equi7Grid):
     x_should = 5138743.127891
     y_should = 1307029.157093
     lon, lat = 15.1, 45.3
-    rpts = e7grid.get_system_from_lonlat(lon, lat)
+    rpts = e7grid.get_systems_from_lonlat(lon, lat)[0]
     assert rpts.name == "EU"
     proj_coord = rpts.lonlat_to_xy(lon, lat)
     nptest.assert_allclose(x_should, proj_coord.x)
@@ -72,7 +72,7 @@ def test_lonlatxy_antimeridian(e7grid: Equi7Grid):
     x_should = 7048122.707876
     y_should = 9238361.594967
     lon, lat = -178.5, 67.75
-    rpts = e7grid.get_system_from_lonlat(lon, lat)
+    rpts = e7grid.get_systems_from_lonlat(lon, lat)[0]
     assert rpts.name == "AS"
     e7_coord = rpts.lonlat_to_xy(lon, lat)
     nptest.assert_allclose(x_should, e7_coord.x)
@@ -82,7 +82,7 @@ def test_lonlatxy_antimeridian(e7grid: Equi7Grid):
     x_should = 3887311.532849
     y_should = 7756934.345841
     lon, lat = -178.0, 51.75
-    rpts = e7grid.get_system_from_lonlat(lon, lat)
+    rpts = e7grid.get_systems_from_lonlat(lon, lat)[0]
     assert rpts.name == "NA"
     e7_coord = rpts.lonlat_to_xy(lon, lat)
     nptest.assert_allclose(x_should, e7_coord.x)
@@ -92,7 +92,7 @@ def test_lonlatxy_antimeridian(e7grid: Equi7Grid):
     x_should = 3865149.386282
     y_should = 8432250.89933
     lon, lat = 173.0, 53.0
-    rpts = e7grid.get_system_from_lonlat(lon, lat)
+    rpts = e7grid.get_systems_from_lonlat(lon, lat)[0]
     assert rpts.name == "NA"
     e7_coord = rpts.lonlat_to_xy(lon, lat)
     nptest.assert_allclose(x_should, e7_coord.x)
@@ -357,6 +357,43 @@ def test_identify_tiles_overlapping_xybbox(e7grid: Equi7Grid):
     )
 
     assert_tiles(tiles, tiles_should)
+
+
+def test_lonlat_to_xy_continental_transition(e7grid: Equi7Grid):
+    lon, lat = 51.12, 61.71
+    proj_coords = e7grid.lonlat_to_xy(lon, lat)
+    assert len(proj_coords) == 1
+    assert next(iter(proj_coords.keys())) == "AS"
+
+
+def test_lonlat_to_xy_continental_transition_bfrd():
+    lon, lat = 51.12, 61.71
+    e7grid_bfrd = get_standard_equi7grid(500, buffered=True)
+    proj_coords = e7grid_bfrd.lonlat_to_xy(lon, lat)
+    n_continents = 2
+    assert len(proj_coords) == n_continents
+    assert list(proj_coords.keys()) == ["AS", "EU"]
+
+
+def test_lonlat_to_xy_system_order():
+    lon, lat = 51.12, 61.71
+    e7grid_eu = get_standard_equi7grid(500, continent_order=["EU"])
+    try:
+        _ = e7grid_eu.lonlat_to_xy(lon, lat)
+        raise AssertionError
+    except GeomOutOfZoneError:
+        assert True
+
+
+def test_lonlat_to_xy_system_order_bfrd():
+    lon, lat = 51.12, 61.71
+    e7grid_bfrd = get_standard_equi7grid(
+        500, buffered=True, continent_order=["EU", "AS"]
+    )
+    proj_coords = e7grid_bfrd.lonlat_to_xy(lon, lat)
+    n_continents = 2
+    assert len(proj_coords) == n_continents
+    assert list(proj_coords.keys()) == ["EU", "AS"]
 
 
 if __name__ == "__main__":
