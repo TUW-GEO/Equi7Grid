@@ -248,7 +248,6 @@ def test_search_tiles_lon_lat_extent_by_points(e7grid: Equi7Grid):
 """
 
 
-# noqa: TODO: bbm (validate if tiles are as desired)
 def test_search_tiles_geog_bbox(e7grid: Equi7Grid):
     tiles = e7grid.get_tiles_in_geog_bbox(
         bbox=(0, 30, 10, 40), tiling_id="T6", cover_land=True
@@ -257,12 +256,12 @@ def test_search_tiles_geog_bbox(e7grid: Equi7Grid):
         "EU_E036N006T6",
         "EU_E042N000T6",
         "EU_E042N006T6",
+        "AF_E030N084T6",
+        "AF_E030N090T6",
         "AF_E036N084T6",
         "AF_E036N090T6",
         "AF_E042N084T6",
         "AF_E042N090T6",
-        "AF_E030N090T6",
-        "AF_E030N084T6",
     ]
     assert_tiles(tiles, tiles_should)
 
