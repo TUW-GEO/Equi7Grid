@@ -214,7 +214,6 @@ def test_decode_tilename(e7grid: Equi7Grid):
         assert True
 
 
-# noqa: TODO: bbm (validate if tiles are as desired)
 def test_find_overlapping_tilenames(e7grid: Equi7Grid):
     tiles_should = [
         "EU_E042N006T3",
