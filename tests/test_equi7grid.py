@@ -104,7 +104,7 @@ def test_calc_length_distortion_on_ellipsoid(e7grid: Equi7Grid):
     lat = 24
     k = e7grid.calc_length_distortion_on_ellipsoid(lon, lat)
 
-    k_should = 1.1432971727108836  # 1.1432971727108836
+    k_should = 1.1432971727108836
     nptest.assert_almost_equal(k, k_should, decimal=6)
 
 
@@ -164,7 +164,6 @@ def test_lonlat2rc_in_tile(e7grid: Equi7Grid):
     nptest.assert_equal(tile.name, tile_should)
 
 
-# noqa: TODO: bbm (test still needed?)
 def test_proj4_reprojection_accuracy():
     aeqd_wkt = (
         'PROJCS["Azimuthal_Equidistant",'
