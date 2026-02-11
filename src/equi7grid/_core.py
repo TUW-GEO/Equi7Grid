@@ -416,7 +416,7 @@ class Equi7Grid(RegularGrid[T_co]):
         # get spherical distance and azimuth between projection
         # centre and point of interest
         geod = Geodesic.WGS84
-        gi = geod.Inverse(lon_0, lat_0, lat, lon)
+        gi = geod.Inverse(lat_0, lon_0, lat, lon)
         c1 = gi["s12"]
 
         # apply equation for distortion in direction

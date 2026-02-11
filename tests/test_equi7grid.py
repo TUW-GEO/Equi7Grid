@@ -99,13 +99,12 @@ def test_lonlatxy_antimeridian(e7grid: Equi7Grid):
     nptest.assert_allclose(y_should, e7_coord.y)
 
 
-# noqa: TODO: bbm (does not yield expected result)
 def test_calc_length_distortion_on_ellipsoid(e7grid: Equi7Grid):
     lon = -29.1
     lat = 24
     k = e7grid.calc_length_distortion_on_ellipsoid(lon, lat)
 
-    k_should = 1.0637776281308071  # 1.1432971727108836
+    k_should = 1.1432971727108836  # 1.1432971727108836
     nptest.assert_almost_equal(k, k_should, decimal=6)
 
 
