@@ -294,7 +294,6 @@ def test_search_tiles_geog_extent_antimeridian(e7grid: Equi7Grid):
     assert_tiles(tiles, tiles_should)
 
 
-# noqa: TODO: bbm (validate if tiles are as desired)
 def test_search_tiles_spitzbergen(e7grid: Equi7Grid, poly_spitzbergen: GeogGeom):
     tiles_should = [
         "EU_E054N042T6",
