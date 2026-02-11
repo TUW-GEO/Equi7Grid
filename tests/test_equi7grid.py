@@ -234,20 +234,6 @@ def test_find_overlapping_tilenames(e7grid: Equi7Grid):
     assert tile.name == tile_should
 
 
-# noqa: TODO: bbm (by points really needed?)
-"""
-def test_search_tiles_lon_lat_extent_by_points(e7grid: Equi7Grid):
-    tiles = e7grid.get_tiles_in_geog_bbox(bbox=[(10, 40), (5, 50),
-                                           (-90.9, -1.2), (-175.2, 66)],
-                                          cover_land=True)
-
-    desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N018T6',
-                     'AS500M_E072N090T6', 'SA500M_E036N066T6']
-
-    assert sorted(tiles) == sorted(desired_tiles)
-"""
-
-
 def test_search_tiles_geog_bbox(e7grid: Equi7Grid):
     tiles = e7grid.get_tiles_in_geog_bbox(
         bbox=(0, 30, 10, 40), tiling_id="T6", cover_land=True
