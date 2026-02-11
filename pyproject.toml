@@ -7,7 +7,7 @@ license = { file = "LICENSE.txt" }
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "pytileproj @ git+https://github.com/TUW-GEO/pytileproj.git@43d1f01",
+    "pytileproj @ git+https://github.com/TUW-GEO/pytileproj.git@19ba86f",
     "geopandas",
     "pyarrow",
     "geographiclib"
@@ -42,6 +42,7 @@ dev = ["ipykernel>=7.1.0",
  "pytest-cov>=7.0.0",
  "ruff>=0.14.5",
  "ty>=0.0.8",
+ "approvaltests"
 ]
 
 
@@ -80,6 +81,7 @@ invalid-method-override = "ignore"
 
 [tool.pytest.ini_options]
 addopts = "--cov=equi7grid --cov-report term-missing -rsx --verbose --color=yes"
+markers = ["warp_installed"]
 
 [tool.coverage.run]
 relative_files = true

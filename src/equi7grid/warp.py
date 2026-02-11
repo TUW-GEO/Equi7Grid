@@ -16,7 +16,7 @@ import tempfile
 from collections.abc import Callable, Mapping
 from functools import partial
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Union, cast
 
 import numpy as np
 import shapely
@@ -67,9 +67,16 @@ def get_raster_boundary(filepath: Path) -> ProjGeom:
         rasterio.open(filepath) as src,
     ):
         src_transform = src.transform
-        dst_transform = src_transform * Affine.scale(qlook_size)
         dst_width = src.width / qlook_size
         dst_height = src.height / qlook_size
+        scale = [qlook_size, qlook_size]
+        if dst_width < 1:
+            dst_width = src.width
+            scale[0] = 1
+        if dst_height < 1:
+            dst_height = src.height
+            scale[1] = 1
+        dst_transform = src_transform * Affine.scale(*scale)
 
         kwargs = src.meta.copy()
         kwargs.update(
@@ -144,7 +151,7 @@ def resample_tile(  # noqa: PLR0913
     *,
     band: int = 1,
     image_nodata: float | None = None,
-    resampling_type: "Resampling" = Resampling.bilinear,
+    resampling_type: Union["Resampling", None] = None,
     compress_type: str = "LZW",
     naming_traffo: Callable | None = None,
     tile_nodata: float | None = None,
@@ -160,8 +167,8 @@ def resample_tile(  # noqa: PLR0913
     ftilename = cast("str", e7tile.name)
 
     if create_e7_folder:
-        grid_foldername = f"EQUI7_{ftilename[0:6]}"
-        tile_dirpath = output_dirpath / grid_foldername / ftilename[7:]
+        grid_foldername = f"EQUI7_{ftilename[0:2]}"
+        tile_dirpath = output_dirpath / grid_foldername / ftilename[3:]
         tile_dirpath.mkdir(exist_ok=True, parents=True)
     else:
         tile_dirpath = output_dirpath
@@ -176,6 +183,10 @@ def resample_tile(  # noqa: PLR0913
     with rasterio.open(filepath, nodata=image_nodata) as src:
         transform = Affine.from_gdal(*e7tile.geotrans)
         blockxsize, blockysize = src.block_shapes[band - 1]
+        if (blockxsize % 16) != 0:
+            blockxsize = None
+        if (blockysize % 16) != 0:
+            blockysize = None
         kwargs = src.meta.copy()
         kwargs.update(
             {
@@ -192,6 +203,7 @@ def resample_tile(  # noqa: PLR0913
                 "blockysize": tile_blocksize or blockysize,
             }
         )
+        resampling_type = resampling_type or Resampling.bilinear
         with rasterio.open(tile_filepath, "w", **kwargs) as dst:
             reproject(
                 source=rasterio.band(src, band),
@@ -272,7 +284,7 @@ def resample_to_equi7_tiles(  # noqa: PLR0913
     ftilenames: list[str] | None = None,
     band: int = 1,
     image_nodata: float | None = None,
-    resampling_type: "Resampling" = Resampling.bilinear,
+    resampling_type: Union["Resampling", None] = None,
     compress_type: str = "LZW",
     naming_traffo: Callable | None = None,
     tile_nodata: float | None = None,
@@ -301,6 +313,7 @@ def resample_to_equi7_tiles(  # noqa: PLR0913
                 accurate_boundary=accurate_boundary,
             )
         )
+    resampling_type = resampling_type or Resampling.bilinear
 
     resample_kwargs = {
         "filepath": filepath,
