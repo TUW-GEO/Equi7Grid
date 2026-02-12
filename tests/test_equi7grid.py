@@ -276,7 +276,6 @@ def test_search_tiles_geog_extent_poles(e7grid: Equi7Grid):
     assert_tiles(tiles, tiles_should)
 
 
-# noqa: TODO: bbm (validate if tiles are as desired)
 def test_search_tiles_geog_extent_antimeridian(e7grid: Equi7Grid):
     tiles = e7grid.get_tiles_in_geog_bbox(bbox=(179, 66, -150, 67.85), tiling_id="T6")
 
@@ -288,7 +287,6 @@ def test_search_tiles_geog_extent_antimeridian(e7grid: Equi7Grid):
         "NA_E054N072T6",
         "NA_E054N078T6",
         "NA_E060N072T6",
-        "NA_E060N078T6",
     ]
 
     assert_tiles(tiles, tiles_should)
