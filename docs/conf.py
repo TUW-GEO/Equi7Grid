@@ -43,7 +43,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "equi7grid"
-copyright = "2025, TU Wien"  # noqa: A001
+copyright = "2026, TU Wien"  # noqa: A001
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

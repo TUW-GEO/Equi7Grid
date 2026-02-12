@@ -233,7 +233,7 @@ def test_find_overlapping_tilenames(e7grid: Equi7Grid):
 
     tile_should = "EU_E042N012T6"
     tile = e7grid.EU.get_parent_from_name("EU_E044N015T1")
-    tile = e7grid.EU.get_parent_from_name(tile.name)
+    tile = e7grid.EU.get_parent_from_name(str(tile.name))
     assert tile.name == tile_should
 
 

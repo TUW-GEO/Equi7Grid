@@ -6,6 +6,7 @@
 import warnings
 from collections.abc import Generator, Mapping
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import shapely
@@ -31,16 +32,16 @@ from pytileproj.projgeom import (
 from equi7grid._types import Extent, T_co
 from equi7grid.create_grids import get_standard_tilings, get_system_definitions
 
-Equi7TileGenerator = Generator["Equi7Tile", "Equi7Tile", "Equi7Tile"]
+Equi7TileGenerator = Generator["Equi7Tile", None, None]
 
 
-class Equi7Tile(RasterTile[T_co]):
+class Equi7Tile(RasterTile[Any]):
     """Defines a tile in the Equi7Grid."""
 
     covers_land: bool
 
 
-class Equi7TilingSystem(RegularProjTilingSystem[T_co]):
+class Equi7TilingSystem(RegularProjTilingSystem):
     """Defines a tiling system for each Equi7Grid continent."""
 
     land_zone: ProjGeom
@@ -341,6 +342,14 @@ class Equi7TilingSystem(RegularProjTilingSystem[T_co]):
 
 class Equi7Grid(RegularGrid[T_co]):
     """Defines Equi7Grid with all sub-grid."""
+
+    AF: Equi7TilingSystem | None = None
+    AN: Equi7TilingSystem | None = None
+    AS: Equi7TilingSystem | None = None
+    EU: Equi7TilingSystem | None = None
+    NA: Equi7TilingSystem | None = None
+    OC: Equi7TilingSystem | None = None
+    SA: Equi7TilingSystem | None = None
 
     _rpts_cls = Equi7TilingSystem
 
