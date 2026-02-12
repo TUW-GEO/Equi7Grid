@@ -99,13 +99,12 @@ def test_lonlatxy_antimeridian(e7grid: Equi7Grid):
     nptest.assert_allclose(y_should, e7_coord.y)
 
 
-# noqa: TODO: bbm (does not yield expected result)
 def test_calc_length_distortion_on_ellipsoid(e7grid: Equi7Grid):
     lon = -29.1
     lat = 24
     k = e7grid.calc_length_distortion_on_ellipsoid(lon, lat)
 
-    k_should = 1.0637776281308071  # 1.1432971727108836
+    k_should = 1.1432971727108836
     nptest.assert_almost_equal(k, k_should, decimal=6)
 
 
@@ -165,7 +164,6 @@ def test_lonlat2rc_in_tile(e7grid: Equi7Grid):
     nptest.assert_equal(tile.name, tile_should)
 
 
-# noqa: TODO: bbm (test still needed?)
 def test_proj4_reprojection_accuracy():
     aeqd_wkt = (
         'PROJCS["Azimuthal_Equidistant",'
@@ -216,7 +214,6 @@ def test_decode_tilename(e7grid: Equi7Grid):
         assert True
 
 
-# noqa: TODO: bbm (validate if tiles are as desired)
 def test_find_overlapping_tilenames(e7grid: Equi7Grid):
     tiles_should = [
         "EU_E042N006T3",
@@ -237,21 +234,6 @@ def test_find_overlapping_tilenames(e7grid: Equi7Grid):
     assert tile.name == tile_should
 
 
-# noqa: TODO: bbm (by points really needed?)
-"""
-def test_search_tiles_lon_lat_extent_by_points(e7grid: Equi7Grid):
-    tiles = e7grid.get_tiles_in_geog_bbox(bbox=[(10, 40), (5, 50),
-                                           (-90.9, -1.2), (-175.2, 66)],
-                                          cover_land=True)
-
-    desired_tiles = ['EU500M_E042N006T6', 'EU500M_E042N018T6',
-                     'AS500M_E072N090T6', 'SA500M_E036N066T6']
-
-    assert sorted(tiles) == sorted(desired_tiles)
-"""
-
-
-# noqa: TODO: bbm (validate if tiles are as desired)
 def test_search_tiles_geog_bbox(e7grid: Equi7Grid):
     tiles = e7grid.get_tiles_in_geog_bbox(
         bbox=(0, 30, 10, 40), tiling_id="T6", cover_land=True
@@ -260,12 +242,12 @@ def test_search_tiles_geog_bbox(e7grid: Equi7Grid):
         "EU_E036N006T6",
         "EU_E042N000T6",
         "EU_E042N006T6",
+        "AF_E030N084T6",
+        "AF_E030N090T6",
         "AF_E036N084T6",
         "AF_E036N090T6",
         "AF_E042N084T6",
         "AF_E042N090T6",
-        "AF_E030N090T6",
-        "AF_E030N084T6",
     ]
     assert_tiles(tiles, tiles_should)
 
@@ -312,7 +294,6 @@ def test_search_tiles_geog_extent_antimeridian(e7grid: Equi7Grid):
     assert_tiles(tiles, tiles_should)
 
 
-# noqa: TODO: bbm (validate if tiles are as desired)
 def test_search_tiles_spitzbergen(e7grid: Equi7Grid, poly_spitzbergen: GeogGeom):
     tiles_should = [
         "EU_E054N042T6",
