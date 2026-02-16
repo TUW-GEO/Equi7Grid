@@ -309,6 +309,25 @@ def test_search_tiles_siberia_antimeridian(
 ):
     tiles_should = [
         "AS_E066N090T6",
+        "AS_E066N096T6",
+        "AS_E072N090T6",
+        "AS_E072N096T6",
+        "NA_E054N072T6",
+        "NA_E054N078T6",
+        "NA_E060N078T6",
+    ]
+    tiles = e7grid.get_tiles_in_geom(
+        poly_siberia_alaska, tiling_id="T6", cover_land=False
+    )
+
+    assert_tiles(tiles, tiles_should)
+
+
+def test_search_tiles_siberia_antimeridian_land(
+    e7grid: Equi7Grid, poly_siberia_alaska: GeogGeom
+):
+    tiles_should = [
+        "AS_E066N090T6",
         "AS_E072N090T6",
         "NA_E054N072T6",
         "NA_E054N078T6",
