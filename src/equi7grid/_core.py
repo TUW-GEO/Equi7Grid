@@ -581,5 +581,51 @@ def get_standard_equi7grid(
     )
 
 
+def get_equi7grid_from_grid_def(
+    json_path: Path,
+    sampling: SamplingFloatOrMap,
+    *,
+    continent_order: list[str] | None = None,
+) -> Equi7Grid:
+    """Get Equi7Grid from a grid definition.
+
+    Parameters
+    ----------
+    json_path: Path
+            Path to JSON file storing grid definition.
+    sampling: float | int | Dict[int | str, float | int]
+            Grid sampling/pixel size specified as a single value or a dictionary with
+            tiling IDs as keys and samplings as values.
+    continent_order: list[str] | None, optional
+        Defines the usage and order of the continents.
+
+    Returns
+    -------
+    Equi7Grid
+        Equi7Grid instance.
+
+    """
+    return Equi7Grid.from_grid_def(json_path, sampling, system_order=continent_order)
+
+
+def get_equi7grid_from_file(
+    json_path: Path,
+) -> Equi7Grid:
+    """Get Equi7Grid from an exported file.
+
+    Parameters
+    ----------
+    json_path: Path
+            Path to JSON file storing grid definition.
+
+    Returns
+    -------
+    Equi7Grid
+        Equi7Grid instance.
+
+    """
+    return Equi7Grid.from_file(json_path)
+
+
 if __name__ == "__main__":
     pass

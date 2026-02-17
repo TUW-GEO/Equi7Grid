@@ -9,7 +9,9 @@ readme
 :hidden:
 :caption: 📚 Guides
 
-guides/guide.ipynb
+guides/grid.ipynb
+guides/tiling_system.ipynb
+guides/tile.ipynb
 ```
 
 ```{toctree}
