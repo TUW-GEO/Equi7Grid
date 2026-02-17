@@ -20,6 +20,9 @@ extensions = [
     "autodoc2",
     "sphinx.ext.napoleon",
 ]
+myst_enable_extensions = [
+    "colon_fence",
+]
 myst_heading_anchors = 3
 autodoc2_packages = [
     "../src/equi7grid",  # path to your package

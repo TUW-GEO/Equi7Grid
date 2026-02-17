@@ -261,9 +261,7 @@ def test_find_all_tiles_with_global_bbox(e7grid: Equi7Grid):
     assert len(list(tiles_all)) == n_t6_tiles_global  # 854 was the old number
 
 
-def test_search_tiles_geog_extent_poles(e7grid: Equi7Grid):
-
-    # variant B: the "large" interpretation of the bounding box
+def test_search_tiles_large_bbox_north_pole(e7grid: Equi7Grid):
     tiles = e7grid.get_tiles_in_geog_bbox(bbox=(-170, 88, 150.0, 90), tiling_id="T6")
     tiles_should = [
         "NA_E078N084T6",
@@ -273,12 +271,14 @@ def test_search_tiles_geog_extent_poles(e7grid: Equi7Grid):
     ]
     assert_tiles(tiles, tiles_should)
 
-    # variant B: the "small" interpretation of the bounding box
+
+def test_search_tiles_small_bbox_north_pole(e7grid: Equi7Grid):
     tiles = e7grid.get_tiles_in_geog_bbox(bbox=(150.0, 88, -170, 90), tiling_id="T6")
     tiles_should = ["NA_E078N090T6"]
     assert_tiles(tiles, tiles_should)
 
-    # test the South Pole
+
+def test_search_tiles_large_bbox_south_pole(e7grid: Equi7Grid):
     tiles = e7grid.get_tiles_in_geog_bbox(bbox=(-170, -90, 150.0, -89), tiling_id="T6")
     tiles_should = ["AN_E036N030T6"]
     assert_tiles(tiles, tiles_should)
@@ -325,7 +325,8 @@ def test_search_tiles_siberia_antimeridian(
         "NA_E060N078T6",
     ]
     tiles = e7grid.get_tiles_in_geom(
-        poly_siberia_alaska, tiling_id="T6", cover_land=False)
+        poly_siberia_alaska, tiling_id="T6", cover_land=False
+    )
 
     assert_tiles(tiles, tiles_should)
 
