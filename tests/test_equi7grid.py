@@ -12,7 +12,7 @@ from pyproj import CRS, Transformer
 from pytileproj import GeogGeom, GeomOutOfZoneError, TileOutOfZoneError
 
 from equi7grid import get_standard_equi7grid
-from equi7grid._core import Equi7Grid, Equi7TileGenerator
+from equi7grid.core import Equi7Grid, Equi7TileGenerator
 
 
 @pytest.fixture(scope="module")

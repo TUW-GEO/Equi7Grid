@@ -12,6 +12,7 @@ readme
 guides/grid.ipynb
 guides/tiling_system.ipynb
 guides/tile.ipynb
+guides/warp.ipynb
 ```
 
 ```{toctree}

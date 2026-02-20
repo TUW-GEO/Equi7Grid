@@ -24,8 +24,8 @@ from pytileproj import ProjGeom
 from shapely.geometry import shape
 
 from equi7grid._const import WARP_INSTALLED
-from equi7grid._core import Equi7Grid, Equi7Tile
 from equi7grid._types import Extent
+from equi7grid.core import Equi7Grid, Equi7Tile
 
 if WARP_INSTALLED:
     import rasterio
@@ -34,7 +34,7 @@ if WARP_INSTALLED:
     from scipy import ndimage
 
 
-def requires_warp(f: Callable) -> Callable:
+def _requires_warp(f: Callable) -> Callable:
     """Check if the warp extension is installed."""
 
     def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
@@ -46,9 +46,27 @@ def requires_warp(f: Callable) -> Callable:
     return wrapper
 
 
-@requires_warp
+@_requires_warp
 def pixel_to_world_coords(tf: "Affine", pixel_coords: np.ndarray) -> np.ndarray:
-    """Convert pixel to world system coordinates."""
+    """Convert pixel to world system coordinates.
+
+    Parameters
+    ----------
+    tf: Affine
+        Affine object representing affine transformation parameters.
+    pixel_coords: np.ndarray
+        2D array with shape (n, 2) containing pixel coordinates:
+            - first column are pixel column coordinates
+            - second column are pixel row coordinates
+
+    Returns
+    -------
+    np.ndarray
+        World system coordinates array with shape (n, 2):
+            - first column are X coordinates
+            - second column are Y coordinates
+
+    """
     sa, sb, sc, sd, se, sf, _, _, _ = tf
     world_coords = np.zeros_like(pixel_coords, dtype=np.float64)
     world_coords[:, 0] = pixel_coords[:, 0] * sa + pixel_coords[:, 1] * sb + sc
@@ -57,9 +75,22 @@ def pixel_to_world_coords(tf: "Affine", pixel_coords: np.ndarray) -> np.ndarray:
     return world_coords
 
 
-@requires_warp
+@_requires_warp
 def get_raster_boundary(filepath: Path) -> ProjGeom:
-    """Get accurate boundary of a raster file."""
+    """Get accurate boundary of a raster file.
+
+    Parameters
+    ----------
+    filepath: Path
+        Geospatial filepath to retrieve raster boundary from.
+
+    Returns
+    -------
+    ProjGeom
+        Accurate raster boundary represented by ProjGeom instance
+        (shapely polygon + pyproj.CRS).
+
+    """
     qlook_size = 400.0
 
     with (
@@ -125,9 +156,22 @@ def get_raster_boundary(filepath: Path) -> ProjGeom:
             return ProjGeom(geom=roi_poly, crs=src.crs)
 
 
-@requires_warp
+@_requires_warp
 def get_raster_extent(filepath: Path) -> ProjGeom:
-    """Get extent of a raster file."""
+    """Get extent of a raster file.
+
+    Parameters
+    ----------
+    filepath: Path
+        Geospatial filepath to retrieve raster extent from.
+
+    Returns
+    -------
+    ProjGeom
+        Raster extent represented by ProjGeom instance
+        (shapely polygon + pyproj.CRS).
+
+    """
     with rasterio.open(filepath) as src:
         min_x, min_y, max_x, max_y = src.bounds
         extent_poly = shapely.Polygon(
@@ -139,11 +183,25 @@ def get_raster_extent(filepath: Path) -> ProjGeom:
 
 
 def get_default_e7_filename(filepath: Path, ftilename: str) -> str:
-    """Get default Equi7Grid filename."""
+    """Get default Equi7Grid filename.
+
+    Parameters
+    ----------
+    filepath: Path
+        Full system path to geospatial image file.
+    ftilename: str
+        Full Equi7Grid tilename.
+
+    Returns
+    -------
+    str
+        Equi7Grid standard filename.
+
+    """
     return f"{filepath.stem}_{ftilename}{filepath.suffix}"
 
 
-@requires_warp
+@_requires_warp
 def resample_tile(  # noqa: PLR0913
     e7tile: Equi7Tile,
     filepath: Path,
@@ -163,7 +221,56 @@ def resample_tile(  # noqa: PLR0913
     overwrite: bool = False,
     create_e7_folder: bool = True,
 ) -> Path:
-    """Resample a portion of an image to an Equi7Grid tile."""
+    """Resample a portion of an image to an Equi7Grid tile.
+
+    Parameters
+    ----------
+    e7tile: Equi7Tile
+        Equi7Tile instance to resample and slice to.
+    filepath: Path
+        Full system path to geospatial image file.
+    output_dirpath: Path
+        Full system path to the output directory.
+    band: int, optional
+        Band number (defaults to 1).
+    image_nodata: float | None, optional
+        Nodata value of geospatial image.
+        Defaults to nodata value provided in the file metadata.
+    resampling_type: Resampling | None, optional
+        Resampling method provided by rasterio. Defaults to neareast.
+    compress_type: str, optional
+        Compression type (defaults to "LZW").
+    naming_traffo: Callable | None, optional
+        Callable/function to define naming convention.
+        It expects two input arguments:
+            - `filepath`: the full system path to geospatial image file
+            - `ftilename`: the full tilename.
+        Defaults to standard naming: "[filename]_[full tilename].[suffix]"
+    tile_nodata: float | None, optional
+        Nodata value of the tiled image. Defaults to nodata value of the input image.
+    tile_dtype: np.dtype | None, optional
+        Data type of the tiled image. Defaults to data type of the input image.
+    tile_scale: float | None, optional
+        Scale factor of the tiled image. Defaults to scale factor of the input image.
+    tile_offset: float | None, optional
+        Offset of the tiled image. Defaults to offset of the input image.
+    tile_blocksize: int | None, optional
+        Block size of the tiled image. Defaults to block size of the input image.
+    tif_is_tiled: bool, optional
+        Flag to define if the output tile image should be tiled w.r.t. the GeoTIFF
+        format (defined by the block size) or not (defaults to True).
+    overwrite: bool, optional
+        Flag if data should be overwritten or not (defaults to false).
+    create_e7_folder: bool, optional
+        Flag if a root Equi7Grid folder ("EQUI7_[continent]") should be
+        created or not (defaults to true).
+
+    Returns
+    -------
+    Path
+        Full system path to the image tile in the Equi7Grid.
+
+    """
     ftilename = cast("str", e7tile.name)
 
     if create_e7_folder:
@@ -203,7 +310,7 @@ def resample_tile(  # noqa: PLR0913
                 "blockysize": tile_blocksize or blockysize,
             }
         )
-        resampling_type = resampling_type or Resampling.bilinear
+        resampling_type = resampling_type or Resampling.nearest
         with rasterio.open(tile_filepath, "w", **kwargs) as dst:
             reproject(
                 source=rasterio.band(src, band),
@@ -234,7 +341,37 @@ def get_overlapping_tiles(  # noqa: PLR0913
     cover_land: bool = False,
     accurate_boundary: bool = False,
 ) -> list[Equi7Tile]:
-    """Get all overlapping Equi7Grid tiles."""
+    """Get all overlapping Equi7Grid tiles.
+
+    Parameters
+    ----------
+    e7grid: Equi7Grid
+        Equi7Grid instance to get the tiles from.
+    tiling_id: int | str, optional
+        Tiling level or name.
+        Defaults to 0, the first tiling level.
+    xy_bbox_map: Mapping[str, Extent] | None, optional
+        Defines projected bounding boxes in the Equi7Grid
+        to consider for reprojection. The keys are the continents,
+        and the values the spatial extent/bounding box.
+        Defaults to image extent.
+    geog_bbox: Extent | None, optional
+        Defines geographic bounding box to consider for reprojection.
+        Defaults to image extent.
+    roi_geom: ProjGeom | None, optional
+        Defines geospatial geometry to consider only a certain region
+        for reprojection. Defaults to image extent.
+    filepath: Path | None, optional
+        Full system path to geospatial image file.
+    cover_land: bool, optional
+        Flag defining if only tiles covering land should be considered
+        (defaults to false).
+    accurate_boundary: bool, optional
+        Flag to define if the accurate raster boundary
+        (excluding nodata values) should be used.
+        If false, then the image extent will be used (default).
+
+    """
     e7tiles = []
     if xy_bbox_map is not None:
         for continent, xy_bbox in xy_bbox_map.items():
@@ -265,17 +402,31 @@ def get_overlapping_tiles(  # noqa: PLR0913
 
 
 def ftilenames_to_tiles(ftilenames: list[str], e7grid: Equi7Grid) -> list[Equi7Tile]:
-    """Convert Equi7Grid tilenames to tiles."""
+    """Convert Equi7Grid tilenames to tiles.
+
+    Parameters
+    ----------
+    ftilenames: list[str]
+        List of full Equi7Grid tilenames.
+    e7grid: Equi7Grid
+        Equi7Grid instance, where the given tilenames are part of.
+
+    Returns
+    -------
+    list[Equi7Tile]
+        List of Equi7Grid tiles.
+
+    """
     return [e7grid.get_tile_from_name(ftilename) for ftilename in ftilenames]
 
 
-@requires_warp
+@_requires_warp
 def resample_to_equi7_tiles(  # noqa: PLR0913
     filepath: Path,
     e7grid: Equi7Grid,
     output_dirpath: Path,
     *,
-    tiling_id: str | int = 1,
+    tiling_id: str | int = 0,
     xy_bbox_map: Mapping[str, Extent] | None = None,
     geog_bbox: Extent | None = None,
     roi_geom: ProjGeom | None = None,
@@ -297,7 +448,82 @@ def resample_to_equi7_tiles(  # noqa: PLR0913
     create_e7_folder: bool = True,
     n_tasks: int = 1,
 ) -> list[Path]:
-    """Resample an image to Equi7Grid tiles."""
+    """Resample an image to Equi7Grid tiles.
+
+    Parameters
+    ----------
+    filepath: Path
+        Full system path to geospatial image file.
+    e7grid: Equi7Grid
+        Equi7Grid instance to resample and slice to.
+    output_dirpath: Path
+        Full system path to the output directory.
+    tiling_id: int | str, optional
+        Tiling level or name.
+        Defaults to 0, the first tiling level.
+    xy_bbox_map: Mapping[str, Extent] | None, optional
+        Defines projected bounding boxes in the Equi7Grid to consider
+        for reprojection. The keys are the continents, and the values
+        the spatial extent/bounding box. Defaults to image extent.
+    geog_bbox: Extent | None, optional
+        Defines geographic bounding box to consider for reprojection.
+        Defaults to image extent.
+    roi_geom: ProjGeom | None, optional
+        Defines geospatial geometry to consider only a certain region for
+        reprojection.Defaults to image extent.
+    cover_land: bool, optional
+        Flag defining if only tiles covering land should be considered
+        (defaults to false).
+    accurate_boundary: bool, optional
+        Flag to define if the accurate raster boundary
+        (excluding nodata values) should be used.
+        If false, then the image extent will be used (default).
+    ftilenames: list[str] | None, optional
+        List of full tilenames to resample to.
+        Defaults to all tiles intersecting with the image.
+    band: int, optional
+        Band number (defaults to 1).
+    image_nodata: float | None, optional
+        Nodata value of geospatial image.
+        Defaults to nodata value provided in the file metadata.
+    resampling_type: Resampling | None, optional
+        Resampling method provided by rasterio. Defaults to neareast.
+    compress_type: str, optional
+        Compression type (defaults to "LZW").
+    naming_traffo: Callable | None, optional
+        Callable/function to define naming convention.
+        It expects two input arguments:
+            - `filepath`: the full system path to geospatial image file
+            - `ftilename`: the full tilename.
+        Defaults to standard naming: "[filename]_[full tilename].[suffix]"
+    tile_nodata: float | None, optional
+        Nodata value of the tiled image. Defaults to nodata value of the input image.
+    tile_dtype: np.dtype | None, optional
+        Data type of the tiled image. Defaults to data type of the input image.
+    tile_scale: float | None, optional
+        Scale factor of the tiled image. Defaults to scale factor of the input image.
+    tile_offset: float | None, optional
+        Offset of the tiled image. Defaults to offset of the input image.
+    tile_blocksize: int | None, optional
+        Block size of the tiled image. Defaults to block size of the input image.
+    tif_is_tiled: bool, optional
+        Flag to define if the output tile image should be tiled w.r.t. the GeoTIFF
+        format (defined by the block size) or not (defaults to True).
+    overwrite: bool, optional
+        Flag if data should be overwritten or not (defaults to false).
+    create_e7_folder: bool, optional
+        Flag if a root Equi7Grid folder ("EQUI7_[continent]") should be created
+        or not (defaults to true).
+    n_tasks: int, optional
+        Number of parallel processes to resample multiple tiles in parallel
+        (defaults to 1).
+
+    Returns
+    -------
+    list[Path]
+        List of full system paths to the image tiles in the Equi7Grid.
+
+    """
     if ftilenames is not None:
         e7tiles = ftilenames_to_tiles(ftilenames, e7grid)
     else:
@@ -313,7 +539,7 @@ def resample_to_equi7_tiles(  # noqa: PLR0913
                 accurate_boundary=accurate_boundary,
             )
         )
-    resampling_type = resampling_type or Resampling.bilinear
+    resampling_type = resampling_type or Resampling.nearest
 
     resample_kwargs = {
         "filepath": filepath,

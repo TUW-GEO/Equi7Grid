@@ -29,8 +29,8 @@ from pytileproj.projgeom import (
     transform_geometry,
 )
 
+from equi7grid._create_grids import get_standard_tilings, get_system_definitions
 from equi7grid._types import Extent, T_co
-from equi7grid.create_grids import get_standard_tilings, get_system_definitions
 
 Equi7TileGenerator = Generator["Equi7Tile", None, None]
 

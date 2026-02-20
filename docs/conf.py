@@ -72,4 +72,6 @@ html_theme_options = {
         "version_match": "latest",
     },
     "navbar_end": ["version-switcher"],
+    "repository_url": "https://github.com/TUW-GEO/Equi7Grid",
+    "use_repository_button": True,
 }

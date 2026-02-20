@@ -10,7 +10,7 @@ from approvaltests.namer import NamerFactory
 
 from equi7grid import get_standard_equi7grid
 from equi7grid._const import WARP_INSTALLED
-from equi7grid._core import Equi7Grid
+from equi7grid.core import Equi7Grid
 from equi7grid.warp import resample_to_equi7_tiles
 
 if WARP_INSTALLED:

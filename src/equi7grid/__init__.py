@@ -3,7 +3,7 @@
 
 """equi7grid's init module defining outward facing objects."""
 
-from equi7grid._core import (
+from equi7grid.core import (
     Equi7Grid,
     get_equi7grid_from_file,
     get_equi7grid_from_grid_def,
