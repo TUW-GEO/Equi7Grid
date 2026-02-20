@@ -138,6 +138,7 @@ def test_reprojecting_lonlat_continuous(
         tiling_id="T6",
         accurate_boundary=True,
         compress_type="zstd",
+        resampling_type=Resampling.bilinear,
     )
 
     n_expected_tiles = 4
@@ -187,6 +188,7 @@ def test_reprojecting_lonlat_continuous_eu(
         tiling_id="T6",
         accurate_boundary=True,
         compress_type="zstd",
+        resampling_type=Resampling.bilinear,
     )
 
     n_expected_tiles = 2
