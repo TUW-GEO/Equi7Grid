@@ -2,6 +2,11 @@
 
 ## Version 0.2.6
 
+- complete rebuild of package and underlying engine `pytileproj`
+- support for buffered polygons
+
+## Version 0.2.6
+
 - update project metadata
 
 ## Version 0.2.5
