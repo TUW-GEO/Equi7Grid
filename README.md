@@ -1,10 +1,9 @@
 # Equi7Grid
 
 [![build ubuntu](https://github.com/TUW-GEO/Equi7Grid/workflows/ubuntu/badge.svg)](https://github.com/TUW-GEO/Equi7Grid/actions/workflows/ubuntu.yml)
-[![build windows](https://github.com/TUW-GEO/Equi7Grid/workflows/windows/badge.svg)](https://github.com/TUW-GEO/Equi7Grid/actions/workflows/windows.yml)
 [![coverage](https://coveralls.io/repos/github/TUW-GEO/Equi7Grid/badge.svg?branch=master)](https://coveralls.io/github/TUW-GEO/Equi7Grid?branch=master)
 [![pypi package](https://badge.fury.io/py/Equi7Grid.svg)](https://badge.fury.io/py/Equi7Grid)
-[![documentation](https://readthedocs.org/projects/equi7grid/badge/?version=latest)](https://equi7grid.readthedocs.io/)
+[![docs](https://img.shields.io/badge/pytileproj-documentation-blue)](https://tuw-geo.github.io/Equi7Grid)
 
 The **Equi7Grid** is a spatial reference system designed to handle efficiently the archiving, processing, and displaying of **high resolution raster image data**. It supports geo-datacubes holding large volumes of satellite imagery, as it preserves geometric accuracy and **minimises data oversampling over global land surfaces** to a very low value of 3%.
 
