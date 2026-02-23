@@ -17,6 +17,7 @@ __pycache__/*
 # Project files
 .ropeproject
 .project
+.scripts
 .pydevproject
 .settings
 .idea
@@ -32,9 +33,8 @@ tags
 # Unittest and coverage
 htmlcov/*
 .coverage
-.coverage.*
 .tox
-junit*.xml
+junit.xml
 coverage.xml
 .pytest_cache/
 
@@ -45,10 +45,17 @@ sdist/*
 docs/api/*
 docs/_rst/*
 docs/_build/*
+docs/apidocs/*
 cover/*
 MANIFEST
 
 # Per-project virtualenvs
+# Per-project virtualenvs
 .venv*/
-.conda*/
-.python-version
+venv
+uv.lock
+
+.scripts
+
+# MyST build outputs
+_build

@@ -1,8 +1,11 @@
-from pathlib import Path
+import sys
 
 import pytest
 
 
-@pytest.fixture
-def input_dir():
-    return Path(__file__).parent / "prj_accuracy_test"
+@pytest.fixture(autouse=True)
+def warp_installed(request):  # noqa: ANN001
+    if request.node.get_closest_marker("warp_installed"):
+        vis_mods_installed = "rasterio" in sys.modules and "scipy" in sys.modules
+        if not vis_mods_installed:
+            pytest.skip()

@@ -1,16 +1,20 @@
-import sys
+# Copyright (c) 2026, TU Wien
+# Licensed under the MIT License. See LICENSE file.
 
-if sys.version_info[:2] >= (3, 8):
-    # TODO: Import directly (no need for conditional) when `python_requires = >= 3.8`
-    from importlib.metadata import PackageNotFoundError, version  # pragma: no cover
-else:
-    from importlib_metadata import PackageNotFoundError, version  # pragma: no cover
+"""equi7grid's init module defining outward facing objects."""
 
-try:
-    # Change here if project is renamed and does not equal the package name
-    dist_name = "Equi7Grid"
-    __version__ = version(dist_name)
-except PackageNotFoundError:  # pragma: no cover
-    __version__ = "unknown"
-finally:
-    del version, PackageNotFoundError
+from equi7grid.core import (
+    Equi7Grid,
+    get_equi7grid_from_file,
+    get_equi7grid_from_grid_def,
+    get_standard_equi7grid,
+    get_user_equi7grid,
+)
+
+__all__ = [
+    "Equi7Grid",
+    "get_equi7grid_from_file",
+    "get_equi7grid_from_grid_def",
+    "get_standard_equi7grid",
+    "get_user_equi7grid",
+]

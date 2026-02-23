@@ -1,9 +1,87 @@
-[build-system]
-# AVOID CHANGING REQUIRES: IT WILL BE UPDATED BY PYSCAFFOLD!
-requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5"]
-build-backend = "setuptools.build_meta"
+[project]
+authors = [{ name = "TU Wien", email = "remote.sensing@geo.tuwien.ac.at" }]
+name = "equi7grid"
+version = "1.0.0"
+description = "Definition and tools for Equi7Grid and its tiling system."
+license = { file = "LICENSE.txt" }
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pytileproj",
+    "geopandas",
+    "pyarrow",
+    "geographiclib"
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Software Development :: Libraries",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: POSIX",
+    "Natural Language :: English",
+]
+[project.urls]
+Repository = "https://github.com/TUW-GEO/equi7grid"
 
-[tool.setuptools_scm]
-# For smarter version schemes and other configuration options,
-# check out https://github.com/pypa/setuptools_scm
-version_scheme = "no-guess-dev"
+[project.optional-dependencies]
+vis = ["matplotlib", "cartopy"]
+docs = ["sphinx", "sphinx-book-theme", "sphinx-autodoc2", "myst-nb"]
+warp = ["rasterio", "scipy"]
+
+[build-system]
+requires = ["uv_build>=0.9.6,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["ipykernel>=7.1.0",
+ "mystmd>=1.6.6",
+ "pytest>=9.0.1",
+ "pytest-cov>=7.0.0",
+ "ruff>=0.14.5",
+ "ty>=0.0.8",
+ "approvaltests"
+]
+
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+skip-string-normalization = false
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812",  # missing-trailing-comma (may conflict with ruff formatter)
+    "D203",    # incorrect-blank-line-before-class (conflicts with D211)
+    "D213",    # multi-line-summary-second-line (conflicts with D212)
+]
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"**/{tests}/*" = ["E402", "ANN201", "D", "INP001", "S101"]
+
+[tool.ruff.format]
+# Same as Black.
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = false
+docstring-code-line-length = "dynamic"
+
+[tool.ty.rules]
+possibly-missing-attribute = "ignore"
+unresolved-attribute = "ignore"
+invalid-method-override = "ignore"
+
+[tool.pytest.ini_options]
+addopts = "--cov=equi7grid --cov-report term-missing -rsx --verbose --color=yes"
+markers = ["warp_installed"]
+
+[tool.coverage.run]
+relative_files = true
