@@ -34,3 +34,24 @@ jobs:
 
       - name: Run Tests{% endraw %}
         run: uv run pytest tests --verbose --color=yes --cov=equi7grid --cov-report term-missing
+
+      - name: Upload Coverage
+        shell: bash -l {0}
+        run: |
+          uv pip install coveralls && uv run coveralls --service=github-actions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
+          COVERALLS_PARALLEL: true
+
+  coveralls:
+    name: Submit Coveralls
+    needs: build
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+      - name: Finished
+        run: |
+          pip3 install --upgrade coveralls && coveralls --service=github --finish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

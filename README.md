@@ -1,18 +1,15 @@
 # Equi7Grid
 
-[![build ubuntu](https://github.com/TUW-GEO/Equi7Grid/workflows/ubuntu/badge.svg)](https://github.com/TUW-GEO/Equi7Grid/actions/workflows/ubuntu.yml)
-[![coverage](https://coveralls.io/repos/github/TUW-GEO/Equi7Grid/badge.svg?branch=master)](https://coveralls.io/github/TUW-GEO/Equi7Grid?branch=master)
-[![pypi package](https://badge.fury.io/py/Equi7Grid.svg)](https://badge.fury.io/py/Equi7Grid)
-[![docs](https://img.shields.io/badge/pytileproj-documentation-blue)](https://tuw-geo.github.io/Equi7Grid)
+[![tests](https://github.com/TUW-GEO/Equi7Grid/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/TUW-GEO/Equi7Grid/actions/workflows/ci.yml) [![coverage](https://coveralls.io/repos/github/TUW-GEO/Equi7Grid/badge.svg?branch=master)](https://coveralls.io/github/TUW-GEO/Equi7Grid?branch=master) [![pypi package](https://badge.fury.io/py/Equi7Grid.svg)](https://badge.fury.io/py/Equi7Grid) [![docs](https://img.shields.io/badge/equi7grid-documentation-blue)](https://tuw-geo.github.io/Equi7Grid)
 
 The **Equi7Grid** is a spatial reference system designed to handle efficiently the archiving, processing, and displaying of **high resolution raster image data**. It supports geo-datacubes holding large volumes of satellite imagery, as it preserves geometric accuracy and **minimises data oversampling over global land surfaces** to a very low value of 3%.
 
 ---
 
-![plot](./docs/doc_files/flyer_equi7grid.png)
+![plot](https://github.com/TUW-GEO/Equi7Grid/blob/master/docs/doc_files/flyer_equi7grid.png)
 
 This package contains:
-- code for working with Equi7Grid: how to convert to, how to use the tiling system, how to identify coordinates, etc.
+- code for working with the Equi7Grid: how to convert to, how to use the tiling system, how to identify coordinates, etc.
 - files defining the contentinal zones, coordinate system, projection parameters, base tilings, etc.
 
 A detailed documentation on the Equi7Grid definition is at
@@ -21,7 +18,7 @@ A detailed documentation on the Equi7Grid definition is at
 
 and its scientific background is published in this [**journal article**](https://www.sciencedirect.com/science/article/pii/S0098300414001629).
 
-The package is a light wrapper around [**pytileproj**](https://github.com/TUW-GEO/pytileproj), which contains a more generic framework for working with projected tiling systems and grids. Please check out its [documention](https://tuw-geo.github.io/pytileproj/latest/) for getting more information on all offered functionalities
+The package is a light wrapper around [`pytileproj`](https://github.com/TUW-GEO/pytileproj), which contains a more generic framework for working with projected tiling systems and grids. Please check out its [documention](https://tuw-geo.github.io/pytileproj/latest/) for getting more information on all offered functionalities
 
 ## Coordinate reference systems
 
@@ -135,9 +132,9 @@ uv pip install -e . --no-deps
 
 ## News
 
-**2026 January:**
+**2026 February:**
 
-New major release 1.0.0! :tada:
+New major release `v1.0.0`! 🎉🥳
 
 This release contains a complete refactoring of the whole codebase, including `pytileproj`, which is the main dependency of `equi7grid`. All requests and issues raised by the user community were considered resulting in flexible, user-defined pixel samplings and grid tilings and new interfaces to create objects for working with the Equi7Grid.
 

@@ -9,9 +9,9 @@ readme
 :hidden:
 :caption: 📚 Guides
 
-guides/grid.ipynb
-guides/tiling_system.ipynb
 guides/tile.ipynb
+guides/tiling_system.ipynb
+guides/grid.ipynb
 guides/warp.ipynb
 ```
 

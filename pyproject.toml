@@ -27,7 +27,8 @@ classifiers = [
 Repository = "https://github.com/TUW-GEO/equi7grid"
 
 [project.optional-dependencies]
-vis = ["matplotlib", "cartopy"]
+vis = ["pytileproj[vis]"]
+export = ["pytileproj[geo]"]
 docs = ["sphinx", "sphinx-book-theme", "sphinx-autodoc2", "myst-nb"]
 warp = ["rasterio", "scipy"]
 
