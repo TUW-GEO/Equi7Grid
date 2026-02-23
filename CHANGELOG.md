@@ -1,9 +1,12 @@
 # Changelog
 
-## Version 0.2.6
+## Version 1.0.0
 
 - complete rebuild of package and underlying engine `pytileproj`
-- support for buffered polygons
+- new interface to generate an Equi7Grid object
+- support for buffered zone boundaries
+- reduced package data to land and projection zones
+- complete rebuild of "image2equi7grid" to `warp` module
 
 ## Version 0.2.6
 

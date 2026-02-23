@@ -6,7 +6,7 @@ The **Equi7Grid** is a spatial reference system designed to handle efficiently t
 
 ---
 
-![plot](https://github.com/TUW-GEO/Equi7Grid/blob/master/docs/doc_files/flyer_equi7grid.png)
+![plot](https://raw.githubusercontent.com/TUW-GEO/Equi7Grid/refs/heads/master/docs/doc_files/flyer_equi7grid.png)
 
 This package contains:
 - code for working with the Equi7Grid: how to convert to, how to use the tiling system, how to identify coordinates, etc.
@@ -176,8 +176,8 @@ If you want to contribute please follow these steps:
 If you use the software in a publication then please cite it using the Zenodo DOI.
 Be aware that this badge links to the latest package version.
 
-Please select your specific version at https://doi.org/10.5281/zenodo.1048530 to get the DOI of that version.
+Please select your specific version [here](https://doi.org/10.5281/zenodo.1048530) to get the DOI of that version.
 You should normally always use the DOI for the specific version of your record in citations.
 This is to ensure that other researchers can access the exact research artefact you used for reproducibility.
 
-You can find additional information regarding DOI versioning at http://help.zenodo.org/#versioning
+You can find additional information regarding DOI versioning [here](http://help.zenodo.org/#versioning).
