@@ -21,6 +21,6 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: check-added-large-files
-        exclude: '^(src/equi7grid/data/land\.parquet|src/equi7grid/data/grids/equi7standard\.json|docs/doc_files.*)$'
+        exclude: '^(src/equi7grid/data/land\.parquet|src/equi7grid/data/grids/equi7standard\.json|docs/doc_files.*|docs/webviewer/images.*)$'
       - id: detect-private-key
       - id: end-of-file-fixer
