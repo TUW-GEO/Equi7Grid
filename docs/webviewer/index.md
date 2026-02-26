@@ -15,7 +15,9 @@ On the left side you have two logos/links to the creators of the Webviewer and t
 
 ## Map
 
-The map itself displays OpenStreetMap in the background and interactions with the map are intuitive, including zoom buttons in the top-right corner. In the lower-left corner you can see a globe. If you click on it, your map will start to render as a globe in 3D.
+The map itself displays OpenStreetMap in the background and interactions with the map are intuitive, including zoom buttons in the top-right corner and on-the-fly rendering of longitude and latitude coordinates while hovering over the map. If you right-click on the map the longitute and latitude coordinate tuple is copied to the clipboard indicated by a pop-up window.
+
+In the lower-left corner you can see a globe. If you click on it, your map will start to render as a globe in 3D.
 
 :::{note}
 The 3D view only works in Chrome.
@@ -35,8 +37,8 @@ This symbol appears when the required data layers (tilings, zones, etc.) are pre
 
 On the left you have a set of tools you can use to interact with the map and displayed items:
 
-- [Add tiling](./tiling.md) (➕)
-- [Coordinate transformations](./coordinate_transformation.md) (📐)
+- [Tiling creator](./tiling.md) (➕)
+- [Coordinate transformer](./coordinate_transformation.md) (📐)
 - [Layer manager](./layers.md) (📚)
 - [Tile query](./tiles.md) (🔍)
 - [Display settings](./settings.md) (🔩)

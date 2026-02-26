@@ -59,7 +59,8 @@ jobs:
           TAGS=$(git tag -l "*v1*" --sort=version:refname)
           echo $TAGS
           for TAG in $TAGS; do
-            cp -R docs/_build/latest docs/_build/$TAG
+            git checkout $tag
+            uv run python -m sphinx.cmd.build -b html docs docs/_build/$TAG
             echo "{\"name\": \"$TAG\", \"url\": \"/$REPO/$TAG/\"}," >> "$OUT"
           done
 
