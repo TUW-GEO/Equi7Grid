@@ -17,6 +17,13 @@ guides/warp.ipynb
 
 ```{toctree}
 :hidden:
+:caption: 🌍 Webviewer
+
+webviewer/index.md
+```
+
+```{toctree}
+:hidden:
 :caption: 📖 Reference
 
 authors
