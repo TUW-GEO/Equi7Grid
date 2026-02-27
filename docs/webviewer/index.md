@@ -10,7 +10,7 @@ When you launch the Equi7Grid webviewer, the screen looks like this:
 
 The header contains several links:
 
-On the left side you have two logos/links to the creators of the Webviewer and the Equi7Grid itself. On the right side there is a link to the GitHub repo (<img src="images/github_logo.png" width="20" style="margin-bottom: -5px; margin-right: -2px;">), to the Equi7Grid documentation (📖), and to GitHub issues to report problems or to request new features (📬).
+On the left side you have two logos/links to the creators of the Webviewer and the Equi7Grid itself. On the right side there is a link to the GitHub repo (<img src="_static/images/github_logo.png" width="20" style="margin-bottom: -5px; margin-right: -2px;">), to the Equi7Grid documentation (📖), and to GitHub issues to report problems or to request new features (📬).
 
 
 ## Map

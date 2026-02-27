@@ -63,6 +63,8 @@ todo_emit_warnings = True
 # a list of builtin themes.
 html_theme = "sphinx_book_theme"
 
+html_static_path = ["_static"]
+
 # Output file base name for HTML help builder.
 htmlhelp_basename = "equi7grid-doc"
 
