@@ -77,7 +77,7 @@ clean: clean-build clean-pyc clean-test
 [private]
 clean-build:
     rm -fr build/
-    rm -fr site/
+    rm -fr _build/
     rm -fr dist/
     rm -fr .eggs/
     find . -name '*.egg-info' -exec rm -fr {} +
