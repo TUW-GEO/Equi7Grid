@@ -132,6 +132,28 @@ Finally, use `uv` to install all other dependencies and `equi7grid` itself, e.g.
 uv sync --all-extras
 ```
 
+#### just - a taskrunner
+
+The repository uses a `Justfile` to provide a simple and consistent interface for task orchestration.
+It groups common development, testing, and release tasks behind short, memorable commands,
+reducing the need to remember long tool-specific invocations.
+Most commands are built on top of uv, ensuring fast and reproducible execution.
+
+Install the [`just` binary][just] with [`uv`][uv] like so:
+
+```bash
+uv tool install rust-just
+```
+
+Now you can execute so called recipes like so:
+
+```bash
+just test
+
+# or list all available recipes with
+just
+```
+
 ## News
 
 **2026 February:**
@@ -188,3 +210,4 @@ You can find additional information regarding DOI versioning [here](http://help.
 
 [pypi]: https://pypi.org/project/equi7grid/
 [uv]: https://docs.astral.sh/uv/getting-started/installation/
+[just]: https://github.com/casey/just
