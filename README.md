@@ -12,26 +12,26 @@ This package contains:
 - code for working with the Equi7Grid: how to convert to, how to use the tiling system, how to identify coordinates, etc.
 - files defining the contentinal zones, coordinate system, projection parameters, base tilings, etc.
 
-A detailed documentation on the Equi7Grid definition is at
+A detailed documentation on the Equi7Grid spatial reference system definition is at
 
 `~/docs/doc_files/`
 
 and its scientific background is published in this [**journal article**](https://www.sciencedirect.com/science/article/pii/S0098300414001629).
 
-The package is a light wrapper around [`pytileproj`](https://github.com/TUW-GEO/pytileproj), which contains a more generic framework for working with projected tiling systems and grids. Please check out its [documention](https://tuw-geo.github.io/pytileproj/latest/) for getting more information on all offered functionalities
+This package is a light wrapper around [`pytileproj`](https://github.com/TUW-GEO/pytileproj), which contains a more generic framework for working with projected grid frameworks and tiling systems. Please check out its [documention](https://tuw-geo.github.io/pytileproj/latest/) for getting more information on all offered functionalities
 
 ## Coordinate reference systems
 
 Easiest access to Equi7's seven continental coordinate reference systems (CRSs) is via the EPSG codes:
 
 ```
-Africa         EPSG:27701
-Antarctica     EPSG:27702
-Asia           EPSG:27703
-Europe         EPSG:27704
-North America  EPSG:27705
-Oceania        EPSG:27706
-South America  EPSG:27707
+Africa          AF   EPSG:27701
+Antarctica      AN   EPSG:27702
+Asia            AS   EPSG:27703
+Europe          EU   EPSG:27704
+North America   NA   EPSG:27705
+Oceania         OC   EPSG:27706
+South America   SA   EPSG:27707
 ```
 For example, when using `pyproj>=3.6.1` in python, you can transform coordinates like this:
 
@@ -43,13 +43,13 @@ lon, lat = Transformer.from_crs("EPSG:27704", "EPSG:4326", always_xy=True).trans
 An alternative are **PROJ4** strings:
 
 ```
-AF: '+proj=aeqd +lat_0=8.5 +lon_0=21.5 +x_0=5621452.01998 +y_0=5990638.42298 +datum=WGS84 +units=m +no_defs'
-AN: '+proj=aeqd +lat_0=-90 +lon_0=0 +x_0=3714266.97719 +y_0=3402016.50625 +datum=WGS84 +units=m +no_defs'
-AS: '+proj=aeqd +lat_0=47 +lon_0=94 +x_0=4340913.84808 +y_0=4812712.92347 +datum=WGS84 +units=m +no_defs'
-EU: '+proj=aeqd +lat_0=53 +lon_0=24 +x_0=5837287.81977 +y_0=2121415.69617 +datum=WGS84 +units=m +no_defs'
-NA: '+proj=aeqd +lat_0=52 +lon_0=-97.5 +x_0=8264722.17686 +y_0=4867518.35323 +datum=WGS84 +units=m +no_defs'
-OC: '+proj=aeqd +lat_0=-19.5 +lon_0=131.5 +x_0=6988408.5356 +y_0=7654884.53733 +datum=WGS84 +units=m +no_defs'
-SA: '+proj=aeqd +lat_0=-14 +lon_0=-60.5 +x_0=7257179.23559 +y_0=5592024.44605 +datum=WGS84 +units=m +no_defs'
+Africa          AF  '+proj=aeqd +lat_0=8.5 +lon_0=21.5 +x_0=5621452.01998 +y_0=5990638.42298 +datum=WGS84 +units=m +no_defs'
+Antarctica      AN  '+proj=aeqd +lat_0=-90 +lon_0=0 +x_0=3714266.97719 +y_0=3402016.50625 +datum=WGS84 +units=m +no_defs'
+Asia            AS  '+proj=aeqd +lat_0=47 +lon_0=94 +x_0=4340913.84808 +y_0=4812712.92347 +datum=WGS84 +units=m +no_defs'
+Europe          EU  '+proj=aeqd +lat_0=53 +lon_0=24 +x_0=5837287.81977 +y_0=2121415.69617 +datum=WGS84 +units=m +no_defs'
+North America   NA  '+proj=aeqd +lat_0=52 +lon_0=-97.5 +x_0=8264722.17686 +y_0=4867518.35323 +datum=WGS84 +units=m +no_defs'
+Oceania         OC  '+proj=aeqd +lat_0=-19.5 +lon_0=131.5 +x_0=6988408.5356 +y_0=7654884.53733 +datum=WGS84 +units=m +no_defs'
+South America   SA  '+proj=aeqd +lat_0=-14 +lon_0=-60.5 +x_0=7257179.23559 +y_0=5592024.44605 +datum=WGS84 +units=m +no_defs'
 ```
 
 ## Installation
