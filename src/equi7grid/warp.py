@@ -562,13 +562,13 @@ def resample_to_equi7_tiles(  # noqa: PLR0913
     if n_tasks == 1:
         tile_filepaths = []
         for e7tile in e7tiles:
-            tile_filepath = resample_tile(e7tile, **resample_kwargs)  # ty: ignore[invalid-argument-type]
+            tile_filepath = resample_tile(e7tile, **resample_kwargs)
             tile_filepaths.append(tile_filepath)
     else:
         n_tiles = len(e7tiles)
         num_cpu = min(n_tasks, n_tiles)
         with mp.Pool(processes=num_cpu) as pool:
-            func = partial(resample_tile, **resample_kwargs)  # ty: ignore[invalid-argument-type]
+            func = partial(resample_tile, **resample_kwargs)
             tile_filepaths = pool.map(func, e7tiles)
             pool.close()
             pool.join()

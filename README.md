@@ -9,6 +9,7 @@ The **Equi7Grid** is a spatial reference system designed to handle efficiently t
 ![plot](https://raw.githubusercontent.com/TUW-GEO/Equi7Grid/refs/heads/master/docs/doc_files/flyer_equi7grid.png)
 
 This package contains:
+
 - code for working with the Equi7Grid: how to convert to, how to use the tiling system, how to identify coordinates, etc.
 - files defining the contentinal zones, coordinate system, projection parameters, base tilings, etc.
 
@@ -33,6 +34,7 @@ North America   NA   EPSG:27705
 Oceania         OC   EPSG:27706
 South America   SA   EPSG:27707
 ```
+
 For example, when using `pyproj>=3.6.1` in python, you can transform coordinates like this:
 
 ```py
@@ -54,24 +56,29 @@ South America   SA  '+proj=aeqd +lat_0=-14 +lon_0=-60.5 +x_0=7257179.23559 +y_0=
 
 ## Installation
 
-This package can be installed via pip:
+This package can be installed from [`PyPi`][pypi] with:
 
 ```bash
 pip install equi7grid
+# or
+uv add equi7grid
 ```
 
 If you want to use `equi7grid`'s visualisation features, then you can install the required optional dependencies with:
 
 ```bash
 pip install equi7grid[vis]
+# or
+uv add equi7grid[vis]
 ```
 
 If you want to reproject and resample files to the Equi7Grid, then you need to install the `warp` extension:
 
 ```bash
 pip install equi7grid[warp]
+# or
+uv add equi7grid[warp]
 ```
-
 
 ## Contribute
 
@@ -84,27 +91,23 @@ against our master branch for new features or bug fixes.
 For development you can either use a `conda/mamba` or `uv` environment. After that you should be able to run `uv run pytest` to run the test suite.
 
 #### uv (recommended)
+
 Here is an example using only `uv` for creating the environment and managing dependencies.
 
-First, install `uv`:
+First, follow the instructions [here][uv] to install [`uv`][uv] or run:
 
 ```bash
 wget -qO- https://astral.sh/uv/install.sh | sh
 ```
 
-Next, create your virtual environment, e.g.
+Next, create your virtual environment with all extras, e.g.:
 
 ```bash
-uv venv --python 3.12
-```
-
-Finally, you can add all required and optional dependencies to it:
-
-```bash
-uv pip install -r pyproject.toml -e . --all-extras
+uv sync --all-extras
 ```
 
 #### mamba
+
 Here is an example using `mamba` together with `uv` for managing dependencies.
 
 First, install conda and set the path:
@@ -119,15 +122,36 @@ Next, create a virtual environment:
 
 ```bash
 conda create -n equi7grid python=3.12 mamba
-source activate equi7grid
+conda activate equi7grid
 mamba install -c conda-forge uv
 ```
 
 Finally, use `uv` to install all other dependencies and `equi7grid` itself, e.g.:
 
 ```bash
-uv pip install -r pyproject.toml -e . --all-extras
-uv pip install -e . --no-deps
+uv sync --all-extras
+```
+
+#### just - a taskrunner
+
+The repository uses a `Justfile` to provide a simple and consistent interface for task orchestration.
+It groups common development, testing, and release tasks behind short, memorable commands,
+reducing the need to remember long tool-specific invocations.
+Most commands are built on top of uv, ensuring fast and reproducible execution.
+
+Install the [`just` binary][just] with [`uv`][uv] like so:
+
+```bash
+uv tool install rust-just
+```
+
+Now you can execute so called recipes like so:
+
+```bash
+just test
+
+# or list all available recipes with
+just
 ```
 
 ## News
@@ -146,16 +170,18 @@ Contributions—whether comments, recommendations, or code—are welcome, and ar
 
 **2024 May:**
 
-For the seven continental Equi7 coordinate systems, the newly available **EPSG codes**  `EPSG:27701` - `EPSG:27707` are available via
-+ with `proj>=9.4.0` from the generic coordinate transformation software [**proj**](https://proj.org/en/9.4/) (e.g. used within [**GDAL/OGR**](https://gdal.org/index.html)>=3.9.0).
-+ with `EPSG>=v11.002` from the Geodetic Parameter Dataset of [**EPSG**](https://epsg.org/home.html)
-+ with `QGIS>=3.36` and its versatile and open geographic information system ([link](https://qgis.org/en/site/))
+For the seven continental Equi7 coordinate systems, the newly available **EPSG codes** `EPSG:27701` - `EPSG:27707` are available via
+
+- with `proj>=9.4.0` from the generic coordinate transformation software [**proj**](https://proj.org/en/9.4/) (e.g. used within [**GDAL/OGR**](https://gdal.org/index.html)>=3.9.0).
+- with `EPSG>=v11.002` from the Geodetic Parameter Dataset of [**EPSG**](https://epsg.org/home.html)
+- with `QGIS>=3.36` and its versatile and open geographic information system ([link](https://qgis.org/en/site/))
 
 Several updates are in the pipeline of this python package:
-+ interface to the **EPSG codes**
-+ updates on the **continental zone bordes** - streamlining along political delimiters
-+ **flexible tile extents** and grid samplings, allowing also user-defined tile extents
-+ updated interfaces to **reprojection methods** (e.g. to and from UTM, or LonLat)
+
+- interface to the **EPSG codes**
+- updates on the **continental zone bordes** - streamlining along political delimiters
+- **flexible tile extents** and grid samplings, allowing also user-defined tile extents
+- updated interfaces to **reprojection methods** (e.g. to and from UTM, or LonLat)
 
 ### Guidelines
 
@@ -181,3 +207,7 @@ You should normally always use the DOI for the specific version of your record i
 This is to ensure that other researchers can access the exact research artefact you used for reproducibility.
 
 You can find additional information regarding DOI versioning [here](http://help.zenodo.org/#versioning).
+
+[pypi]: https://pypi.org/project/equi7grid/
+[uv]: https://docs.astral.sh/uv/getting-started/installation/
+[just]: https://github.com/casey/just
