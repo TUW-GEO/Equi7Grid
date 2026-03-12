@@ -12,6 +12,15 @@ import numpy as np
 import shapely
 from geographiclib.geodesic import Geodesic
 from morecantile.models import Tile as RegularTile
+from pytileproj._const import DEF_SEG_LEN_DEG
+from pytileproj._types import SamplingFloatOrMap
+from pytileproj.projgeom import (
+    convert_any_to_geog_geom,
+    transform_geometry,
+)
+
+from equi7grid._create_grids import get_standard_tilings, get_system_definitions
+from equi7grid._types import Extent, T_co
 from pytileproj import (
     GeogGeom,
     ProjGeom,
@@ -22,15 +31,6 @@ from pytileproj import (
     RegularTilingDefinition,
     TileOutOfZoneError,
 )
-from pytileproj._const import DEF_SEG_LEN_DEG
-from pytileproj._types import SamplingFloatOrMap
-from pytileproj.projgeom import (
-    convert_any_to_geog_geom,
-    transform_geometry,
-)
-
-from equi7grid._create_grids import get_standard_tilings, get_system_definitions
-from equi7grid._types import Extent, T_co
 
 Equi7TileGenerator = Generator["Equi7Tile", None, None]
 
@@ -39,6 +39,14 @@ class Equi7Tile(RasterTile[Any]):
     """Defines a tile in the Equi7Grid."""
 
     covers_land: bool
+
+    def __str__(self) -> str:
+        """Returns to command line as representation the raster tile's name"""
+        return self.name
+
+    def __repr__(self) -> str:
+        """Returns to command line as representation the raster tile's name"""
+        return self.name
 
 
 class Equi7TilingSystem(RegularProjTilingSystem):
@@ -338,6 +346,14 @@ class Equi7TilingSystem(RegularProjTilingSystem):
 
         """
         return super().get_parent_from_name(tilename.split("_")[1])
+
+    def __str__(self) -> str:
+        """Returns to command line as representation the raster tile's name"""
+        return self.name
+
+    def __repr__(self) -> str:
+        """Returns to command line as representation the raster tile's name"""
+        return self.name
 
 
 class Equi7Grid(RegularGrid[T_co]):
