@@ -80,6 +80,14 @@ pip install equi7grid[warp]
 uv add equi7grid[warp]
 ```
 
+To include the support for exporting grid definitions (which may be used-defined), use the `export` extension:
+
+```bash
+pip install equi7grid[export]
+# or
+uv add equi7grid[export]
+```
+
 ## Contribute
 
 We are happy if you want to contribute. Please raise an issue explaining what
@@ -104,6 +112,12 @@ Next, create your virtual environment with all extras, e.g.:
 
 ```bash
 uv sync --all-extras
+```
+
+or with the dependencies e.g. for the export support:
+
+```bash
+uv sync --extra=export
 ```
 
 #### mamba
