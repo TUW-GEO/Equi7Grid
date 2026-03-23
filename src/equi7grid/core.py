@@ -28,6 +28,7 @@ from pytileproj.projgeom import (
     convert_any_to_geog_geom,
     transform_geometry,
 )
+from pytileproj.tile import OriginStr
 
 from equi7grid._create_grids import get_standard_tilings, get_system_definitions
 from equi7grid._types import Extent, T_co
@@ -39,6 +40,7 @@ class Equi7Tile(RasterTile[Any]):
     """Defines a tile in the Equi7Grid."""
 
     covers_land: bool
+    px_origin: OriginStr = "ll"
 
 
 class Equi7TilingSystem(RegularProjTilingSystem):

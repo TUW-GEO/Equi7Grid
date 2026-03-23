@@ -119,7 +119,7 @@ def test_calc_length_distortion(e7grid: Equi7Grid):
 
 def test_rc2xy(e7grid: Equi7Grid):
     x_should = 3166500
-    y_should = 5178000
+    y_should = 5177500
     tile = e7grid.EU.get_tile_from_xy(3245631, 5146545, tiling_id="T6")
     x, y = tile.rc2xy(444, 333)
     nptest.assert_allclose(x_should, x)
@@ -151,6 +151,16 @@ def test_xy2rc(e7grid: Equi7Grid):
     nptest.assert_allclose(r_should, r)
 
 
+def test_tile_extents(e7grid: Equi7Grid):
+    outer_boundary_extent = e7grid.get_tile_from_name(
+        "EU_E048N012T6"
+    ).outer_boundary_extent
+    assert outer_boundary_extent == (4800000.0, 1200000.0, 5400000.0, 1800000.0)
+
+    coord_extent = e7grid.get_tile_from_name("EU_E048N012T6").coord_extent
+    assert coord_extent == (4800000.0, 1200000.0, 5399500.0, 1799500.0)
+
+
 def test_lonlat2rc_in_tile(e7grid: Equi7Grid):
     lon, lat = 18.507, 44.571
     tile = e7grid.EU.get_tile_from_lonlat(lon, lat, tiling_id="T6")
@@ -158,7 +168,7 @@ def test_lonlat2rc_in_tile(e7grid: Equi7Grid):
     r, c = tile.xy2rc(e7_coord.x, e7_coord.y)
     tile_should = "EU_E048N012T6"
     c_should = 1199
-    r_should = tile.n_rows - 1
+    r_should = 1199
     nptest.assert_equal(r, r_should)
     nptest.assert_equal(c, c_should)
     nptest.assert_equal(tile.name, tile_should)
