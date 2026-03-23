@@ -208,9 +208,17 @@ def test_decode_tilename(e7grid: Equi7Grid):
     assert tile.outer_boundary_corners[0] == (4200000, 600000)
 
     try:
-        tile = e7grid.get_tile_from_name("EU_E242N006T6")
+        tile = e7grid.get_tile_from_name("EU_E240N006T6")
         raise AssertionError
     except TileOutOfZoneError:
+        assert True
+
+
+def test_invalid_tilename(e7grid: Equi7Grid):
+    try:
+        _ = e7grid.get_tile_from_name("EU_E011N023T6")
+        raise AssertionError
+    except ValueError:
         assert True
 
 

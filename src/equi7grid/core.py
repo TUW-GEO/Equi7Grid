@@ -182,6 +182,11 @@ class Equi7TilingSystem(RegularProjTilingSystem):
 
         tilesize = self[tiling_level].tile_shape[0]
         sampling = self[tiling_level].sampling
+
+        if (x % tilesize != 0) | (y % tilesize != 0):
+            err_msg = f"The given tilename '{tilename}' is not valid."
+            raise ValueError(err_msg)
+
         tile = RasterTile.from_extent(
             (x, y, x + tilesize, y + tilesize), self.pyproj_crs, sampling, sampling
         )
