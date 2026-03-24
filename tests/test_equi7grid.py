@@ -270,6 +270,18 @@ def test_search_tiles_geog_bbox(e7grid: Equi7Grid):
     assert_tiles(tiles, tiles_should)
 
 
+def test_tiles_sorted(e7grid: Equi7Grid):
+    tiles = list(e7grid.get_tiles_in_geog_bbox((16, 48, 18, 50), tiling_id="T6"))
+    tilenames = [tile.name for tile in tiles]
+
+    assert tilenames == [
+        "EU_E048N012T6",
+        "EU_E048N018T6",
+        "EU_E054N012T6",
+        "EU_E054N018T6",
+    ]
+
+
 # noqa: TODO: bbm (validate if tiles are as desired)
 def test_find_all_tiles_with_global_bbox(e7grid: Equi7Grid):
     tiles_all = e7grid.get_tiles_in_geog_bbox(
