@@ -282,13 +282,20 @@ def test_tiles_sorted(e7grid: Equi7Grid):
     ]
 
 
-# noqa: TODO: bbm (validate if tiles are as desired)
-def test_find_all_tiles_with_global_bbox(e7grid: Equi7Grid):
+def test_find_all_tiles_coverland_with_global_bbox(e7grid: Equi7Grid):
     tiles_all = e7grid.get_tiles_in_geog_bbox(
         bbox=(-179.9, -89.9, 179.9, 89.9), tiling_id="T6", cover_land=True
     )
     n_t6_tiles_global = 864
-    assert len(list(tiles_all)) == n_t6_tiles_global  # 854 was the old number
+    assert len(list(tiles_all)) == n_t6_tiles_global  # 854 was the old number. I trust it for now, as the coverland=False result (1801) is correct.
+
+
+def test_find_all_tiles_with_global_bbox(e7grid: Equi7Grid):
+    tiles_all = e7grid.get_tiles_in_geog_bbox(
+        bbox=(-179.9, -89.9, 179.9, 89.9), tiling_id="T6", cover_land=False
+    )
+    n_t6_tiles_global = 1801
+    assert len(list(tiles_all)) == n_t6_tiles_global
 
 
 def test_search_tiles_large_bbox_north_pole(e7grid: Equi7Grid):
