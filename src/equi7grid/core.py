@@ -400,7 +400,9 @@ class Equi7Grid(RegularGrid[T_co]):
             proj_def.proj_zone_geog.geom, land_zone_geog.geom
         )
         land_zone = transform_geometry(
-            GeogGeom(geom=land_proj_zone_geog), proj_def.crs, segment=DEF_SEG_LEN_DEG
+            GeogGeom(geom=land_proj_zone_geog),
+            proj_def.crs,
+            max_segment_length=DEF_SEG_LEN_DEG,
         )
         land_zone.geom = shapely.buffer(land_zone.geom, 0)
         return Equi7TilingSystem.from_sampling(
