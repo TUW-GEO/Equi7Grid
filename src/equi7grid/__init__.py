@@ -5,6 +5,7 @@
 
 from equi7grid.core import (
     Equi7Grid,
+    allowed_samplings,
     get_equi7grid_from_file,
     get_equi7grid_from_grid_def,
     get_standard_equi7grid,
@@ -13,6 +14,7 @@ from equi7grid.core import (
 
 __all__ = [
     "Equi7Grid",
+    "allowed_samplings",
     "get_equi7grid_from_file",
     "get_equi7grid_from_grid_def",
     "get_standard_equi7grid",

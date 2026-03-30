@@ -417,14 +417,15 @@ class Equi7Grid(RegularGrid[T_co]):
 
         Parameters
         ----------
-        lon: float
+        lon : float
             Longitude.
-        lat: float
+
+        lat : float
             Latitude.
 
         Returns
         -------
-        k: float
+        k : float
             Local max length distortion = local areal distortion.
 
         """
@@ -489,10 +490,12 @@ class Equi7Grid(RegularGrid[T_co]):
         ----------
         proj_geom : ProjGeom
             Projected geometry representing the region of interest.
-        tiling_id: int | str
+
+        tiling_id : int | str
             Tiling level or name.
             Defaults to the first tiling level.
-        cover_land: bool, optional
+
+        cover_land : bool, optional
             True if only tiles which cover land should be returned.
             Defaults to false.
 
@@ -639,6 +642,23 @@ def get_equi7grid_from_file(
 
     """
     return Equi7Grid.from_file(json_path)
+
+
+def allowed_samplings(tile_size: float) -> list[float]:
+    """Compute samplings which fit into the given tile size.
+
+    Parameters
+    ----------
+    tile_size : float
+        Tile size.
+
+    Returns
+    -------
+    list[float]
+        Divisors/samplings of the given tile size.
+
+    """
+    return Equi7Grid.allowed_samplings(tile_size)
 
 
 if __name__ == "__main__":
