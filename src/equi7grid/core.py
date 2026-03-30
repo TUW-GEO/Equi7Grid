@@ -47,6 +47,10 @@ class Equi7Tile(RasterTile[Any]):
         raster_tile_str = super().__str__()
         return raster_tile_str + f"\nCovers land: \n{self.covers_land}"
 
+    def __repr__(self) -> str:
+        """Short string representation."""
+        return self.name
+
 
 class Equi7TilingSystem(RegularProjTilingSystem):
     """Defines a tiling system for each Equi7Grid continent."""
