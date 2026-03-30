@@ -12,7 +12,7 @@ from pathlib import Path
 
 __location__ = Path(__file__).parent
 sys.path.insert(0, (__location__ / "../src").resolve().as_posix())
-sys.path.append((__location__ / "source").resolve().as_posix())
+sys.path.append(__location__.resolve().as_posix())
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
