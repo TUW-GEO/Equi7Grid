@@ -17,9 +17,9 @@ A detailed documentation on the Equi7Grid spatial reference system definition is
 
 `~/docs/doc_files/`
 
-and its scientific background is published in this [**journal article**](https://www.sciencedirect.com/science/article/pii/S0098300414001629).
+and its scientific background is published in this [journal article](https://www.sciencedirect.com/science/article/pii/S0098300414001629).
 
-This package is a light wrapper around [`pytileproj`](https://github.com/TUW-GEO/pytileproj), which contains a more generic framework for working with projected grid frameworks and tiling systems. Please check out its [documention](https://tuw-geo.github.io/pytileproj/latest/) for getting more information on all offered functionalities
+This package is a light wrapper around [`pytileproj`](https://github.com/TUW-GEO/pytileproj), which contains a more generic framework for working with projected grid frameworks and tiling systems. Please also check out its [documention](https://tuw-geo.github.io/pytileproj/latest/) in addition to `equi7grid`'s documentation for getting the full picture of all offered functionalities.
 
 ## Coordinate reference systems
 
@@ -56,7 +56,7 @@ South America   SA  '+proj=aeqd +lat_0=-14 +lon_0=-60.5 +x_0=7257179.23559 +y_0=
 
 ## Installation
 
-This package can be installed from [`PyPi`][pypi] with:
+This package can be installed from [PyPi][pypi] with:
 
 ```bash
 pip install equi7grid
@@ -80,7 +80,7 @@ pip install equi7grid[warp]
 uv add equi7grid[warp]
 ```
 
-To include the support for exporting grid definitions (which may be used-defined), use the `export` extension:
+To include the support for exporting grid definitions (which may be user-defined), use the `export` extension:
 
 ```bash
 pip install equi7grid[export]
@@ -90,9 +90,7 @@ uv add equi7grid[export]
 
 ## Contribute
 
-We are happy if you want to contribute. Please raise an issue explaining what
-is missing or if you find a bug. We will also gladly accept pull requests
-against our master branch for new features or bug fixes.
+We are happy if you want to contribute. Please raise an issue explaining what is missing or if you find a bug. We will also gladly accept pull requests against our master branch for new features or bug fixes.
 
 ### Development setup
 
@@ -146,12 +144,9 @@ Finally, use `uv` to install all other dependencies and `equi7grid` itself, e.g.
 uv sync --all-extras
 ```
 
-#### just - a taskrunner
+#### just
 
-The repository uses a `Justfile` to provide a simple and consistent interface for task orchestration.
-It groups common development, testing, and release tasks behind short, memorable commands,
-reducing the need to remember long tool-specific invocations.
-Most commands are built on top of uv, ensuring fast and reproducible execution.
+The repository uses a `Justfile` to provide a simple and consistent interface for task orchestration. It groups common development, testing, and release tasks behind short, memorable commands, reducing the need to remember long tool-specific invocations. Most commands are built on top of `uv`, ensuring fast and reproducible execution.
 
 Install the [`just` binary][just] with [`uv`][uv] like so:
 
@@ -159,7 +154,7 @@ Install the [`just` binary][just] with [`uv`][uv] like so:
 uv tool install rust-just
 ```
 
-Now you can execute so called recipes like so:
+Now you can execute so called recipes with:
 
 ```bash
 just test
