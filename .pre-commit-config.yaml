@@ -1,7 +1,7 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.14.10
+    rev: v0.15.5
     hooks:
       # Run the linter.
       - id: ruff-check
@@ -11,7 +11,7 @@ repos:
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
-    rev: 0.9.20
+    rev: 0.10.9
     hooks:
       # Update the uv lockfile
       - id: uv-lock
@@ -22,5 +22,11 @@ repos:
       - id: trailing-whitespace
       - id: check-added-large-files
         exclude: '^(src/equi7grid/data/land\.parquet|src/equi7grid/data/grids/equi7standard\.json|docs/doc_files.*|docs/webviewer/images.*)$'
+      - id: check-merge-conflict
       - id: detect-private-key
       - id: end-of-file-fixer
+
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: "v2.16.2"
+    hooks:
+      - id: pyproject-fmt
