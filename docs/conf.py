@@ -55,6 +55,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".venv"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
 
+napoleon_google_docstring = False
+
 
 # If this is True, todo emits a warning for each TODO entries. The default is False.
 todo_emit_warnings = True
