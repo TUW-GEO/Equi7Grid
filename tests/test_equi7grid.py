@@ -119,7 +119,7 @@ def test_calc_length_distortion(e7grid: Equi7Grid):
 
 def test_rc2xy(e7grid: Equi7Grid):
     x_should = 3166500
-    y_should = 5178000
+    y_should = 5177500
     tile = e7grid.EU.get_tile_from_xy(3245631, 5146545, tiling_id="T6")
     x, y = tile.rc2xy(444, 333)
     nptest.assert_allclose(x_should, x)
@@ -151,6 +151,16 @@ def test_xy2rc(e7grid: Equi7Grid):
     nptest.assert_allclose(r_should, r)
 
 
+def test_tile_extents(e7grid: Equi7Grid):
+    outer_boundary_extent = e7grid.get_tile_from_name(
+        "EU_E048N012T6"
+    ).outer_boundary_extent
+    assert outer_boundary_extent == (4800000.0, 1200000.0, 5400000.0, 1800000.0)
+
+    coord_extent = e7grid.get_tile_from_name("EU_E048N012T6").coord_extent
+    assert coord_extent == (4800000.0, 1200000.0, 5399500.0, 1799500.0)
+
+
 def test_lonlat2rc_in_tile(e7grid: Equi7Grid):
     lon, lat = 18.507, 44.571
     tile = e7grid.EU.get_tile_from_lonlat(lon, lat, tiling_id="T6")
@@ -158,7 +168,7 @@ def test_lonlat2rc_in_tile(e7grid: Equi7Grid):
     r, c = tile.xy2rc(e7_coord.x, e7_coord.y)
     tile_should = "EU_E048N012T6"
     c_should = 1199
-    r_should = tile.n_rows - 1
+    r_should = 1199
     nptest.assert_equal(r, r_should)
     nptest.assert_equal(c, c_should)
     nptest.assert_equal(tile.name, tile_should)
@@ -208,9 +218,17 @@ def test_decode_tilename(e7grid: Equi7Grid):
     assert tile.outer_boundary_corners[0] == (4200000, 600000)
 
     try:
-        tile = e7grid.get_tile_from_name("EU_E242N006T6")
+        tile = e7grid.get_tile_from_name("EU_E240N006T6")
         raise AssertionError
     except TileOutOfZoneError:
+        assert True
+
+
+def test_invalid_tilename(e7grid: Equi7Grid):
+    try:
+        _ = e7grid.get_tile_from_name("EU_E011N023T6")
+        raise AssertionError
+    except ValueError:
         assert True
 
 
@@ -252,13 +270,32 @@ def test_search_tiles_geog_bbox(e7grid: Equi7Grid):
     assert_tiles(tiles, tiles_should)
 
 
-# noqa: TODO: bbm (validate if tiles are as desired)
-def test_find_all_tiles_with_global_bbox(e7grid: Equi7Grid):
+def test_tiles_sorted(e7grid: Equi7Grid):
+    tiles = list(e7grid.get_tiles_in_geog_bbox((16, 48, 18, 50), tiling_id="T6"))
+    tilenames = [tile.name for tile in tiles]
+
+    assert tilenames == [
+        "EU_E048N012T6",
+        "EU_E048N018T6",
+        "EU_E054N012T6",
+        "EU_E054N018T6",
+    ]
+
+
+def test_find_all_tiles_coverland_with_global_bbox(e7grid: Equi7Grid):
     tiles_all = e7grid.get_tiles_in_geog_bbox(
         bbox=(-179.9, -89.9, 179.9, 89.9), tiling_id="T6", cover_land=True
     )
     n_t6_tiles_global = 864
-    assert len(list(tiles_all)) == n_t6_tiles_global  # 854 was the old number
+    assert len(list(tiles_all)) == n_t6_tiles_global  # 854 was the old number. I trust it for now, as the coverland=False result (1801) is correct.
+
+
+def test_find_all_tiles_with_global_bbox(e7grid: Equi7Grid):
+    tiles_all = e7grid.get_tiles_in_geog_bbox(
+        bbox=(-179.9, -89.9, 179.9, 89.9), tiling_id="T6", cover_land=False
+    )
+    n_t6_tiles_global = 1801
+    assert len(list(tiles_all)) == n_t6_tiles_global
 
 
 def test_search_tiles_large_bbox_north_pole(e7grid: Equi7Grid):

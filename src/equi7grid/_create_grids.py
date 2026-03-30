@@ -15,7 +15,7 @@ from equi7grid._types import T_co
 class Equi7ProjSystemDefinition(ProjSystemDefinition[T_co]):
     """Defines a projection system for an Equi7 continent."""
 
-    axis_orientation: tuple[Literal["E"], Literal["S"]] = ("E", "S")
+    axis_orientation: tuple[Literal["E"], Literal["N"]] = ("E", "N")
 
 
 def get_system_definitions(

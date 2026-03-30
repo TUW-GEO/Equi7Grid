@@ -28,6 +28,7 @@ from pytileproj.projgeom import (
     convert_any_to_geog_geom,
     transform_geometry,
 )
+from pytileproj.tile import OriginStr
 
 from equi7grid._create_grids import get_standard_tilings, get_system_definitions
 from equi7grid._types import Extent, T_co
@@ -39,6 +40,12 @@ class Equi7Tile(RasterTile[Any]):
     """Defines a tile in the Equi7Grid."""
 
     covers_land: bool
+    px_origin: OriginStr = "ll"
+
+    def __str__(self) -> str:
+        """Extensive string representation."""
+        raster_tile_str = super().__str__()
+        return raster_tile_str + f"\nCovers land: \n{self.covers_land}"
 
 
 class Equi7TilingSystem(RegularProjTilingSystem):
@@ -182,6 +189,11 @@ class Equi7TilingSystem(RegularProjTilingSystem):
 
         tilesize = self[tiling_level].tile_shape[0]
         sampling = self[tiling_level].sampling
+
+        if (x % tilesize != 0) | (y % tilesize != 0):
+            err_msg = f"The given tilename '{tilename}' is not valid."
+            raise ValueError(err_msg)
+
         tile = RasterTile.from_extent(
             (x, y, x + tilesize, y + tilesize), self.pyproj_crs, sampling, sampling
         )
@@ -388,7 +400,9 @@ class Equi7Grid(RegularGrid[T_co]):
             proj_def.proj_zone_geog.geom, land_zone_geog.geom
         )
         land_zone = transform_geometry(
-            GeogGeom(geom=land_proj_zone_geog), proj_def.crs, segment=DEF_SEG_LEN_DEG
+            GeogGeom(geom=land_proj_zone_geog),
+            proj_def.crs,
+            max_segment_length=DEF_SEG_LEN_DEG,
         )
         land_zone.geom = shapely.buffer(land_zone.geom, 0)
         return Equi7TilingSystem.from_sampling(
