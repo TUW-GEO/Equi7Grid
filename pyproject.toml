@@ -1,51 +1,51 @@
 [build-system]
 build-backend = "uv_build"
-requires = ["uv-build>=0.9.6,<0.10"]
+requires = [ "uv-build>=0.9.6,<0.10" ]
 
 [project]
 name = "equi7grid"
-version = "1.0.0"
+version = "1.1.0"
 description = "Definition and tools for Equi7Grid and its tiling system."
 readme = "README.md"
 license = { file = "LICENSE.txt" }
-authors = [{ name = "TU Wien", email = "remote.sensing@geo.tuwien.ac.at" }]
+authors = [ { name = "TU Wien", email = "remote.sensing@geo.tuwien.ac.at" } ]
 requires-python = ">=3.11"
 classifiers = [
-	"Intended Audience :: Science/Research",
-	"Natural Language :: English",
-	"Operating System :: POSIX",
-	"Programming Language :: Python :: 3 :: Only",
-	"Programming Language :: Python :: 3.11",
-	"Programming Language :: Python :: 3.12",
-	"Programming Language :: Python :: 3.13",
-	"Programming Language :: Python :: 3.14",
-	"Topic :: Scientific/Engineering",
-	"Topic :: Scientific/Engineering :: GIS",
-	"Topic :: Software Development :: Libraries",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: GIS",
+  "Topic :: Software Development :: Libraries",
 ]
-dependencies = ["geographiclib", "geopandas", "pyarrow", "pytileproj"]
+dependencies = [ "geographiclib", "geopandas", "pyarrow", "pytileproj" ]
 [project.optional-dependencies]
-docs = ["myst-nb", "sphinx", "sphinx-autodoc2", "sphinx-book-theme"]
-export = ["pytileproj[geo]"]
-vis = ["pytileproj[vis]"]
-warp = ["rasterio", "scipy"]
+docs = [ "myst-nb", "sphinx", "sphinx-autodoc2", "sphinx-book-theme" ]
+export = [ "pytileproj[geo]" ]
+vis = [ "pytileproj[vis]" ]
+warp = [ "rasterio", "scipy" ]
 [project.urls]
 Repository = "https://github.com/TUW-GEO/equi7grid"
 
 [dependency-groups]
 dev = [
-	"approvaltests",
-	"ipykernel>=7.1",
-	"mystmd>=1.6.6",
-	"pytest>=9.0.1",
-	"pytest-cov>=7",
-	"ruff>=0.14.5",
-	"ty>=0.0.8",
+  "approvaltests",
+  "ipykernel>=7.1",
+  "mystmd>=1.6.6",
+  "pytest>=9.0.1",
+  "pytest-cov>=7",
+  "ruff>=0.14.5",
+  "ty>=0.0.8",
 ]
 
 [tool.black]
 line-length = 88
-target-version = ["py312"]
+target-version = [ "py312" ]
 skip-string-normalization = false
 
 [tool.ruff.format]
@@ -57,25 +57,25 @@ line-ending = "auto"
 docstring-code-format = false
 docstring-code-line-length = "dynamic"
 [tool.ruff.lint]
-select = ["ALL"]
+select = [ "ALL" ]
 ignore = [
-	"COM812", # missing-trailing-comma (may conflict with ruff formatter)
-	"D203",   # incorrect-blank-line-before-class (conflicts with D211)
-	"D213",   # multi-line-summary-second-line (conflicts with D212)
+  "COM812", # missing-trailing-comma (may conflict with ruff formatter)
+  "D203",   # incorrect-blank-line-before-class (conflicts with D211)
+  "D213",   # multi-line-summary-second-line (conflicts with D212)
 ]
-fixable = ["ALL"]
+fixable = [ "ALL" ]
 unfixable = []
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["E402"]
-"**/{tests}/*" = ["E402", "ANN201", "D", "INP001", "S101"]
+"__init__.py" = [ "E402" ]
+"**/{tests}/*" = [ "E402", "ANN201", "D", "INP001", "S101" ]
 
 [tool.pyproject-fmt]
 table_format = "long"
-collapse_tables = ["project.authors"]
+collapse_tables = [ "project.authors" ]
 
 [tool.pytest.ini_options]
 addopts = "--cov=equi7grid --cov-report term-missing -rsx --verbose --color=yes"
-markers = ["warp_installed"]
+markers = [ "warp_installed" ]
 
 [tool.coverage.run]
 relative_files = true
