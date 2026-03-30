@@ -6,6 +6,7 @@ repos:
       # Run the linter.
       - id: ruff-check
         args: [--fix]
+        exclude: '^(docs/source/docstrings_parser.*)$'
       # Run the formatter.
       - id: ruff-format
 

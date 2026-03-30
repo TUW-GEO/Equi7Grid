@@ -29,7 +29,10 @@ autodoc2_packages = [
 ]
 autodoc2_render_plugin = "myst"
 autodoc2_hidden_objects = ["dunder", "undoc", "private", "inherited"]
-
+autodoc2_docstring_parser_regexes = [
+    # this will render all docstrings as Markdown
+    (r".*", "source.docstrings_parser"),
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -54,8 +57,6 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".venv"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
-
-napoleon_google_docstring = False
 
 
 # If this is True, todo emits a warning for each TODO entries. The default is False.
