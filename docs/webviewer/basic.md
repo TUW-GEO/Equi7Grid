@@ -6,3 +6,9 @@ The basic mode restricts the set of tools to a minimum to focus on display and m
 - Zone toggle (🧱): toggle for displaying zones
 - Tiling toggle (🔷): toggle for displaying tilings (can be changed in the expert mode with the [layer manager](./layers.md) (📚))
 - [Display settings](./settings.md) (🔩): change transparency and stroke width of the tilings
+
+```{toctree}
+:hidden:
+
+settings.md
+```

@@ -1,10 +1,3 @@
-```{toctree}
-:hidden:
-
-basic.md
-expert.md
-```
-
 # Equi7Grid webviewer
 
 The Equi7Grid webviewer is a tool to display and interact with the tiles, tilings, coordinates and projection zones of the Equi7Grid system. It was created as a high-level interface for users, who want to get a visual understanding of the grid system without touching any code. But the tool is alse very helpful for advanced users, e.g., to fetch tile lists, export geotransformation parameters for further data processing and analyse new tiling schemes.
@@ -38,3 +31,10 @@ The 2D view offers the same level of interaction and displays geographic coordin
 ![loading](images/earth_loading.png)
 
 This symbol appears when the required data layers (tilings, zones, etc.) are pre-loaded in the background. It is also visible when adding a new tiling (➕) with the [tiling tool](tiling.md) or within the [layer manager](layers.md). While data loading is ongoing, the toolbar is disabled.
+
+```{toctree}
+:hidden:
+
+basic.md
+expert.md
+```

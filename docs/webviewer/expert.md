@@ -1,13 +1,3 @@
-```{toctree}
-:hidden:
-
-tiling.md
-coordinate_transformation.md
-layers.md
-tiles.md
-settings.md
-```
-
 # Expert mode
 
 The expert mode is for users who do not only want to display zones and tiles but rather want to exploit and use all features of the Equi7Grid. When clicking on "Expert" the toolbar on the left side of the map will display the following icons:
@@ -20,3 +10,13 @@ The expert mode is for users who do not only want to display zones and tiles but
 - [Display settings](./settings.md) (🔩): change transparency and stroke width of the tilings
 
 Not all tools are available in the 3D view, since the overall functionality of the engine in the background is more restrictive. The tiling creator (➕), the coordinate transformer (📐), and the tile query (🔍) are disabled in 3D.
+
+```{toctree}
+:hidden:
+
+tiling.md
+coordinate_transformation.md
+layers.md
+tiles.md
+settings.md
+```
