@@ -15,7 +15,7 @@ Next to the region of interest symbols, you can specify the desired sampling of 
 If you change the sampling to a different value (other than 500m or one specified before) and submit the query, then all pre-computed objects need to be re-rendered. This takes significantly more time to finish the query.
 :::
 
-In the example below, we submit a query by entering a bounding box covering Central America. After execution, the tiles in the result are highlighted on the map (if the respective tiling is visible) and the tile list fills the area below the query form.
+In the example below, we submit a query by drawing a bounding box covering Central America. After execution, the tiles in the result are highlighted on the map (if the respective tiling is visible) and the tile list fills the area below the query form.
 
 ![tile_query_bbox](images/tile_query_bbox.png)
 
@@ -31,3 +31,5 @@ The symbols on the bottom perform exports on the whole tilelist:
 - 📋: copy all tilenames to the clipboard (separated via a newline)
 - 🌐: copy a JSON dictionary mapping tilenames to geotransformation parameters to the clipboard
 - 🐍: copy Python code allowing to generate a Python dictionary mapping tilenames to `Equi7Tile` instances to the clipboard
+
+With the 🗑️ icon you can delete the tile list.

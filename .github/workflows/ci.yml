@@ -32,7 +32,7 @@ jobs:
       - name: Install the Project
         run: uv sync --all-extras --dev
 
-      - name: Run Tests{% endraw %}
+      - name: Run Tests
         run: uv run pytest tests --verbose --color=yes --cov=equi7grid --cov-report term-missing
 
       - name: Upload Coverage

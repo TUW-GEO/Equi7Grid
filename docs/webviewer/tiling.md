@@ -7,6 +7,8 @@ The toolbar has three entries:
 - the new tiling ID (two characters)
 - the desired tile size in metres
 
+In the example below, we created a new tiling named "T2" with a tile size of 200km for the African continent.
+
 ![loading](images/tiling.png)
 
-After clicking on _Load_, the new tiling will be added to the existing tilings and will show up in the [layer manager](./layers.md). Note that this might take some time indicated by the loading circle in the lower-left corner.
+After clicking on _Load_, the new tiling will be added to the existing tilings and will show up in the [layer manager](./layers.md). Note that this might take some time indicated by the loading circle in the upper-right corner.

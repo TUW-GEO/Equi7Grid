@@ -12,6 +12,7 @@ from pathlib import Path
 
 __location__ = Path(__file__).parent
 sys.path.insert(0, (__location__ / "../src").resolve().as_posix())
+sys.path.append(__location__.resolve().as_posix())
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -22,6 +23,8 @@ extensions = [
 ]
 myst_enable_extensions = [
     "colon_fence",
+    "dollarmath",
+    "fieldlist",
 ]
 myst_heading_anchors = 3
 autodoc2_packages = [
@@ -29,7 +32,10 @@ autodoc2_packages = [
 ]
 autodoc2_render_plugin = "myst"
 autodoc2_hidden_objects = ["dunder", "undoc", "private", "inherited"]
-
+autodoc2_docstring_parser_regexes = [
+    # this will render all docstrings as Markdown
+    (r".*", "source.docstrings_parser"),
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

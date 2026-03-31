@@ -3,15 +3,16 @@
 :caption: 🔎 Overview
 
 readme
+howto.ipynb
 ```
 
 ```{toctree}
 :hidden:
 :caption: 📚 Guides
 
-guides/tile.ipynb
-guides/tiling_system.ipynb
 guides/grid.ipynb
+guides/tiling_system.ipynb
+guides/tile.ipynb
 guides/warp.ipynb
 ```
 
