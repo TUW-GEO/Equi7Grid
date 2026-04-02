@@ -1,6 +1,8 @@
 # Equi7Grid webviewer
 
-The Equi7Grid webviewer is a tool to display and interact with the tiles, tilings, coordinates and projection zones of the Equi7Grid system. It was created as a high-level interface for users, who want to get a visual understanding of the grid system without touching any code. But the tool is alse very helpful for advanced users, e.g., to fetch tile lists, export geotransformation parameters for further data processing and analyse new tiling schemes.
+The Equi7Grid webviewer is a tool to display and interact with the projection zones, coordinates, and tilings of the Equi7Grid system. 
+
+It was created as a high-level interface for users, who want to get a visual understanding of the grid system without touching any code. But the tool is alse very helpful for advanced users, e.g., to fetch tile lists, export geotransformation parameters for further data processing, and explore new user-defined tiling schemes.
 
 ## Home view
 
@@ -10,10 +12,12 @@ When you launch the Equi7Grid webviewer, the screen looks like this:
 
 The header contains several links:
 
-In the upper-left corner you have two logos/links to the creators of the Webviewer and the Equi7Grid itself. On the right side there is a link to the GitHub repo (<img src="../_static/images/github_logo.png" width="20" style="margin-bottom: -5px; margin-right: -2px;">), to the Equi7Grid documentation (📖), and to GitHub issues to report problems or to request new features (📬). In the upper-left corner of the map there are two important buttons which steer the level of interactivity with the webviewer: "Basic" and "Expert". The following pages describe the tools belonging to each mode in more detail:
+In the upper-left corner you have two logos/links to the creators of the Webviewer and the Equi7Grid. On the right side there is a link to the GitHub repo (<img src="../_static/images/github_logo.png" width="20" style="margin-bottom: -5px; margin-right: -2px;">), to the Equi7Grid documentation (📖), and to GitHub issues to report problems or to request new features (📬). In the upper-left corner of the map there are two important buttons which steer the level of interactivity with the webviewer: "Basic" and "Expert". The following pages describe the tools belonging to each mode in more detail:
 
 - [Basic mode](basic.md)
 - [Expert mode](expert.md)
+
+For simply exploring the grid and its zones, we recommend to stay in basic mode use the zoom and pan controls. When you're up to take measurements and make queries, the Expert mode will be at your aid.
 
 ## Map
 
@@ -21,6 +25,8 @@ The map itself displays a globe in 3D by default and offers intuitive interactio
 
 :::{note}
 The 3D view renders with CesiumJS, which requires WebGL in the background. It may happen that your browser displays an error in the console like this: "Browser supports WebGL, but initialization failed". Check your performance settings and allow hardware acceleration if possible. Please switch to a different browser if this is not working.
+
+In Firefox, you may need to enable hardware acceleration by going to `about:config` and setting `webgl.force-enabled` to `true`.
 :::
 
 ![globe](images/2d_view.png)

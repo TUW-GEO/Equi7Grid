@@ -1,29 +1,31 @@
 # Layer manager
 
-The layer manager is a core tool of the webviewer allowing to define which and how layers are displayed. In addition you can remove and add new tilings to the webviewer.
+The layer manager is a core tool of the webviewer allowing defining which and how layers are displayed. In addition, you can add new or remove tilings to the webviewer.
 
-The following image shows the default view of the layer manager panel. By clicking on the checkbox next to each layer, you can display it on the map:
+The following image shows the default view of the layer manager panel. By toggling checkbox next to each layer, you control its display on the map:
 
 ![layers_start](images/layers_start.png)
 
-You can interact with the layer by clicking on the tiles to display the tilename.
+On the map, you can now interact with the layer by clicking on the tiles to display the tilename.
 
 ![layers_click](images/layers_click.png)
 
-In the layer manager panel, you have layers grouped by Equi7Grid continent and the respective zone and tilings for each continent. The ➖ symbol will minimise the group. The symbols on the right side of the group manage layer loading and deletion. After selecting the tiling ID in the dropdown menu you can either remove the tiling with 🚮 or add it with ➕. Note that any non-standard tiling scheme needs to be added via the [tiling creator](./tiling.md).
+In the layer manager panel, the layers are grouped by Equi7Grid's continents, listing the respective zone and tilings for each continent. The ➖ symbol will minimise these groups individually. 
 
-Under each continent you can find a zone layer representing the projection zone of a Equi7Grid continent.
+The symbols on the right side of the group manage layer loading and deletion. After selecting the tiling ID in the dropdown menu on the right, you can either remove the tiling with 🚮, or add it with ➕. Note that any non-standard tiling scheme needs to be added via the webviewer's [tiling creator](./tiling.md) tool.
+
+For each continent, you can find a dedicated zone layer as a coloured polygon that represents the extent of Equi7Grid continental zone.
 
 ![zones](images/zones.png)
 
-Except the zone layers, you can modify the stroke and fill colour of all tiling layers.
+You can modify the stroke and fill colour of all tiling layers (but not for the zone layers).
 
 ![layer_styling](images/layer_styling.png)
 
-All items are draggable to change the display order. This means you can drag the continent groups to achieve the desired visual overlay
+All items are draggable to change the display order. This can be up and down within each group. In other words, you can drag the layers to achieve the desired visual overlay as seen in this example...
 
 ![layer_order](images/layer_order.png)
 
-or you can do the same within a continent group and change the order of the zone and tilings.
+...or you can do the same with the continental groups (comprising per continent the zone and tile layers) and change the order of the continents, as here:
 
 ![layer_continent_order](images/layer_continent_order.png)
