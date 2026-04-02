@@ -10,11 +10,10 @@ When you launch the Equi7Grid webviewer, the screen looks like this:
 
 The header contains several links:
 
-In the upper-left corner you have two logos/links to the creators of the Webviewer and the Equi7Grid itself. On the right side there is a link to the GitHub repo (<img src="../_static/images/github_logo.png" width="20" style="margin-bottom: -5px; margin-right: -2px;">), to the Equi7Grid documentation (📖), and to GitHub issues to report problems or to request new features (📬). On the left next to these icons there are two important buttons which steer the level of interactivity with the webviewer: "Basic" and "Expert". The following pages describe the tools belonging to each mode in more detail:
+In the upper-left corner you have two logos/links to the creators of the Webviewer and the Equi7Grid itself. On the right side there is a link to the GitHub repo (<img src="../_static/images/github_logo.png" width="20" style="margin-bottom: -5px; margin-right: -2px;">), to the Equi7Grid documentation (📖), and to GitHub issues to report problems or to request new features (📬). In the upper-left corner of the map there are two important buttons which steer the level of interactivity with the webviewer: "Basic" and "Expert". The following pages describe the tools belonging to each mode in more detail:
 
 - [Basic mode](basic.md)
 - [Expert mode](expert.md)
-
 
 ## Map
 

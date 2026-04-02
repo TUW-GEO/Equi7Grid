@@ -165,6 +165,10 @@ just
 
 ## News
 
+**2026 April:**
+
+Official announcement of new Equi7Grid package release (`v1.1.1`) along with the launch of the Equi7Grid webviewer () and the official Equi7Grid website (). `v1.1.1` incorporates all feedback collected from the first review and testing round after the major release `v1.0.0`.
+
 **2026 February:**
 
 New major release `v1.0.0`! 🎉🥳
