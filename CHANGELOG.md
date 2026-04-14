@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- insertion marker -->
 
+## [v1.1.1](https://github.com/TUW-GEO/Equi7Grid/releases/tag/v1.1.1) - 2026-04-14
+
+<small>[Compare with v1.1.0](https://github.com/TUW-GEO/Equi7Grid/compare/v1.1.0...v1.1.1)</small>
+
+### Summary
+
+- updated changelog
+
+
+## [v1.1.0](https://github.com/TUW-GEO/Equi7Grid/releases/tag/v1.1.0) - 2026-04-14
+
+<small>[Compare with v1.0.0](https://github.com/TUW-GEO/Equi7Grid/compare/v1.0.0...v1.1.0)</small>
+
+### Summary
+
+- updated origin of Equi7 tiles to lower-left
+- added global/grid-based tile export
+- simplified string representation of classes
+- documentation updates
+- added segmentation to tile export
+- fixed bug for functions accepting wrong tilenames
+- replaced EPSG zones with internal ones
+
+
 ## [v1.0.0](https://github.com/TUW-GEO/Equi7Grid/releases/tag/v1.0.0) - 2026-03-10
 
 <small>[Compare with v1.0.0](https://github.com/TUW-GEO/Equi7Grid/compare/v1.0.0...v1.0.0)</small>
